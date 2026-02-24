@@ -1,0 +1,235 @@
+// hex code to Color code
+
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:appex_lead/controller/dash/dash_controller.dart';
+import 'package:appex_lead/service/api_service.dart';
+import 'package:appex_lead/utils/constants.dart';
+import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:appex_lead/controller/drawer_controller.dart';
+import 'package:appex_lead/main.dart';
+import 'package:appex_lead/utils/auth_service.dart';
+import 'package:appex_lead/view/auth/login.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+String hexToColor(String hexColor) {
+  String onlyCode = hexColor.substring(1);
+  String color = "0xff$onlyCode";
+  return color;
+}
+
+copyToClipboard({String? text}) async {
+  await Clipboard.setData(ClipboardData(text: text ?? ""));
+}
+
+//
+final TextStyle primaryTextStyle = TextStyle(
+  color: colorManager.textColor,
+  fontFamily: 'SF Pro',
+);
+//
+toggleDrawer(GlobalKey<ScaffoldState> key) {
+  key.currentState!.isDrawerOpen
+      ? key.currentState!.closeDrawer()
+      : key.currentState!.openDrawer();
+}
+
+String toParameterize(String key) {
+  if (key.contains("_")) {
+    var words = key
+        .split('_')
+        .map((word) {
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+    return words;
+  } else {
+    return key[0].toUpperCase() + key.substring(1).toLowerCase();
+  }
+}
+
+extension StringCasingExtension on String {
+  String capitalizeFirstLetters() {
+    return split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
+}
+
+extension StringCapitalizeExtension on String {
+  String capitalizeOnlyFirstLetter() {
+    return split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
+  }
+}
+
+Future<bool> setData({
+  required String key,
+  required dynamic value,
+  required String type,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  switch (type) {
+    case "string":
+      return prefs.setString(key, value);
+    case "bool":
+      return prefs.setBool(key, value);
+    case "double":
+      return prefs.setDouble(key, value);
+    case "int":
+      return prefs.setInt(key, value);
+    case "list":
+    case "map":
+      return prefs.setString(key, jsonEncode(value));
+    default:
+      throw Exception("Unsupported type: $type");
+  }
+}
+
+Future<dynamic> getData({required String key, required String type}) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  switch (type) {
+    case "string":
+      return prefs.getString(key);
+    case "bool":
+      return prefs.getBool(key);
+    case "double":
+      return prefs.getDouble(key);
+    case "int":
+      return prefs.getInt(key);
+    case "list":
+    case "map":
+      final raw = prefs.getString(key);
+      return raw != null ? jsonDecode(raw) : null;
+    default:
+      throw Exception("Unsupported type: $type");
+  }
+}
+
+prettyPrint(mapData) {
+  var data = JsonEncoder.withIndent('  ').convert(mapData);
+  log(data);
+}
+
+dynamic dig(Map data, dynamic keys) {
+  dynamic value = data;
+  for (var k in keys) {
+    if (value is Map && value.containsKey(k)) {
+      value = value[k];
+    } else {
+      return null;
+    }
+  }
+  return value;
+}
+
+dynamic buildIcons(String title) {
+  switch (title.toLowerCase()) {
+    case "accounts":
+      return HugeIcons.strokeRoundedUser;
+    case "sale":
+    case "cash sale":
+    case "credit sale":
+    case "returns":
+      return HugeIcons.strokeRoundedInvoice;
+    case "purchase":
+      return HugeIcons.strokeRoundedInvoice02;
+    case "bank receipts":
+    case "bank payments":
+      return HugeIcons.strokeRoundedBank;
+    case "payments":
+      return HugeIcons.strokeRoundedPayment01;
+    case "cash payments":
+    case "cash receipts":
+      return HugeIcons.strokeRoundedPayment02;
+    case "complaints":
+    case "unresolved":
+    case "unassigned":
+      return HugeIcons.strokeRoundedComplaint;
+    default:
+      return HugeIcons.strokeRoundedUser;
+  }
+}
+
+setDataToPrefs({
+  required String key,
+  required var value,
+  required String type,
+}) async {
+  await SharedPreferences.getInstance().then((v) {
+    if (type == "string") {
+      v.setString(key, value);
+    }
+    if (type == "bool") {
+      v.setBool(key, value);
+    }
+    if (type == "double") {
+      v.setDouble(key, value);
+    }
+    if (type == "int") {
+      v.setInt(key, value);
+    }
+  });
+}
+
+logoutUser({String toastMessage = 'Logging out...'}) async {
+  String token = await getData(key: sessionToken, type: 'string') ?? '';
+  if (token.isNotEmpty) showLoading(message: toastMessage);
+  // final dash = Get.put(DashController());
+  ApiServices service = ApiServices();
+  // await dash.clearMemberships();
+  // await Get.put(HomeController()).clearMemberships();
+  await service.logout();
+  await clearUserSession();
+}
+
+clearUserSession() async {
+  await setDataToPrefs(key: sessionToken, value: '', type: 'string');
+
+  await setDataToPrefs(key: userDetailsKey, value: '', type: 'string');
+}
+
+Future<List<dynamic>> getDecodedListFromPrefs({required String key}) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString(key);
+
+    if (data == null || data.isEmpty) {
+      return [];
+    }
+    final decoded = jsonDecode(data);
+    if (decoded is List) {
+      return decoded;
+    }
+    return [];
+  } catch (e) {
+    print("Error decoding prefs for key '$key': $e");
+    return [];
+  }
+}
+
+setDataToPrefsEncoded({key, value}) async {
+  String encodedValue = json.encode(value);
+  await setDataToPrefs(key: key, value: encodedValue, type: 'string');
+}
+
+getDataFromPrefsDecoded({key}) async {
+  String? jsonString = await getData(key: key, type: 'string');
+
+  var decodedData = jsonString != null ? json.decode(jsonString) : {};
+  return decodedData;
+}
