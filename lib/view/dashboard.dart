@@ -1,5 +1,6 @@
 import 'package:appex_lead/component/custom_dropdown.dart';
 import 'package:appex_lead/component/custom_line_chart.dart';
+import 'package:appex_lead/component/custom_searchable_dropdown.dart';
 import 'package:appex_lead/component/dynamic_table.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/utils/app_routes.dart';

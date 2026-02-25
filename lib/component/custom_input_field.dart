@@ -18,8 +18,8 @@ class CustomInputField extends StatefulWidget {
   final EdgeInsetsGeometry contentPadding;
   final Function? onFieldSubmitted;
 
-  // final VoidCallback;
   final Function(String)? onChanged;
+  final VoidCallback? onTap;
 
   final TextEditingController? controller;
 
@@ -45,6 +45,7 @@ class CustomInputField extends StatefulWidget {
     this.initialValue,
     this.label,
     this.autoFocus = false,
+    this.onTap,
   });
 
   @override
@@ -91,6 +92,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
           onChanged: (value) {
             widget.onChanged != null ? widget.onChanged!(value) : null;
           },
+          onTap: widget.onTap,
           validator: widget.isRequired
               ? (value) {
                   return value == null || value.isEmpty

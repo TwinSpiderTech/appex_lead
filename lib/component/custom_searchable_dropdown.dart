@@ -1,0 +1,201 @@
+import 'package:appex_lead/main.dart';
+import 'package:appex_lead/utils/helpers.dart';
+import 'package:flutter/material.dart';
+import 'custom_input_field.dart';
+
+class CustomSearchableDropdown extends StatefulWidget {
+  final List<String> items;
+  final String? selectedValue, label, hint;
+  final Function(String)? onChange;
+  final bool enabled;
+  final double? borderRadius;
+  final EdgeInsetsGeometry? padding;
+
+  const CustomSearchableDropdown({
+    super.key,
+    required this.items,
+    this.onChange,
+    this.selectedValue,
+    this.label,
+    this.hint,
+    this.padding,
+    this.enabled = true,
+    this.borderRadius = 30,
+  });
+
+  @override
+  _CustomSearchableDropdownState createState() =>
+      _CustomSearchableDropdownState();
+}
+
+class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
+  late TextEditingController _controller;
+  bool _isMenuOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.selectedValue != null
+          ? toParameterize(widget.selectedValue!.capitalizeFirstLetters())
+          : "",
+    );
+  }
+
+  @override
+  void didUpdateWidget(CustomSearchableDropdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedValue != oldWidget.selectedValue) {
+      _controller.text = widget.selectedValue != null
+          ? toParameterize(widget.selectedValue!.capitalizeFirstLetters())
+          : "";
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomInputField(
+          controller: _controller,
+          enable: widget.enabled,
+          hint: widget.hint ?? "Search ${widget.label}...",
+          readOnly: false, // Allow typing to search
+          borderRadius: widget.borderRadius ?? 30,
+          isRequired: false,
+          suffixIcon: Icon(
+            _isMenuOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+            color: colorManager.textColor,
+          ),
+          onChanged: (val) {
+            if (widget.enabled && !_isMenuOpen) {
+              setState(() => _isMenuOpen = true);
+              _showSearchDialog(context);
+            }
+          },
+          // When the field is tapped, open the dialog
+          onTap: widget.enabled
+              ? () {
+                  _showSearchDialog(context);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
+  void _showSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String searchQuery = "";
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            List<String> dialogFilteredItems = widget.items
+                .where(
+                  (item) =>
+                      item.toLowerCase().contains(searchQuery.toLowerCase()),
+                )
+                .toList();
+
+            return Dialog(
+              backgroundColor: colorManager.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Select ${widget.label}",
+                      style: TextStyle(
+                        color: colorManager.bgDark,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      autofocus: true,
+                      style: TextStyle(color: colorManager.bgDark),
+                      decoration: InputDecoration(
+                        hintText: "Search...",
+                        hintStyle: TextStyle(
+                          color: colorManager.bgDark.withOpacity(0.5),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: colorManager.bgDark,
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: colorManager.bgDark.withOpacity(0.3),
+                          ),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: colorManager.bgDark),
+                        ),
+                      ),
+                      onChanged: (val) {
+                        setDialogState(() {
+                          searchQuery = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height * 0.4,
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: dialogFilteredItems.length,
+                          itemBuilder: (context, index) {
+                            final item = dialogFilteredItems[index];
+                            return ListTile(
+                              title: Text(
+                                toParameterize(item),
+                                style: TextStyle(color: colorManager.bgDark),
+                              ),
+                              onTap: () {
+                                widget.onChange?.call(item);
+                                _controller.text = toParameterize(
+                                  item.capitalizeFirstLetters(),
+                                );
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    if (dialogFilteredItems.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Text(
+                          "No items found",
+                          style: TextStyle(
+                            color: colorManager.bgDark.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}

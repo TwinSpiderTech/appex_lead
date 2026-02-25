@@ -39,8 +39,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ? IconButton(
                 padding: EdgeInsets.all(0),
                 onPressed: () {
-                  Get.back();
-                  onNavigateBack?.call();
+                  if (onNavigateBack != null) {
+                    onNavigateBack?.call();
+                  } else {
+                    Get.back();
+                  }
                 },
                 icon: HugeIcon(
                   icon: HugeIcons.strokeRoundedArrowLeft01,

@@ -3,7 +3,6 @@ import 'package:appex_lead/service/app_infor_service.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/form/generic_form_screen.dart';
 import 'package:appex_lead/view/form/forms.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -143,7 +142,18 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
                     press: () {
                       Get.back();
-                      Get.to(() => GenericFormScreen());
+                      Get.toNamed(AppPages.formsList);
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 0.0),
+                  child: DrawerListTile(
+                    title: "Drafts",
+                    icon: Icons.drafts_outlined,
+                    press: () {
+                      Get.back();
+                      Get.toNamed(AppPages.drafts);
                     },
                   ),
                 ),

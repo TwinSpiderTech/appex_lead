@@ -101,7 +101,6 @@ class _SharePrefScreenState extends State<SharePrefScreen> {
                             String key = prefsData.keys.elementAt(index);
                             dynamic value = prefsData[key];
                             return _reuseableRow(key, value);
-                            // trailing: ,
                           },
                         ),
                       ),
@@ -119,29 +118,52 @@ class _SharePrefScreenState extends State<SharePrefScreen> {
       ),
     );
   }
-}
 
-Widget _reuseableRow(key, value) {
-  return Container(
-    padding: EdgeInsets.only(bottom: 4, top: 4),
-    decoration: BoxDecoration(
-      border: Border(bottom: BorderSide(color: colorManager.borderColor)),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("$key:", style: TextStyle(color: colorManager.textColor)),
-        Container(
-          constraints: BoxConstraints(maxWidth: 200),
-          child: Text(
-            "$value",
-            style: TextStyle(color: colorManager.textColor),
-            textAlign: TextAlign.end,
-            overflow: TextOverflow.visible,
+  Widget _reuseableRow(key, value) {
+    return Container(
+      padding: EdgeInsets.only(bottom: 4, top: 4),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colorManager.borderColor)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.remove(key);
+                  setState(() {
+                    showToast(message: "Key '$key' removed");
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Icon(
+                    Icons.remove_circle_outline,
+                    color: Colors.red,
+                    size: 18,
+                  ),
+                ),
+              ),
+              Text("$key:", style: TextStyle(color: colorManager.textColor)),
+            ],
           ),
-        ),
-      ],
-    ),
-  );
+          Container(
+            constraints: BoxConstraints(maxWidth: 180),
+            child: Text(
+              "$value",
+              style: TextStyle(color: colorManager.textColor),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.visible,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
