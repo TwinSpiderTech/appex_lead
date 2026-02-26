@@ -6,6 +6,7 @@ import '../../controller/form/generic_form_controller.dart';
 import '../../view/camera/camera_screen.dart';
 import '../../component/custom_input_field.dart';
 import '../../component/custom_searchable_dropdown.dart';
+import '../../component/custom_searchable_dropdown2.dart';
 import '../../component/custom_button.dart';
 import '../../main.dart'; // for colorManager
 
@@ -61,7 +62,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           Row(
             children: [
               Text(
-                fieldData['field_text'],
+                fieldData['field_text'] ?? '',
                 style: TextStyle(
                   color: colorManager.textColor,
                   fontWeight: FontWeight.bold,
@@ -108,11 +109,43 @@ class GenericFormFieldWidget extends StatelessWidget {
 
   Widget _buildDropdownField(bool isEditable) {
     String fieldName = fieldData['field_name'] ?? "unknown";
-    List<String> options = List<String>.from(fieldData['options'] ?? []);
+    var rawOptions =
+        fieldData['field_options'] ??
+        fieldData['options'] ??
+        fieldData['choices'];
 
     return _buildWrapper(
       child: Obx(() {
         var currentValue = controller.formValues[fieldName];
+
+        if (rawOptions is Map) {
+          Map<String, dynamic> optionsMap = Map<String, dynamic>.from(
+            rawOptions,
+          );
+          return CustomSearchableDropdown2(
+            items: optionsMap,
+            enabled: isEditable,
+            selectedValue: currentValue?.toString(),
+            label: fieldData['field_text'] ?? fieldName,
+            borderRadius: 30,
+            padding: const EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 18,
+              bottom: 18,
+            ),
+            onChange: (val) {
+              controller.updateFieldValue(fieldName, val);
+            },
+          );
+        }
+
+        List<String> options = [];
+        if (rawOptions is List) {
+          options = List<String>.from(rawOptions.map((e) => e.toString()));
+        } else if (rawOptions is String && rawOptions.isNotEmpty) {
+          options = rawOptions.split(',').map((e) => e.trim()).toList();
+        }
 
         return CustomSearchableDropdown(
           items: options,
@@ -269,6 +302,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                     height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    alignment: Alignment.bottomCenter,
                   ),
                 ),
               ),

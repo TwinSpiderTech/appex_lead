@@ -26,9 +26,8 @@ class _FormDetailsState extends State<FormDetails> {
     super.initState();
     if (widget.draftData != null) {
       controller.resumeDraft(widget.draftData!);
-    } else {
-      controller.fetchTemplate(widget.url);
     }
+    controller.fetchTemplate(widget.url);
   }
 
   _isFormEmpty() {
@@ -75,16 +74,84 @@ class _FormDetailsState extends State<FormDetails> {
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: controller.fieldsData.length,
-                  itemBuilder: (context, i) {
-                    final field = controller.fieldsData[i];
-                    return controller.isHidden(field['field_visibility'])
-                        ? SizedBox()
-                        : GenericFormFieldWidget(
-                            fieldData: field,
-                            controller: controller,
-                          );
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  itemCount: controller.formGroupsData.length,
+                  itemBuilder: (context, groupIndex) {
+                    final group = controller.formGroupsData[groupIndex];
+                    final fields = group['fields'] as List? ?? [];
+                    final groupTitle = group['group_title'];
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (groupTitle != null &&
+                            groupTitle.toString().isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 24.0,
+                              bottom: 12.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  groupTitle.toString(),
+                                  style: TextStyle(
+                                    color: colorManager.primaryColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  height: 2,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: colorManager.primaryColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: colorManager.primaryColor.withOpacity(.3),
+                            ),
+                            // color: Colors.grey.shade100,
+                          ),
+                          child: Column(
+                            children: [
+                              ...fields.map((fieldData) {
+                                final field = Map<String, dynamic>.from(
+                                  fieldData,
+                                );
+                                return controller.isHidden(
+                                      field['field_visibility'],
+                                    )
+                                    ? const SizedBox.shrink()
+                                    : GenericFormFieldWidget(
+                                        fieldData: field,
+                                        controller: controller,
+                                      );
+                              }).toList(),
+                              if (groupIndex <
+                                  controller.formGroupsData.length - 1)
+                                const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
                   },
                 ),
               ),

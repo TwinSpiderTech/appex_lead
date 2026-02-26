@@ -23,6 +23,7 @@ class GenericFormController extends GetxController {
   var currentDraftId = "".obs; // Unique ID for each draft session
   var currentTemplateUrl = "".obs; // Store URL for re-fetching
   var fieldsData = <Map<String, dynamic>>[].obs;
+  var formGroupsData = <Map<String, dynamic>>[].obs;
   FormModel? formModel;
 
   // Map to hold dynamic form values
@@ -76,11 +77,59 @@ class GenericFormController extends GetxController {
       currentFormTitle.value = formModel?.title ?? "";
       debugPrint("Applied Template: ${currentFormTitle.value}");
 
-      // Map FormFileds to List<Map<String, dynamic>>
-      var fieldList =
-          formModel?.formFileds?.map((f) => f.toJson()).toList() ?? [];
-      fieldsData.assignAll(fieldList);
-      debugPrint("Fields loaded: ${fieldsData.length}");
+      // Build groupList and flatFieldList while preserving order
+      var groupList = <Map<String, dynamic>>[];
+      var flatFieldList = <Map<String, dynamic>>[];
+
+      List<Map<String, dynamic>> currentFieldBuffer = [];
+
+      void flushBuffer() {
+        if (currentFieldBuffer.isNotEmpty) {
+          groupList.add({
+            'group_title': null,
+            'fields': List<Map<String, dynamic>>.from(currentFieldBuffer),
+          });
+          currentFieldBuffer.clear();
+        }
+      }
+
+      if (formModel?.formElements != null) {
+        for (var element in formModel!.formElements!) {
+          if (element is FormFieldGroup) {
+            flushBuffer(); // Before adding a titled group, flush any pending root fields
+
+            var groupMap = element.toJson();
+            groupList.add(groupMap);
+
+            if (element.fields != null) {
+              for (var f in element.fields!) {
+                var fJson = f.toJson();
+                if (!flatFieldList.any(
+                  (e) => e['field_name'] == fJson['field_name'],
+                )) {
+                  flatFieldList.add(fJson);
+                }
+              }
+            }
+          } else if (element is FormFileds) {
+            var fJson = element.toJson();
+            currentFieldBuffer.add(fJson);
+
+            if (!flatFieldList.any(
+              (e) => e['field_name'] == fJson['field_name'],
+            )) {
+              flatFieldList.add(fJson);
+            }
+          }
+        }
+        flushBuffer(); // Final flush
+      }
+
+      fieldsData.assignAll(flatFieldList);
+      formGroupsData.assignAll(groupList);
+      debugPrint(
+        "Fields loaded: ${fieldsData.length}, Groups: ${formGroupsData.length}",
+      );
 
       // If we are starting a NEW form session (not resuming), initialize
       if (currentDraftId.isEmpty) {
@@ -104,8 +153,8 @@ class GenericFormController extends GetxController {
   }
 
   void resumeDraft(Map<String, dynamic> draftData) {
-    currentDraftId.value = draftData['id'];
-    currentFormTitle.value = draftData['title'];
+    currentDraftId.value = (draftData['id'] ?? "").toString();
+    currentFormTitle.value = (draftData['title'] ?? "").toString();
 
     // Load fields from draft
     if (draftData['fields'] != null) {
@@ -114,8 +163,21 @@ class GenericFormController extends GetxController {
       );
     }
 
+    // Load groups if available, otherwise reconstruct a default group
+    if (draftData['groups'] != null) {
+      formGroupsData.assignAll(
+        List<Map<String, dynamic>>.from(draftData['groups']),
+      );
+    } else if (fieldsData.isNotEmpty) {
+      formGroupsData.assignAll([
+        {'group_title': null, 'fields': fieldsData.toList()},
+      ]);
+    }
+
     // Load values
-    formValues.assignAll(Map<String, dynamic>.from(draftData['values']));
+    if (draftData['values'] != null) {
+      formValues.assignAll(Map<String, dynamic>.from(draftData['values']));
+    }
 
     // Restore URL if present
     if (draftData['template_url'] != null) {
@@ -298,13 +360,14 @@ class GenericFormController extends GetxController {
             "${currentFormTitle.value}_${DateTime.now().millisecondsSinceEpoch}";
       }
 
-      // Save title, fields, values, and timestamp
+      // Save title, fields, groups, values, and timestamp
       Map<String, dynamic> saveData = {
         'id': currentDraftId.value,
         'title': currentFormTitle.value,
         'template_url': currentTemplateUrl.value,
         'submission_url': currentTemplateUrl.value,
         'fields': fieldsData.toList(),
+        'groups': formGroupsData.toList(),
         'values': Map<String, dynamic>.from(formValues),
         'updated_at': DateTime.now().toIso8601String(),
       };
