@@ -33,7 +33,7 @@ class AvailableForms extends StatelessWidget {
   Widget _formCard(String title, String url) {
     return InkWell(
       onTap: () {
-        Get.to(() => FormDetails(url: url));
+        Get.to(() => FormDetails(url: url, title: title));
       },
       child: Card(
         child: ListTile(

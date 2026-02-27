@@ -6,13 +6,18 @@ import '../../controller/form/generic_form_controller.dart';
 import '../../main.dart';
 import 'form_details.dart';
 
-class DraftsScreen extends StatelessWidget {
+class DraftsScreen extends StatefulWidget {
   const DraftsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final GenericFormController controller = Get.put(GenericFormController());
+  State<DraftsScreen> createState() => _DraftsScreenState();
+}
 
+class _DraftsScreenState extends State<DraftsScreen> {
+  final GenericFormController controller = Get.put(GenericFormController());
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: colorManager.bgDark,
       appBar: CustomAppBar(title: 'Saved Drafts'),
@@ -69,9 +74,6 @@ class DraftsScreen extends StatelessWidget {
               ).format(updatedAt);
 
               return Card(
-                // color: colorManager.isDark
-                //     ? colorManager.accentColor
-                // : colorManager.secondaryColor.withValues(alpha: .1),
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: Icon(
@@ -113,10 +115,17 @@ class DraftsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  onTap: () {
+                  onTap: () async {
                     final String url = draft['template_url'] ?? "";
                     if (url.isNotEmpty) {
-                      Get.to(() => FormDetails(url: url, draftData: draft));
+                      await Get.to(
+                        () => FormDetails(
+                          url: url,
+                          draftData: draft,
+                          title: draft['title'] ?? 'Untitled Draft',
+                        ),
+                      );
+                      setState(() {}); // Refresh list when coming back
                     } else {
                       Get.snackbar(
                         "Error",
@@ -163,10 +172,8 @@ class DraftsScreen extends StatelessWidget {
             onPressed: () async {
               controller.currentDraftId.value = draft['id'] ?? "";
               await controller.deleteProgress();
-              Get.back();
-              // The FutureBuilder will re-run if we use a stateful approach or trigger a refresh.
-              // For simplicity, we can use a GetBuilder or just Get.off/to to refresh.
-              Get.off(() => const DraftsScreen());
+              Get.back(); // Pop the dialog
+              setState(() {}); // Refresh the list
             },
             child: Text("Delete", style: TextStyle(color: Colors.redAccent)),
           ),

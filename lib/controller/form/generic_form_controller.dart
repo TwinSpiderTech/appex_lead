@@ -1,5 +1,7 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
+// import 'dart:math';
 import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/utils/urls.dart';
@@ -22,6 +24,7 @@ class GenericFormController extends GetxController {
   var currentFormTitle = "".obs;
   var currentDraftId = "".obs; // Unique ID for each draft session
   var currentTemplateUrl = "".obs; // Store URL for re-fetching
+  var currentSubmissionUrl = "".obs; // Store URL for re-fetching
   var fieldsData = <Map<String, dynamic>>[].obs;
   var formGroupsData = <Map<String, dynamic>>[].obs;
   FormModel? formModel;
@@ -38,8 +41,8 @@ class GenericFormController extends GetxController {
     String templateUrl, {
     bool forceRefresh = false,
   }) async {
-    String url = Urls.base + templateUrl;
-    currentTemplateUrl.value = url;
+    String url = Urls.base + validateURL(templateUrl);
+    currentTemplateUrl.value = templateUrl;
     isLoadingTemplates.value = true;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -76,7 +79,7 @@ class GenericFormController extends GetxController {
       formModel = FormModel.fromJson(data);
       currentFormTitle.value = formModel?.title ?? "";
       debugPrint("Applied Template: ${currentFormTitle.value}");
-
+      currentSubmissionUrl.value = formModel?.submissionUrl ?? '';
       // Build groupList and flatFieldList while preserving order
       var groupList = <Map<String, dynamic>>[];
       var flatFieldList = <Map<String, dynamic>>[];
@@ -152,6 +155,14 @@ class GenericFormController extends GetxController {
     _applyTemplate(template);
   }
 
+  void clearSession() {
+    currentDraftId.value = "";
+    formValues.clear();
+    fieldsData.clear();
+    formGroupsData.clear();
+    debugPrint("Form session cleared.");
+  }
+
   void resumeDraft(Map<String, dynamic> draftData) {
     currentDraftId.value = (draftData['id'] ?? "").toString();
     currentFormTitle.value = (draftData['title'] ?? "").toString();
@@ -220,11 +231,10 @@ class GenericFormController extends GetxController {
             isHidden(field['field_visibility'])) {
           if (field['field_type'] == 'datetime') {
             formValues[name] = DateFormat(
-              'yyyy-MM-dd HH:mm:ss',
+              'yyyy-MM-dd - HH:mm:ss a',
             ).format(DateTime.now());
           } else if (field['field_type'] == 'gps') {
-            formValues[name] = "Fetching location...";
-            _fetchLocation(name);
+            formValues[name] = "Capture photo to update GPS";
           }
         } else if (field['field_default'] != null &&
             field['field_default'] != "") {
@@ -234,6 +244,15 @@ class GenericFormController extends GetxController {
           // Initialize with null or empty
           formValues[name] = null;
         }
+      }
+    }
+  }
+
+  void updateAllGpsFields() {
+    for (var field in fieldsData) {
+      String name = (field['field_name'] ?? "").toString();
+      if (name.isNotEmpty && field['field_type'] == 'gps') {
+        _fetchLocation(name);
       }
     }
   }
@@ -272,9 +291,28 @@ class GenericFormController extends GetxController {
           timeLimit: Duration(seconds: 10),
         ),
       );
-      String locString = "${position.latitude}, ${position.longitude}";
-      debugPrint("Location fetched: $locString");
-      updateFieldValue(fieldName, locString);
+      Map<String, dynamic> loc = {
+        "latitude": position.latitude,
+        "longitude": position.longitude,
+        "accuracy": position.accuracy,
+        "altitude": position.altitude,
+        "altitudeAccuracy": position.altitudeAccuracy,
+        "floor": position.floor,
+        "heading": position.heading,
+        "headingAccuracy": position.headingAccuracy,
+        "speed": position.speed,
+        "speedAccuracy": position.speedAccuracy,
+        "timestamp": position.timestamp.toIso8601String(),
+        "isMocked": position.isMocked,
+      };
+      prettyPrint(loc);
+      Map<String, dynamic> latLong = {
+        "latitude": position.latitude,
+        "longitude": position.longitude,
+      };
+      // String locString = "${position.latitude}, ${position.longitude}";
+      debugPrint("Location fetched: $latLong");
+      updateFieldValue(fieldName, latLong);
     } catch (e) {
       updateFieldValue(fieldName, "Error fetching location");
       debugPrint("Location error: $e");
@@ -315,26 +353,47 @@ class GenericFormController extends GetxController {
     return isValid;
   }
 
-  Map<String, dynamic>? submitForm({String? submissionURL}) {
-    print(submissionURL ?? formModel?.submissionUrl ?? 'no submission url');
+  Future<Map<String, dynamic>?> submitForm({String? submissionURL}) async {
+    // print(submissionURL ?? formModel?.submissionUrl ?? 'no submission url');
+    log("Submitting form data....");
     if (true || validateForm()) {
-      // debugPrint("Form Map: ${formValues.toString()}");
+      // prettyPrint(formValues.toJson());
 
-      Get.snackbar(
-        "Success",
-        "Form Validated Successfully!",
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      var _data = await getFormData();
+      print(_data);
+      String url = Urls.base + validateURL(currentSubmissionUrl.value);
+      log(url);
+      Map<String, dynamic> data = {"business_lead": _data};
+
+      var _formData = dio.FormData.fromMap(data);
+
+      try {
+        var res = await api.postData(url, formData: _formData);
+        if (res != null) {
+          prettyPrint(res);
+          if (res['status'] == 200) {
+            deleteProgress();
+          }
+          return Map<String, dynamic>.from(formValues);
+        }
+      } catch (e) {
+        showToast(message: "Failed to submit form: ${e.toString()}");
+        log(e.toString());
+        return null;
+      }
+
+      // Get.snackbar(
+      //   "Success",
+      //   "Form Validated Successfully!",
+      //   backgroundColor: Colors.green,
+      //   colorText: Colors.white,
+      //   snackPosition: SnackPosition.BOTTOM,
+      // );
 
       // When successfully validated/submitted, delete it from local storage
-      deleteProgress();
 
       // Return the key-value pair of the form data
-      return Map<String, dynamic>.from(formValues);
     }
-
     return null;
   }
 
@@ -360,12 +419,28 @@ class GenericFormController extends GetxController {
             "${currentFormTitle.value}_${DateTime.now().millisecondsSinceEpoch}";
       }
 
+      // Dynamically determine the draft title from form fields if possible
+      String draftTitle = currentFormTitle.value;
+      for (var field in fieldsData) {
+        String name = (field['field_name'] ?? "").toString().toLowerCase();
+        String text = (field['field_text'] ?? "").toString().toLowerCase();
+        // Look for business name field
+        if ((name.contains("business") && name.contains("name")) ||
+            (text.contains("business") && text.contains("name"))) {
+          var val = formValues[field['field_name']];
+          if (val != null && val.toString().trim().isNotEmpty) {
+            draftTitle = val.toString().trim();
+            break;
+          }
+        }
+      }
+
       // Save title, fields, groups, values, and timestamp
       Map<String, dynamic> saveData = {
         'id': currentDraftId.value,
-        'title': currentFormTitle.value,
+        'title': draftTitle,
         'template_url': currentTemplateUrl.value,
-        'submission_url': currentTemplateUrl.value,
+        'submission_url': currentSubmissionUrl.value,
         'fields': fieldsData.toList(),
         'groups': formGroupsData.toList(),
         'values': Map<String, dynamic>.from(formValues),
@@ -376,8 +451,6 @@ class GenericFormController extends GetxController {
       debugPrint("Draft saved locally with Key: $_storageKey");
 
       showToast(message: "Draft saved successfully!");
-      Get.back();
-      Get.back();
 
       // Get.snackbar(
       //   "Saved",
@@ -392,17 +465,13 @@ class GenericFormController extends GetxController {
     }
   }
 
-  Future<void> loadProgress() async {
-    // In multi-draft mode, loadProgress is usually called via resumeDraft or on startup for a specific ID.
-    // If currentDraftId is empty, we don't load anything (it's a new form).
-  }
-
   Future<void> deleteProgress() async {
     if (currentDraftId.isEmpty) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_storageKey);
       debugPrint("Progress deleted for Key: $_storageKey");
+      update();
     } catch (e) {
       debugPrint("Error clearing progress: $e");
     }
@@ -444,27 +513,36 @@ class GenericFormController extends GetxController {
     return [];
   }
 
-  Future<dio.FormData?> getFormData() async {
+  Future<Map<String, dynamic>?> getFormData() async {
+    // Future<dio.FormData?> getFormData() async {
     if (!validateForm()) return null;
 
     Map<String, dynamic> map = {};
 
-    for (var field in fieldsData) {
-      String name = field['field_name'] as String;
-      String type = field['field_type'] as String;
-      var value = formValues[name];
+    for (var entry in formValues.entries) {
+      String name = entry.key;
+      var value = entry.value;
 
       // Skip empty string or null values
       if (value == null || (value is String && value.isEmpty)) continue;
 
+      // Find field type from metadata
+      String type = 'string';
+      var fieldDef = fieldsData.firstWhere(
+        (f) => f['field_name'] == name,
+        orElse: () => <String, dynamic>{},
+      );
+      if (fieldDef.isNotEmpty) {
+        type = (fieldDef['field_type'] ?? 'string').toString();
+      }
+
       if (type == 'camera') {
-        // Assume value is a file path
-        File file = File(value as String);
+        // Assume value is a file path for images
+        File file = File(value.toString());
         if (await file.exists()) {
-          // Wrap the path as a dio MultipartFile
           map[name] = await dio.MultipartFile.fromFile(
             file.path,
-            filename: value.split(Platform.pathSeparator).last,
+            filename: file.path.split(Platform.pathSeparator).last,
           );
         } else {
           debugPrint("Failed to find file at path: $value");
@@ -474,6 +552,7 @@ class GenericFormController extends GetxController {
       }
     }
 
-    return dio.FormData.fromMap(map);
+    return map;
+    // return dio.FormData.fromMap(map);
   }
 }

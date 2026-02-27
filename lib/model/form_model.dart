@@ -19,7 +19,7 @@ class FormModel {
   String? methodType;
   List<FormFileds>? formFileds;
   List<FormFieldGroup>? formGroups;
-  List<dynamic>? formElements; // Mixed list to preserve order
+  List<dynamic>? formElements;
 
   FormModel({
     this.uniqueKey,
@@ -142,6 +142,8 @@ class FormFileds {
   bool? fieldEditable;
   String? fieldDefault;
   dynamic fieldOptions; // Can be List<String> or Map<String, dynamic>
+  dynamic fieldConfig;
+  Map<String, dynamic>? requiredCondition;
 
   FormFileds({
     this.fieldVisibility,
@@ -153,9 +155,15 @@ class FormFileds {
     this.fieldEditable,
     this.fieldDefault,
     this.fieldOptions,
+    this.fieldConfig,
+    this.requiredCondition,
   });
 
   FormFileds.fromJson(Map<String, dynamic> json) {
+    fieldConfig = json['field_config'] ?? {};
+    requiredCondition = Map<String, dynamic>.from(
+      json['required_condition'] ?? {},
+    );
     fieldVisibility =
         (json['field_visibility'] ?? json['visibility'] ?? json['visible'])
             ?.toString();
@@ -222,7 +230,7 @@ class FormFileds {
       "Parsed Field: $fieldName, Type: $fieldType, Editable: $fieldEditable (Raw: ${json['field_editable'] ?? json['editable']})",
     );
   }
-
+  // for preview api response
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['field_visibility'] = fieldVisibility;
@@ -235,6 +243,12 @@ class FormFileds {
     data['field_default'] = fieldDefault;
     if (fieldOptions != null) {
       data['field_options'] = fieldOptions;
+    }
+    if (fieldConfig != null) {
+      data['field_config'] = fieldConfig;
+    }
+    if (requiredCondition != null) {
+      data['required_condition'] = requiredCondition;
     }
     return data;
   }

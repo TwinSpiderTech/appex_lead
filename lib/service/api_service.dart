@@ -95,6 +95,37 @@ class ApiServices {
     }
   }
 
+  Future<Map<String, dynamic>?> postData(
+    String url, {
+    Map<String, dynamic>? data,
+    FormData? formData,
+  }) async {
+    // String? subdomain = await AuthService.getSubdomain();
+    String _url = "${Urls.env == 'dev' ? "http://" : "https://"}$url";
+
+    try {
+      String url = _url;
+      log(url);
+      final response = await _dio.post(
+        url,
+        data: data ?? formData ?? {},
+        options: Options(extra: {isTokenRequired: true}),
+      );
+      if (response.data?['status'] == 200) {
+        return response.data;
+      } else {
+        var err = response.data?['messages']?[0];
+        showToast(message: err.toString());
+        log('Error: $err');
+        return null;
+      }
+    } catch (e) {
+      showToast(message: 'Failed to fetch data!');
+      log('Error on fetching data: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> authenticate(
     String email,
     String password,

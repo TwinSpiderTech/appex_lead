@@ -21,7 +21,7 @@ class CustomButton extends StatefulWidget {
     this.boderColor = Colors.transparent,
     required this.onTap,
     this.labelSize = 16,
-    this.borderRadius = 30,
+    this.borderRadius = 12,
     this.padding = const EdgeInsets.all(14),
     this.disabled = false,
   });

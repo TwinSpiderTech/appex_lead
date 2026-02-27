@@ -33,6 +33,10 @@ class CustomCameraController extends GetxController {
   // captureTime holds the exact DateTime when the photo was taken. Rx<DateTime?> makes it nullable observable.
   var captureTime = Rx<DateTime?>(null);
 
+  // Background processing flags
+  bool usedOnForm = false;
+  Function(String)? onProcessed;
+
   // onInit is a lifecycle method provided by GetX that runs as soon as this controller is created.
   @override
   void onInit() {
@@ -78,14 +82,14 @@ class CustomCameraController extends GetxController {
     await [Permission.camera, Permission.location].request();
   }
 
-  Future<void> captureImage() async {
+  Future<String?> captureImage() async {
     // Safety check: Don't do anything if the camera isn't ready.
     if (cameraController == null || !cameraController!.value.isInitialized) {
-      return;
+      return null;
     }
 
     // Safety check: Don't do anything if we are already in the middle of taking a picture.
-    if (isCapturing.value) return;
+    if (isCapturing.value) return null;
 
     // Lock the capture mechanism so we don't trigger it twice.
     isCapturing.value = true;
@@ -97,6 +101,15 @@ class CustomCameraController extends GetxController {
       // 2. Temporarily save the raw, unmodified image's path.
       capturedImagePath.value = image.path;
 
+      if (usedOnForm) {
+        // If used on form, we don't call Get.back() here.
+        // The UI (CameraScreen) will handle the navigation.
+
+        // Start background processing
+        _processInBackground(image.path);
+        return image.path;
+      }
+
       // 3. Show a loading spinner dialog because processing the image and getting GPS can take a few seconds.
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
@@ -105,7 +118,7 @@ class CustomCameraController extends GetxController {
       );
 
       // 4. Fetch the user's current GPS location and street address.
-      await _getLocationDetails();
+      await getLocationDetails();
 
       // 5. Record the exact time the capture process reached this point.
       captureTime.value = DateTime.now();
@@ -120,18 +133,46 @@ class CustomCameraController extends GetxController {
 
       // Close the loading dialog if it is still open.
       if (Get.isDialogOpen ?? false) Get.back();
+      return capturedImagePath.value;
     } catch (e) {
       // If anything fails, make sure we still close the loading dialog so the app doesn't freeze.
       if (Get.isDialogOpen ?? false) Get.back();
       debugPrint("Error capturing image: $e");
+      return null;
     } finally {
       // Unlock the capture mechanism so the user can take another picture later.
+      if (!usedOnForm) {
+        isCapturing.value = false;
+      }
+    }
+  }
+
+  Future<void> _processInBackground(String rawPath) async {
+    try {
+      // 1. Fetch the user's current GPS location and street address.
+      await getLocationDetails();
+
+      // 2. Record the exact time.
+      captureTime.value = DateTime.now();
+
+      // 3. Draw the location and time onto the image itself.
+      final processedPath = await _generateProcessedImage();
+
+      if (processedPath != null) {
+        capturedImagePath.value = processedPath;
+        if (onProcessed != null) {
+          onProcessed!(processedPath);
+        }
+      }
+    } catch (e) {
+      debugPrint("Background processing error: $e");
+    } finally {
       isCapturing.value = false;
     }
   }
 
   // Fetches GPS coordinates and converts them into a human-readable street address.
-  Future<void> _getLocationDetails() async {
+  Future<void> getLocationDetails() async {
     try {
       // Check if the phone's overarching location services (GPS hardware) are turned on.
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

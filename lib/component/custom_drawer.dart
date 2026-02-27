@@ -84,6 +84,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ),
                 ),
 
+                Spacer(),
                 Divider(color: Colors.grey.withValues(alpha: .3)),
 
                 Padding(

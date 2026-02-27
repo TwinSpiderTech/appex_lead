@@ -1,9 +1,9 @@
 class Urls {
-  static const String env = 'prod';
+  static const String env = 'dev';
 
   static const String base = env == 'dev'
       // ? '192.168.100.161'
-      ? '192.168.100.5:8080'
+      ? '192.168.100.173'
       // ? 'appex.lvh.me:3000'
       : "appex.twincloud.app";
 

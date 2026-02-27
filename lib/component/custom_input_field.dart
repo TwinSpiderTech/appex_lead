@@ -13,7 +13,8 @@ class CustomInputField extends StatefulWidget {
   final bool isRequired;
   final bool obsecure;
   final bool autoFocus;
-
+  final int? maxLength;
+  final int? minLength;
   final double fontSize, borderRadius;
   final EdgeInsetsGeometry contentPadding;
   final Function? onFieldSubmitted;
@@ -40,12 +41,19 @@ class CustomInputField extends StatefulWidget {
     this.prefixIcon,
     this.onFieldSubmitted,
     this.onChanged,
-    this.contentPadding = const EdgeInsets.only(left: 24, top: 18, bottom: 18),
-    this.borderRadius = 30,
+    this.contentPadding = const EdgeInsets.only(
+      left: 18,
+      top: 10,
+      bottom: 10,
+      right: 18,
+    ),
+    this.borderRadius = 12,
     this.initialValue,
     this.label,
     this.autoFocus = false,
     this.onTap,
+    this.maxLength,
+    this.minLength,
   });
 
   @override
@@ -75,6 +83,8 @@ class _CustomInputFieldState extends State<CustomInputField> {
         //   widget.onTap;
         // },
         child: TextFormField(
+          maxLength: widget.maxLength,
+
           autofocus: widget.autoFocus,
           onFieldSubmitted: (_) {
             widget.onFieldSubmitted != null ? widget.onFieldSubmitted!() : null;
@@ -99,7 +109,14 @@ class _CustomInputFieldState extends State<CustomInputField> {
                       ? "Field can't be empty!"
                       : null;
                 }
+              : widget.minLength != null
+              ? (value) {
+                  return value!.length < widget.minLength!
+                      ? "Field must be at least ${widget.minLength} characters!"
+                      : null;
+                }
               : null,
+
           controller: widget.controller,
           cursorColor: colorManager.secondaryColor,
           maxLines: widget.maxLine,

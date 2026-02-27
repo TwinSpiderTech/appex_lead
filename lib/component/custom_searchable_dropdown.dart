@@ -7,7 +7,7 @@ class CustomSearchableDropdown extends StatefulWidget {
   final List<String> items;
   final String? selectedValue, label, hint;
   final Function(String)? onChange;
-  final bool enabled;
+  final bool enabled, allowCustomValue;
   final double? borderRadius;
   final EdgeInsetsGeometry? padding;
 
@@ -20,7 +20,8 @@ class CustomSearchableDropdown extends StatefulWidget {
     this.hint,
     this.padding,
     this.enabled = true,
-    this.borderRadius = 30,
+    this.allowCustomValue = true,
+    this.borderRadius = 12,
   });
 
   @override
@@ -68,7 +69,7 @@ class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
           enable: widget.enabled,
           hint: widget.hint ?? "Search ${widget.label}...",
           readOnly: false, // Allow typing to search
-          borderRadius: widget.borderRadius ?? 30,
+          borderRadius: widget.borderRadius ?? 12,
           isRequired: false,
           suffixIcon: Icon(
             _isMenuOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
@@ -108,7 +109,7 @@ class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
             return Dialog(
               backgroundColor: colorManager.primaryColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(widget.borderRadius ?? 12),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -182,11 +183,37 @@ class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
                     if (dialogFilteredItems.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 20),
-                        child: Text(
-                          "No items found",
-                          style: TextStyle(
-                            color: colorManager.bgDark.withOpacity(0.5),
-                          ),
+                        child: Column(
+                          children: [
+                            Text(
+                              "No items found",
+                              style: TextStyle(
+                                color: colorManager.bgDark.withOpacity(0.5),
+                              ),
+                            ),
+                            if (widget.allowCustomValue &&
+                                searchQuery.trim().isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colorManager.bgDark,
+                                  foregroundColor: colorManager.primaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      widget.borderRadius ?? 12,
+                                    ),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  widget.onChange?.call(searchQuery.trim());
+                                  _controller.text = searchQuery.trim();
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(Icons.add),
+                                label: Text("Add \"$searchQuery\""),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                   ],

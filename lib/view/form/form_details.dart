@@ -4,15 +4,22 @@ import 'package:appex_lead/controller/form/generic_form_controller.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/form_field_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class FormDetails extends StatefulWidget {
   final String url;
+  final String title;
   final Map<String, dynamic>? draftData; // Optional data for resumption
 
-  const FormDetails({super.key, required this.url, this.draftData});
+  const FormDetails({
+    super.key,
+    required this.url,
+    this.draftData,
+    required this.title,
+  });
 
   @override
   State<FormDetails> createState() => _FormDetailsState();
@@ -26,6 +33,8 @@ class _FormDetailsState extends State<FormDetails> {
     super.initState();
     if (widget.draftData != null) {
       controller.resumeDraft(widget.draftData!);
+    } else {
+      controller.clearSession();
     }
     controller.fetchTemplate(widget.url);
   }
@@ -39,7 +48,7 @@ class _FormDetailsState extends State<FormDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Form Details',
+        title: widget.title,
         onNavigateBack: () {
           // print(controller.formValues.values.first != null);
           if (false && !_isFormEmpty()) {
@@ -71,12 +80,27 @@ class _FormDetailsState extends State<FormDetails> {
           onRefresh: () =>
               controller.fetchTemplate(widget.url, forceRefresh: true),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 16,
+              //     vertical: 8,
+              //   ),
+              //   child: Text(
+              //     controller.formModel?.description ?? "",
+              //     style: primaryTextStyle.copyWith(
+              //       color: colorManager.textColor,
+              //     ),
+              //     textAlign: TextAlign.left,
+              //   ),
+              // ),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 8,
+                    vertical: 0,
                   ),
                   itemCount: controller.formGroupsData.length,
                   itemBuilder: (context, groupIndex) {
@@ -127,6 +151,12 @@ class _FormDetailsState extends State<FormDetails> {
                             border: Border.all(
                               color: colorManager.primaryColor.withOpacity(.3),
                             ),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(0),
+                              topRight: Radius.circular(18),
+                              bottomLeft: Radius.circular(18),
+                              bottomRight: Radius.circular(18),
+                            ),
                             // color: Colors.grey.shade100,
                           ),
                           child: Column(
@@ -165,7 +195,7 @@ class _FormDetailsState extends State<FormDetails> {
                         backgroundColor: colorManager.accentColor,
                         onTap: () async {
                           await controller.saveProgress();
-                          Get.back();
+                          Get.back(); // Pop FormDetails
                         },
                         label: "Save Draft",
                       ),

@@ -72,10 +72,10 @@ class GenericFormScreen extends StatelessWidget {
                       child: CustomButton(
                         onTap: () {
                           final formData = controller.submitForm();
-                          if (formData != null) {
-                            debugPrint("RECEIVED FORM DATA:");
-                            debugPrint(formData.toString());
-                          }
+                          // if (formData != null) {
+                          //   debugPrint("RECEIVED FORM DATA:");
+                          //   debugPrint(formData.toString());
+                          // }
                         },
                         label: "Submit Form",
                       ),

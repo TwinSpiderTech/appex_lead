@@ -8,12 +8,18 @@ import '../../controller/camera/camera_controller.dart';
 import 'camera_preview_screen.dart';
 
 class CameraScreen extends StatelessWidget {
-  CameraScreen({Key? key}) : super(key: key);
+  final bool usedOnForm;
+  final Function(String)? onProcessed;
+
+  CameraScreen({Key? key, this.usedOnForm = false, this.onProcessed})
+    : super(key: key);
 
   final CustomCameraController controller = Get.put(CustomCameraController());
 
   @override
   Widget build(BuildContext context) {
+    controller.usedOnForm = usedOnForm;
+    controller.onProcessed = onProcessed;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: CustomAppBar(title: "Capture Image"),
@@ -37,13 +43,17 @@ class CameraScreen extends StatelessWidget {
               child: Center(
                 child: GestureDetector(
                   onTap: () async {
-                    await controller.captureImage();
-                    if (controller.capturedImagePath.value.isNotEmpty) {
-                      final result = await Get.to(() => CameraPreviewScreen());
-                      if (result != null) {
-                        Get.back(
-                          result: result,
-                        ); // Go completely back to Generic Form
+                    final path = await controller.captureImage();
+                    if (path != null && path.isNotEmpty) {
+                      if (usedOnForm) {
+                        Get.back(result: path);
+                      } else {
+                        final result = await Get.to(
+                          () => CameraPreviewScreen(),
+                        );
+                        if (result != null) {
+                          Get.back(result: result);
+                        }
                       }
                     }
                   },

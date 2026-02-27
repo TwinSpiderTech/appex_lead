@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -13,11 +14,13 @@ import '../../main.dart'; // for colorManager
 class GenericFormFieldWidget extends StatelessWidget {
   final Map<String, dynamic> fieldData;
   final GenericFormController controller;
+  final double borderRadius;
 
   const GenericFormFieldWidget({
     super.key,
     required this.fieldData,
     required this.controller,
+    this.borderRadius = 12,
   });
 
   @override
@@ -32,9 +35,13 @@ class GenericFormFieldWidget extends StatelessWidget {
 
     switch (fieldType) {
       case 'string':
-        return _buildStringField(isEditable);
+        return _buildStringField(isEditable, TextInputType.text);
+      case 'email':
+        return _buildStringField(isEditable, TextInputType.emailAddress);
+      case 'phone':
+        return _buildStringField(isEditable, TextInputType.phone);
       case 'text':
-        return _buildTextField(isEditable);
+        return _buildTextField(isEditable, TextInputType.text);
       case 'select':
       case 'dropdown':
       case 'select_with_add':
@@ -48,8 +55,7 @@ class GenericFormFieldWidget extends StatelessWidget {
       case 'camera':
         return _buildCameraField(isEditable);
       default:
-        // Assume anything else might be a custom type that defaults to string behavior
-        return _buildStringField(isEditable);
+        return _buildStringField(isEditable, TextInputType.text);
     }
   }
 
@@ -80,12 +86,25 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStringField(bool isEditable) {
+  Widget _buildStringField(bool isEditable, TextInputType keyboardType) {
     String fieldName = fieldData['field_name'] ?? "unknown";
+    Map<String, dynamic> config = Map<String, dynamic>.from(
+      dig(fieldData, ['field_config']) ?? {},
+    );
+    int? maxLength = config['max_length'] != null
+        ? int.tryParse(config['max_length'].toString())
+        : null;
+    int? minLength = config['min_length'] != null
+        ? int.tryParse(config['min_length'].toString())
+        : null;
 
     return _buildWrapper(
       child: CustomInputField(
+        minLength: minLength,
+        maxLength: maxLength,
+        type: keyboardType,
         enable: isEditable,
+        borderRadius: borderRadius,
         initialValue: controller.formValues[fieldName]?.toString(),
         onChanged: (val) => controller.updateFieldValue(fieldName, val),
         hint: "Enter ${fieldData['field_text'] ?? fieldName}",
@@ -93,13 +112,15 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(bool isEditable) {
+  Widget _buildTextField(bool isEditable, TextInputType keyboardType) {
     String fieldName = fieldData['field_name'] ?? "unknown";
 
     return _buildWrapper(
       child: CustomInputField(
         maxLine: 4,
+        type: keyboardType,
         enable: isEditable,
+        borderRadius: borderRadius,
         initialValue: controller.formValues[fieldName]?.toString(),
         onChanged: (val) => controller.updateFieldValue(fieldName, val),
         hint: "Enter ${fieldData['field_text'] ?? fieldName}",
@@ -125,9 +146,11 @@ class GenericFormFieldWidget extends StatelessWidget {
           return CustomSearchableDropdown2(
             items: optionsMap,
             enabled: isEditable,
+            allowCustomValue: true,
+            // fieldType == 'select_with_add' || fieldType == 'select_or_auto',
             selectedValue: currentValue?.toString(),
             label: fieldData['field_text'] ?? fieldName,
-            borderRadius: 30,
+            borderRadius: borderRadius,
             padding: const EdgeInsets.only(
               left: 24,
               right: 24,
@@ -150,12 +173,10 @@ class GenericFormFieldWidget extends StatelessWidget {
         return CustomSearchableDropdown(
           items: options,
           enabled: isEditable, // Pass enablement here
-          selectedValue:
-              currentValue is String && options.contains(currentValue)
-              ? currentValue
-              : null,
+          allowCustomValue: true,
+          selectedValue: currentValue is String ? currentValue : null,
           label: fieldData['field_text'] ?? fieldName,
-          borderRadius: 30,
+          borderRadius: borderRadius,
           padding: const EdgeInsets.only(
             left: 24,
             right: 24,
@@ -173,6 +194,14 @@ class GenericFormFieldWidget extends StatelessWidget {
   Widget _buildDateTimeField(BuildContext context, bool isEditable) {
     String fieldName = fieldData['field_name'] ?? "unknown";
     bool isDateOnly = fieldData['field_type'] == 'date';
+    Map<String, dynamic> config = Map<String, dynamic>.from(
+      dig(fieldData, ['field_config']) ?? {},
+    );
+    DateTime minDate =
+        DateTime.tryParse(config['min_date'] ?? '') ?? DateTime.now();
+    DateTime maxDate =
+        DateTime.tryParse(config['max_date'] ?? '') ??
+        DateTime.now().add(const Duration(days: 365));
 
     return _buildWrapper(
       child: InkWell(
@@ -181,8 +210,8 @@ class GenericFormFieldWidget extends StatelessWidget {
                 DateTime? pickedDate = await showDatePicker(
                   context: context,
                   initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
+                  firstDate: minDate,
+                  lastDate: maxDate,
                 );
 
                 if (pickedDate != null) {
@@ -217,14 +246,14 @@ class GenericFormFieldWidget extends StatelessWidget {
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 18,
-            bottom: 18,
+            left: 18,
+            right: 18,
+            top: 15,
+            bottom: 15,
           ),
           decoration: BoxDecoration(
             border: Border.all(color: colorManager.secondaryColor),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(borderRadius),
             color: isEditable
                 ? Colors.transparent
                 : colorManager.primaryColor.withAlpha(25),
@@ -261,7 +290,7 @@ class GenericFormFieldWidget extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           border: Border.all(color: colorManager.secondaryColor),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
         child: Row(
           children: [
@@ -311,9 +340,19 @@ class GenericFormFieldWidget extends StatelessWidget {
                 width: double.infinity,
                 child: CustomButton(
                   onTap: () async {
-                    final result = await Get.to(() => CameraScreen());
+                    final result = await Get.to(
+                      () => CameraScreen(
+                        usedOnForm: true,
+                        onProcessed: (path) {
+                          debugPrint("Background processing done: $path");
+                          controller.updateFieldValue(fieldName, path);
+                          controller.updateAllGpsFields();
+                        },
+                      ),
+                    );
                     if (result != null && result is String) {
                       controller.updateFieldValue(fieldName, result);
+                      controller.updateAllGpsFields();
                     }
                   },
                   label: imagePath == null ? "Capture Photo" : "Retake Photo",

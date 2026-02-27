@@ -233,3 +233,60 @@ getDataFromPrefsDecoded({key}) async {
   var decodedData = jsonString != null ? json.decode(jsonString) : {};
   return decodedData;
 }
+
+validateURL(String url) {
+  if (url.startsWith("/")) {
+    return url;
+  } else {
+    return "/$url";
+  }
+}
+
+// dynamic form required condition
+
+bool isFieldRequired(
+  Map<String, dynamic> formFieldData,
+  Map<String, dynamic> fieldValidations,
+) {
+  final fiedlData = {"person_designation": "director", 'name': 'john'};
+
+  final required_condition = {
+    "_and": [
+      {
+        "person_designation": {"not_equal": 'none_avialable'},
+      },
+      {
+        "person_name": {"equal": 'ali'},
+      },
+      {
+        "_or": [
+          {
+            "area_id": {"equal": 3},
+          },
+          {
+            "_and": [
+              {
+                "province": {"equal": 'Punjab'},
+              },
+              {
+                "_or": [
+                  {
+                    "status": {"equal": 'verified'},
+                  },
+                  {
+                    "priority": {
+                      "in": ['High', 'Urgent'],
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+
+  return false;
+}
