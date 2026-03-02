@@ -70,7 +70,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
                 draft['updated_at'] ?? DateTime.now().toIso8601String(),
               );
               final String formattedDate = DateFormat(
-                'MMM d, yyyy - HH:mm',
+                'MMM d, yyyy - hh:mm a',
               ).format(updatedAt);
 
               return Card(

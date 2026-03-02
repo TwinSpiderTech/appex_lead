@@ -9,15 +9,15 @@ class Validations {
     return null;
   }
 
-  static String? validatePhone(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Phone is required';
-    }
-    if (value.length < 10) {
-      return 'Phone number must be at least 10 digits';
-    }
-    return null;
-  }
+  // static String? validatePhone(String? value) {
+  //   if (value == null || value.isEmpty) {
+  //     return 'Phone is required';
+  //   }
+  //   if (value.length < 10) {
+  //     return 'Phone number must be at least 10 digits';
+  //   }
+  //   return null;
+  // }
 
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -41,5 +41,11 @@ class Validations {
       return 'This field is required';
     }
     return null;
+  }
+
+  static bool isValidPattern(String input, String patternFromApi) {
+    if (patternFromApi.isEmpty) return true;
+    final RegExp regex = RegExp(patternFromApi);
+    return regex.hasMatch(input);
   }
 }

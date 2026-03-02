@@ -30,28 +30,41 @@ class AvailableForms extends StatelessWidget {
     );
   }
 
-  Widget _formCard(String title, String url) {
+  Widget _formCard(String title, String url, {String? description}) {
     return InkWell(
       onTap: () {
         Get.to(() => FormDetails(url: url, title: title));
       },
       child: Card(
+        color: colorManager.primaryColor,
         child: ListTile(
           leading: Icon(
             Icons.description_outlined,
-            color: colorManager.primaryColor,
+            color: colorManager.whiteColor,
           ),
           title: Text(
             title,
             style: primaryTextStyle.copyWith(
               fontSize: 16,
-              color: colorManager.textColor,
+              color: colorManager.whiteColor,
             ),
           ),
+
+          subtitle: (description != null)
+              ? Text(
+                  description,
+                  style: primaryTextStyle.copyWith(
+                    fontSize: 12,
+                    color: colorManager.whiteColor,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : null,
           trailing: Icon(
             Icons.arrow_forward_ios,
             size: 16,
-            color: colorManager.textColor,
+            color: colorManager.whiteColor,
           ),
         ),
       ),

@@ -86,6 +86,8 @@ class ColorManager extends GetxController {
   }
 
   bool isDark = false;
+
+  get dynamicColor => null;
   void toggleTheme() {
     isDark = !isDark;
 

@@ -2,9 +2,12 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
 // import 'dart:math';
+import 'package:appex_lead/controller/camera/camera_controller.dart';
 import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/utils/urls.dart';
+import 'package:camera/camera.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -188,6 +191,37 @@ class GenericFormController extends GetxController {
     // Load values
     if (draftData['values'] != null) {
       formValues.assignAll(Map<String, dynamic>.from(draftData['values']));
+    } else if (draftData['fields_record'] != null) {
+      // Handle the case where record is nested in fields_record (API response)
+      Map<String, dynamic> record = Map<String, dynamic>.from(
+        draftData['fields_record'],
+      );
+
+      // Parse stringified GPS if present
+      record.forEach((key, value) {
+        if (value is String &&
+            value.contains('latitutde') &&
+            value.contains('{')) {
+          record[key] = _parseGpsString(value);
+        }
+      });
+
+      formValues.assignAll(record);
+    } else if (draftData['FOLLOWUP'] != null &&
+        draftData['FOLLOWUP']['fields_record'] != null) {
+      // Handle FOLLOWUP data structure
+      Map<String, dynamic> record = Map<String, dynamic>.from(
+        draftData['FOLLOWUP']['fields_record'],
+      );
+
+      record.forEach((key, value) {
+        if (value is String &&
+            value.contains('latitutde') &&
+            value.contains('{')) {
+          record[key] = _parseGpsString(value);
+        }
+      });
+      formValues.assignAll(record);
     }
 
     // Restore URL if present
@@ -201,9 +235,41 @@ class GenericFormController extends GetxController {
     debugPrint("Resumed draft: ${currentDraftId.value}");
   }
 
+  // Helper to parse messy stringified GPS data from API
+  Map<String, dynamic>? _parseGpsString(String gpsStr) {
+    try {
+      // Basic extraction of lat/long/location from string like "{latitutde: 1212.23, longitude: 121.32, location: \"...\"}"
+      double? lat;
+      double? lng;
+      String? loc;
+
+      final latMatch = RegExp(r'latit?utde:\s*([0-9.-]+)').firstMatch(gpsStr);
+      final lngMatch = RegExp(r'longitude:\s*([0-9.-]+)').firstMatch(gpsStr);
+      final locMatch = RegExp(
+        r'location:\s*\\?"([^"]+)\\?"',
+      ).firstMatch(gpsStr);
+
+      if (latMatch != null) lat = double.tryParse(latMatch.group(1)!);
+      if (lngMatch != null) lng = double.tryParse(lngMatch.group(1)!);
+      if (locMatch != null) loc = locMatch.group(1);
+
+      if (lat != null && lng != null) {
+        return {
+          'latitude': lat,
+          'longitude': lng,
+          'address': loc,
+          'position': loc,
+        };
+      }
+    } catch (e) {
+      debugPrint("Error parsing GPS string: $e");
+    }
+    return null;
+  }
+
   // Removed automatic initialize from onInit as it happens on selectTemplate
 
-  bool _isTrue(dynamic value) {
+  bool isTrue(dynamic value) {
     if (value == null) return false;
     if (value is bool) return value;
     if (value is int) return value == 1;
@@ -219,7 +285,14 @@ class GenericFormController extends GetxController {
     return false;
   }
 
+  bool hasCameraField() {
+    return fieldsData.any((f) => f['field_type'] == 'camera');
+  }
+
   void _initializeForm() {
+    bool cameraPresent = hasCameraField();
+    bool gpsUpdated = false;
+
     for (var field in fieldsData) {
       String name = (field['field_name'] ?? "").toString();
       if (name.isEmpty) continue;
@@ -227,14 +300,19 @@ class GenericFormController extends GetxController {
       // Only initialize if the value is currently null
       if (formValues[name] == null) {
         // Auto generate values if needed
-        if (_isTrue(field['field_auto_generated']) ||
+        if (isTrue(field['field_auto_generated']) ||
             isHidden(field['field_visibility'])) {
           if (field['field_type'] == 'datetime') {
             formValues[name] = DateFormat(
-              'yyyy-MM-dd - HH:mm:ss a',
+              'yyyy-MM-dd - hh:mm:ss a',
             ).format(DateTime.now());
           } else if (field['field_type'] == 'gps') {
-            formValues[name] = "Capture photo to update GPS";
+            if (cameraPresent) {
+              formValues[name] = "Capture photo to update GPS";
+            } else {
+              formValues[name] = "Fetching GPS automatically...";
+              gpsUpdated = true;
+            }
           }
         } else if (field['field_default'] != null &&
             field['field_default'] != "") {
@@ -244,7 +322,17 @@ class GenericFormController extends GetxController {
           // Initialize with null or empty
           formValues[name] = null;
         }
+      } else if (field['field_type'] == 'gps' && !cameraPresent) {
+        // If resuming but no camera, and it was "Capture photo...", refresh it
+        if (formValues[name] == "Capture photo to update GPS") {
+          formValues[name] = "Fetching GPS automatically...";
+          gpsUpdated = true;
+        }
       }
+    }
+
+    if (gpsUpdated) {
+      updateAllGpsFields();
     }
   }
 
@@ -291,6 +379,37 @@ class GenericFormController extends GetxController {
           timeLimit: Duration(seconds: 10),
         ),
       );
+
+      String address = "Unknown address";
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          Placemark place = placemarks[0];
+          List<String> addressParts = [];
+          if (place.street != null && place.street!.isNotEmpty) {
+            addressParts.add(place.street!);
+          }
+          if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+            addressParts.add(place.subLocality!);
+          }
+          if (place.locality != null && place.locality!.isNotEmpty) {
+            addressParts.add(place.locality!);
+          }
+          if (place.administrativeArea != null &&
+              place.administrativeArea!.isNotEmpty) {
+            addressParts.add(place.administrativeArea!);
+          }
+          address = addressParts.join(", ");
+        }
+      } catch (e) {
+        debugPrint("Geocoding error: $e");
+        address = "Error fetching address";
+      }
+
       Map<String, dynamic> loc = {
         "latitude": position.latitude,
         "longitude": position.longitude,
@@ -304,11 +423,13 @@ class GenericFormController extends GetxController {
         "speedAccuracy": position.speedAccuracy,
         "timestamp": position.timestamp.toIso8601String(),
         "isMocked": position.isMocked,
+        "address": address,
       };
       prettyPrint(loc);
       Map<String, dynamic> latLong = {
         "latitude": position.latitude,
         "longitude": position.longitude,
+        "position": address,
       };
       // String locString = "${position.latitude}, ${position.longitude}";
       debugPrint("Location fetched: $latLong");
@@ -330,23 +451,32 @@ class GenericFormController extends GetxController {
     formValues[fieldName] = value;
   }
 
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
   bool validateForm() {
     bool isValid = true;
+    log("Validating form...");
+
+    // First, check basic Form widget validation (regex, length, etc.)
+    if (formKey.currentState != null && !formKey.currentState!.validate()) {
+      isValid = false;
+      showToast(message: "Please fix the errors in the form.");
+      // return false; // Stop here to let user fix visible errors
+    }
+
+    // Second, check required fields specifically in formValues
     for (var field in fieldsData) {
-      if (field['field_required'] == true) {
+      if (isHidden(field['field_visibility'])) continue;
+
+      if (isTrue(field['field_required'])) {
         String name = field['field_name'] as String;
         var value = formValues[name];
 
         if (value == null || (value is String && value.trim().isEmpty)) {
           isValid = false;
-          Get.snackbar(
-            "Validation Error",
-            "${field['field_text']} is required.",
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-          );
-          break; // Stop at first error to prevent notification spam
+          String label = field['field_text'] ?? name;
+          showToast(message: "$label is required.");
+          return false; // Show only the first missing field
         }
       }
     }
@@ -356,7 +486,7 @@ class GenericFormController extends GetxController {
   Future<Map<String, dynamic>?> submitForm({String? submissionURL}) async {
     // print(submissionURL ?? formModel?.submissionUrl ?? 'no submission url');
     log("Submitting form data....");
-    if (true || validateForm()) {
+    if (validateForm()) {
       // prettyPrint(formValues.toJson());
 
       var _data = await getFormData();
@@ -374,6 +504,7 @@ class GenericFormController extends GetxController {
           if (res['status'] == 200) {
             deleteProgress();
           }
+          Get.back();
           return Map<String, dynamic>.from(formValues);
         }
       } catch (e) {
@@ -548,7 +679,7 @@ class GenericFormController extends GetxController {
           debugPrint("Failed to find file at path: $value");
         }
       } else {
-        map[name] = value.toString();
+        map[name] = value;
       }
     }
 

@@ -4,6 +4,7 @@ import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/forms.dart';
+import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -83,8 +84,22 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         : null,
                   ),
                 ),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      DrawerListTile(
+                        title: "Leads",
+                        icon: Icons.list_alt_outlined,
+                        press: () {
+                          Get.back();
+                          Get.to(() => LeadScreen());
+                        },
+                      ),
+                    ],
+                  ),
+                ),
 
-                Spacer(),
+                // Spacer(),
                 Divider(color: Colors.grey.withValues(alpha: .3)),
 
                 Padding(
@@ -135,29 +150,31 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 //     },
                 //   ),
                 // ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 0.0),
-                  child: DrawerListTile(
-                    title: "Form",
-                    icon: Icons.list_alt_outlined,
+                if (token.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 0.0),
+                    child: DrawerListTile(
+                      title: "Form",
+                      icon: Icons.list_alt_outlined,
 
-                    press: () {
-                      Get.back();
-                      Get.toNamed(AppPages.formsList);
-                    },
+                      press: () {
+                        Get.back();
+                        Get.toNamed(AppPages.formsList);
+                      },
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 0.0),
-                  child: DrawerListTile(
-                    title: "Drafts",
-                    icon: Icons.drafts_outlined,
-                    press: () {
-                      Get.back();
-                      Get.toNamed(AppPages.drafts);
-                    },
+                if (token.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 0.0),
+                    child: DrawerListTile(
+                      title: "Drafts",
+                      icon: Icons.drafts_outlined,
+                      press: () {
+                        Get.back();
+                        Get.toNamed(AppPages.drafts);
+                      },
+                    ),
                   ),
-                ),
 
                 Card(
                   elevation: 0,

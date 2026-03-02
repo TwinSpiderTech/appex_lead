@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:appex_lead/utils/helpers.dart';
+import 'package:appex_lead/utils/validations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'image_preview_screen.dart';
 import '../../controller/form/generic_form_controller.dart';
 import '../../view/camera/camera_screen.dart';
 import '../../component/custom_input_field.dart';
@@ -15,18 +17,20 @@ class GenericFormFieldWidget extends StatelessWidget {
   final Map<String, dynamic> fieldData;
   final GenericFormController controller;
   final double borderRadius;
+  final bool isReadOnly;
 
   const GenericFormFieldWidget({
     super.key,
     required this.fieldData,
     required this.controller,
     this.borderRadius = 12,
+    this.isReadOnly = false,
   });
 
   @override
   Widget build(BuildContext context) {
     String fieldType = fieldData['field_type'] ?? "string";
-    bool isEditable = fieldData['field_editable'] ?? true;
+    bool isEditable = (fieldData['field_editable'] ?? true) && !isReadOnly;
     String fieldName = fieldData['field_name'] ?? "unknown";
 
     // debugPrint(
@@ -88,6 +92,7 @@ class GenericFormFieldWidget extends StatelessWidget {
 
   Widget _buildStringField(bool isEditable, TextInputType keyboardType) {
     String fieldName = fieldData['field_name'] ?? "unknown";
+    bool isRequired = controller.isTrue(fieldData['field_required']);
     Map<String, dynamic> config = Map<String, dynamic>.from(
       dig(fieldData, ['field_config']) ?? {},
     );
@@ -97,14 +102,24 @@ class GenericFormFieldWidget extends StatelessWidget {
     int? minLength = config['min_length'] != null
         ? int.tryParse(config['min_length'].toString())
         : null;
+    String regex = config['regax'] ?? '';
 
     return _buildWrapper(
       child: CustomInputField(
+        isRequired: isRequired,
         minLength: minLength,
         maxLength: maxLength,
         type: keyboardType,
         enable: isEditable,
         borderRadius: borderRadius,
+        validator: (value) {
+          if (value != null && value.isNotEmpty && regex.isNotEmpty) {
+            return Validations.isValidPattern(value, regex)
+                ? null
+                : "Invalid ${fieldData['field_text'] ?? toParameterize(fieldName)}";
+          }
+          return null;
+        },
         initialValue: controller.formValues[fieldName]?.toString(),
         onChanged: (val) => controller.updateFieldValue(fieldName, val),
         hint: "Enter ${fieldData['field_text'] ?? fieldName}",
@@ -115,12 +130,35 @@ class GenericFormFieldWidget extends StatelessWidget {
   Widget _buildTextField(bool isEditable, TextInputType keyboardType) {
     String fieldName = fieldData['field_name'] ?? "unknown";
 
+    bool isRequired = controller.isTrue(fieldData['field_required']);
+    Map<String, dynamic> config = Map<String, dynamic>.from(
+      dig(fieldData, ['field_config']) ?? {},
+    );
+    int? maxLength = config['max_length'] != null
+        ? int.tryParse(config['max_length'].toString())
+        : null;
+    int? minLength = config['min_length'] != null
+        ? int.tryParse(config['min_length'].toString())
+        : null;
+    String regex = config['regax'] ?? '';
+
     return _buildWrapper(
       child: CustomInputField(
+        isRequired: isRequired,
+        minLength: minLength,
+        maxLength: maxLength,
         maxLine: 4,
         type: keyboardType,
         enable: isEditable,
         borderRadius: borderRadius,
+        validator: (value) {
+          if (value != null && value.isNotEmpty && regex.isNotEmpty) {
+            return Validations.isValidPattern(value, regex)
+                ? null
+                : "Invalid ${fieldData['field_text'] ?? toParameterize(fieldName)}";
+          }
+          return null;
+        },
         initialValue: controller.formValues[fieldName]?.toString(),
         onChanged: (val) => controller.updateFieldValue(fieldName, val),
         hint: "Enter ${fieldData['field_text'] ?? fieldName}",
@@ -197,11 +235,12 @@ class GenericFormFieldWidget extends StatelessWidget {
     Map<String, dynamic> config = Map<String, dynamic>.from(
       dig(fieldData, ['field_config']) ?? {},
     );
-    DateTime minDate =
-        DateTime.tryParse(config['min_date'] ?? '') ?? DateTime.now();
-    DateTime maxDate =
-        DateTime.tryParse(config['max_date'] ?? '') ??
-        DateTime.now().add(const Duration(days: 365));
+    DateTime minDate = DateTime.now().add(
+      Duration(days: config['min_date'] ?? -1),
+    );
+    DateTime maxDate = DateTime.now().add(
+      Duration(days: config['max_date'] ?? 365),
+    );
 
     return _buildWrapper(
       child: InkWell(
@@ -236,7 +275,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                       );
                       controller.updateFieldValue(
                         fieldName,
-                        DateFormat('yyyy-MM-dd HH:mm:ss').format(dt),
+                        DateFormat('yyyy-MM-dd hh:mm:ss a').format(dt),
                       );
                     }
                   }
@@ -299,8 +338,30 @@ class GenericFormFieldWidget extends StatelessWidget {
             Expanded(
               child: Obx(() {
                 var val = controller.formValues[fieldName];
+                String displayValue = "Getting location...";
+
+                if (val is Map) {
+                  double? lat = val['latitude'];
+                  double? lng = val['longitude'];
+                  String? address = val['position'] ?? val['address'];
+                  if (lat != null && lng != null) {
+                    displayValue = address ?? "";
+                    //     "Lat: ${lat.toStringAsFixed(4)}, Long: ${lng.toStringAsFixed(4)}";
+                    // if (address != null && address.isNotEmpty) {
+                    //   displayValue += "\n$address";
+                    // }
+                  }
+                } else if (val != null) {
+                  displayValue = val.toString();
+                } else {
+                  // Fallback for null
+                  displayValue = controller.hasCameraField()
+                      ? "Capture photo to update GPS"
+                      : "Fetching GPS automatically...";
+                }
+
                 return Text(
-                  val?.toString() ?? "Getting location...",
+                  displayValue,
                   style: TextStyle(color: colorManager.textColor),
                 );
               }),
@@ -326,12 +387,35 @@ class GenericFormFieldWidget extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(imagePath),
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.bottomCenter,
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.to(
+                        () => ImagePreviewScreen(
+                          imagePath: imagePath,
+                          title: fieldData['field_text'] ?? "Image Preview",
+                        ),
+                      );
+                    },
+                    child: Hero(
+                      tag: imagePath,
+                      child: imagePath.startsWith('http')
+                          ? Image.network(
+                              imagePath,
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              alignment: Alignment.bottomCenter,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, size: 50),
+                            )
+                          : Image.file(
+                              File(imagePath),
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              alignment: Alignment.bottomCenter,
+                            ),
+                    ),
                   ),
                 ),
               ),

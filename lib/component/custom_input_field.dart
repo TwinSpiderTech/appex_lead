@@ -18,6 +18,7 @@ class CustomInputField extends StatefulWidget {
   final double fontSize, borderRadius;
   final EdgeInsetsGeometry contentPadding;
   final Function? onFieldSubmitted;
+  final String? Function(String?)? validator;
 
   final Function(String)? onChanged;
   final VoidCallback? onTap;
@@ -54,6 +55,7 @@ class CustomInputField extends StatefulWidget {
     this.onTap,
     this.maxLength,
     this.minLength,
+    this.validator,
   });
 
   @override
@@ -103,23 +105,26 @@ class _CustomInputFieldState extends State<CustomInputField> {
             widget.onChanged != null ? widget.onChanged!(value) : null;
           },
           onTap: widget.onTap,
-          validator: widget.isRequired
-              ? (value) {
-                  return value == null || value.isEmpty
-                      ? "Field can't be empty!"
-                      : null;
-                }
-              : widget.minLength != null
-              ? (value) {
-                  return value!.length < widget.minLength!
-                      ? "Field must be at least ${widget.minLength} characters!"
-                      : null;
-                }
-              : null,
+          validator: (value) {
+            if (widget.isRequired && (value == null || value.isEmpty)) {
+              return "Field can't be empty!";
+            }
+            if (value != null &&
+                value.isNotEmpty &&
+                widget.minLength != null &&
+                value.length < widget.minLength!) {
+              return "Field must be at least ${widget.minLength} characters!";
+            }
+            if (widget.validator != null) {
+              return widget.validator!(value);
+            }
+            return null;
+          },
 
           controller: widget.controller,
           cursorColor: colorManager.secondaryColor,
           maxLines: widget.maxLine,
+
           decoration: InputDecoration(
             prefixIcon: widget.prefixIcon,
             labelText: widget.label,

@@ -172,13 +172,13 @@ class CustomCameraController extends GetxController {
   }
 
   // Fetches GPS coordinates and converts them into a human-readable street address.
-  Future<void> getLocationDetails() async {
+  Future<String> getLocationDetails() async {
     try {
       // Check if the phone's overarching location services (GPS hardware) are turned on.
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         readableAddress.value = "Location services disabled";
-        return;
+        return "";
       }
 
       // Check our specific app's permission status.
@@ -189,14 +189,14 @@ class CustomCameraController extends GetxController {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           readableAddress.value = "Location permission denied";
-          return;
+          return "";
         }
       }
 
       // Some users permanently deny permission, so we can't even ask anymore.
       if (permission == LocationPermission.deniedForever) {
         readableAddress.value = "Location permissions permanently denied";
-        return;
+        return "";
       }
 
       // Fetch the highly-accurate current GPS coordinates (lat, lng).
@@ -248,6 +248,7 @@ class CustomCameraController extends GetxController {
       debugPrint("Error getting location: $e");
       readableAddress.value = "Error getting location";
     }
+    return readableAddress.value;
   }
 
   // This method uses Flutter's native Canvas API to "paint" the text onto the raw image memory.
@@ -359,7 +360,7 @@ class CustomCameraController extends GetxController {
       // 9. Draw the Latitude and Longitude Text.
       textPainter.text = TextSpan(
         text:
-            "Lat: ${latitude.value.toStringAsFixed(6)}, Lng: ${longitude.value.toStringAsFixed(6)}",
+            "Lat: ${latitude.value.toStringAsFixed(6)}, Long: ${longitude.value.toStringAsFixed(6)}",
         style: TextStyle(
           color: Colors.white,
           fontSize: fontSize * 0.8,
@@ -373,7 +374,7 @@ class CustomCameraController extends GetxController {
 
       // 10. Draw the Timestamp Text.
       final timeStr = captureTime.value != null
-          ? DateFormat('dd-MM-yyyy HH:mm:ss').format(captureTime.value!)
+          ? DateFormat('dd-MM-yyyy hh:mm:ss a').format(captureTime.value!)
           : "";
       textPainter.text = TextSpan(
         text: timeStr,

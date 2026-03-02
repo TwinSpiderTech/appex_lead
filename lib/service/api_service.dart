@@ -95,6 +95,37 @@ class ApiServices {
     }
   }
 
+  Future<Map<String, dynamic>?> getLeads(
+    int pageNo, {
+    String? status,
+    String? search,
+  }) async {
+    try {
+      String url =
+          "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.leadsURL}?page=$pageNo";
+      if (status != null && status.isNotEmpty) {
+        url += "&lead_status=$status";
+      }
+      if (search != null && search.isNotEmpty) {
+        url += "&search=$search";
+      }
+      print(url);
+      final response = await _dio.get(url);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        await logoutUser(toastMessage: "Session Expired!");
+
+        return null;
+      }
+      log('Dio error: ${e.message}');
+      return null;
+    } catch (e) {
+      log('Error occurred ---: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> postData(
     String url, {
     Map<String, dynamic>? data,

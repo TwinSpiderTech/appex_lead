@@ -1,5 +1,5 @@
 class Urls {
-  static const String env = 'dev';
+  static const String env = 'prod';
 
   static const String base = env == 'dev'
       // ? '192.168.100.161'
@@ -17,6 +17,7 @@ class Urls {
   static const String authenticationURL = '$baseUrl/authenticate?';
   static const String loadDashboardUrl =
       '$baseUrl/app_dashboard/load_dashboard';
+  static const String leadsURL = '$baseUrl/business/leads';
   static const String signoutUrl = '$baseUrl/authentication/logout';
   static const String appUpdate =
       "https://twincloud.app/api/v1/app_config/get_app_version?app_name=";
