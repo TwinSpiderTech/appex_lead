@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:appex_lead/main.dart';
@@ -20,11 +21,10 @@ class LeadController extends GetxController
       ongoingSearchCont = TextEditingController(),
       closedSearchCont = TextEditingController();
   Map<String, dynamic>? selectedCategory;
-
+  RxString leadEndPoint = "".obs;
   late TabController tabController;
-
   // Tab-based states
-  List<LeadModel>? pendingLeads, ongoingLeads, closedLeads;
+  List<Map<String, dynamic>>? pendingLeads, ongoingLeads, closedLeads;
   int pendingPage = 1, ongoingPage = 1, closedPage = 1;
   bool pendingHasNext = false, ongoingHasNext = false, closedHasNext = false;
   RxBool pendingLoading = false.obs,
@@ -33,6 +33,7 @@ class LeadController extends GetxController
 
   bool isLoaded = false;
   String complaintNO = '';
+  Timer? _searchTimer;
 
   @override
   void onInit() async {
@@ -66,20 +67,21 @@ class LeadController extends GetxController
     loading.value = value;
   }
 
-  loadLeadDetails(LeadModel lead) {
+  Future<LeadModel?> loadLeadDetails(String url) async {
     try {
-      // isLoaded = true;
-      // selectedCategory = complaintsCategories.firstWhereOrNull(
-      //   (c) => c['name'] == history.complaintCategory,
-      // );
-      // subjectCont.text = history.subject;
-      // phoneCont.text = history.mobileNo;
-      // complaintCont.text = history.description;
-      // complaintNO = history.complaintNo;
-      // update();
-      // Get.to(() => AddNewCompalint(cont: this));
+      isLoaded = true;
+      var res = await api.getLeadDetails(url);
+      log("Lead Details Response: $res");
+      if (res != null &&
+          (res['status'] == 200 || res['response_status'] == 'success')) {
+        var data = res['data'] ?? {};
+        return LeadModel.fromJson(data);
+      }
+      update();
+      return null;
     } catch (e) {
-      print(e);
+      log("Error in loadLeadDetails: $e");
+      return null;
     }
   }
 
@@ -130,19 +132,27 @@ class LeadController extends GetxController
 
     update();
 
+    log(
+      "Fetching Leads for status: $status, page: $currentPage, search: $searchQuery",
+    );
     final response = await api.getLeads(
       currentPage,
       status: status,
       search: searchQuery,
     );
+    log("Leads Response for $status: $response");
 
     if (response != null && response['response_status'] == 'success') {
       var data = response['data'] ?? [];
+      leadEndPoint.value = dig(data, ['detail_endpoint']) ?? '';
       bool hasNext = dig(response, ['meta', 'next_page']) ?? true;
-      List<LeadModel> fetchedHistory = dig(data, [
-        'data',
-        'table_record',
-      ]).map((e) => LeadModel.fromJson(e)).toList();
+
+      prettyPrint(data);
+
+      List<Map<String, dynamic>> fetchedHistory =
+          List<Map<String, dynamic>>.from(
+            dig(data, ['table_record'])?.map((e) => e).toList(),
+          );
 
       if (status == 'pending') {
         pendingLeads = fetchedHistory;
@@ -215,8 +225,11 @@ class LeadController extends GetxController
   List<Map<String, dynamic>> complaintsCategories = [];
 
   void onSearchChanged(String value, String status) {
-    if (value.length >= 3 || value.isEmpty) {
-      getLeads(reset: true, status: status);
-    }
+    _searchTimer?.cancel();
+    _searchTimer = Timer(const Duration(milliseconds: 500), () {
+      if (value.length >= 3 || value.isEmpty) {
+        getLeads(reset: true, status: status);
+      }
+    });
   }
 }

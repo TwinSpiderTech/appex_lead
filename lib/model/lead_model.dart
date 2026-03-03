@@ -37,26 +37,27 @@ class FieldsRecord {
   String? gpsPoints;
   String? personName;
   String? personDesignation;
-  Null? phoneNo;
-  Null? emailAddress;
-  Null? address;
+  String? phoneNo;
+  String? emailAddress;
+  String? address;
   String? expectedClosingTimeline;
   String? leadStatus;
 
-  FieldsRecord(
-      {this.visitProofImage,
-      this.businessName,
-      this.mobileNo,
-      this.areaId,
-      this.setupStatus,
-      this.gpsPoints,
-      this.personName,
-      this.personDesignation,
-      this.phoneNo,
-      this.emailAddress,
-      this.address,
-      this.expectedClosingTimeline,
-      this.leadStatus});
+  FieldsRecord({
+    this.visitProofImage,
+    this.businessName,
+    this.mobileNo,
+    this.areaId,
+    this.setupStatus,
+    this.gpsPoints,
+    this.personName,
+    this.personDesignation,
+    this.phoneNo,
+    this.emailAddress,
+    this.address,
+    this.expectedClosingTimeline,
+    this.leadStatus,
+  });
 
   FieldsRecord.fromJson(Map<String, dynamic> json) {
     visitProofImage = json['visit_proof_image'];

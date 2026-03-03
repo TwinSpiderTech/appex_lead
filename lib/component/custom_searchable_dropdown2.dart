@@ -77,9 +77,10 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
       children: [
         CustomInputField(
           controller: _controller,
+
           enable: widget.enabled,
           hint: widget.hint ?? "Search ${widget.label}...",
-          readOnly: false, // Allow typing to search
+          readOnly: true, // Prevent direct typing, use dialog for selection
           borderRadius: widget.borderRadius ?? 12,
           isRequired: false,
           suffixIcon: Icon(

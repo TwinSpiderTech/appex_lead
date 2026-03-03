@@ -79,8 +79,15 @@ class GenericFormFieldWidget extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              if (fieldData['field_required'] == true)
-                const Text(" *", style: TextStyle(color: Colors.red)),
+              Obx(
+                () =>
+                    controller.isConditionalFieldRequired(
+                      // demoCondition,
+                      fieldData['field_required'] ?? {},
+                    )
+                    ? const Text(" *", style: TextStyle(color: Colors.red))
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -92,7 +99,6 @@ class GenericFormFieldWidget extends StatelessWidget {
 
   Widget _buildStringField(bool isEditable, TextInputType keyboardType) {
     String fieldName = fieldData['field_name'] ?? "unknown";
-    bool isRequired = controller.isTrue(fieldData['field_required']);
     Map<String, dynamic> config = Map<String, dynamic>.from(
       dig(fieldData, ['field_config']) ?? {},
     );
@@ -105,32 +111,39 @@ class GenericFormFieldWidget extends StatelessWidget {
     String regex = config['regax'] ?? '';
 
     return _buildWrapper(
-      child: CustomInputField(
-        isRequired: isRequired,
-        minLength: minLength,
-        maxLength: maxLength,
-        type: keyboardType,
-        enable: isEditable,
-        borderRadius: borderRadius,
-        validator: (value) {
-          if (value != null && value.isNotEmpty && regex.isNotEmpty) {
-            return Validations.isValidPattern(value, regex)
-                ? null
-                : "Invalid ${fieldData['field_text'] ?? toParameterize(fieldName)}";
-          }
-          return null;
-        },
-        initialValue: controller.formValues[fieldName]?.toString(),
-        onChanged: (val) => controller.updateFieldValue(fieldName, val),
-        hint: "Enter ${fieldData['field_text'] ?? fieldName}",
-      ),
+      child: Obx(() {
+        String? value = controller.formValues[fieldName]?.toString();
+        bool isRequired = controller.isConditionalFieldRequired(
+          fieldData['field_required'],
+        );
+        return CustomInputField(
+          key: isEditable
+              ? ValueKey(fieldName)
+              : ValueKey("${fieldName}_${value ?? ''}_$isRequired"),
+          isRequired: isRequired,
+          minLength: minLength,
+          maxLength: maxLength,
+          type: keyboardType,
+          enable: isEditable,
+          borderRadius: borderRadius,
+          validator: (value) {
+            if (value != null && value.isNotEmpty && regex.isNotEmpty) {
+              return Validations.isValidPattern(value, regex)
+                  ? null
+                  : "Invalid ${fieldData['field_text'] ?? toParameterize(fieldName)}";
+            }
+            return null;
+          },
+          initialValue: value,
+          onChanged: (val) => controller.updateFieldValue(fieldName, val),
+          hint: "Enter ${fieldData['field_text'] ?? fieldName}",
+        );
+      }),
     );
   }
 
   Widget _buildTextField(bool isEditable, TextInputType keyboardType) {
     String fieldName = fieldData['field_name'] ?? "unknown";
-
-    bool isRequired = controller.isTrue(fieldData['field_required']);
     Map<String, dynamic> config = Map<String, dynamic>.from(
       dig(fieldData, ['field_config']) ?? {},
     );
@@ -143,26 +156,35 @@ class GenericFormFieldWidget extends StatelessWidget {
     String regex = config['regax'] ?? '';
 
     return _buildWrapper(
-      child: CustomInputField(
-        isRequired: isRequired,
-        minLength: minLength,
-        maxLength: maxLength,
-        maxLine: 4,
-        type: keyboardType,
-        enable: isEditable,
-        borderRadius: borderRadius,
-        validator: (value) {
-          if (value != null && value.isNotEmpty && regex.isNotEmpty) {
-            return Validations.isValidPattern(value, regex)
-                ? null
-                : "Invalid ${fieldData['field_text'] ?? toParameterize(fieldName)}";
-          }
-          return null;
-        },
-        initialValue: controller.formValues[fieldName]?.toString(),
-        onChanged: (val) => controller.updateFieldValue(fieldName, val),
-        hint: "Enter ${fieldData['field_text'] ?? fieldName}",
-      ),
+      child: Obx(() {
+        String? value = controller.formValues[fieldName]?.toString();
+        bool isRequired = controller.isConditionalFieldRequired(
+          fieldData['field_required'],
+        );
+        return CustomInputField(
+          key: isEditable
+              ? ValueKey(fieldName)
+              : ValueKey("${fieldName}_${value ?? ''}_$isRequired"),
+          isRequired: isRequired,
+          minLength: minLength,
+          maxLength: maxLength,
+          maxLine: 4,
+          type: keyboardType,
+          enable: isEditable,
+          borderRadius: borderRadius,
+          validator: (value) {
+            if (value != null && value.isNotEmpty && regex.isNotEmpty) {
+              return Validations.isValidPattern(value, regex)
+                  ? null
+                  : "Invalid ${fieldData['field_text'] ?? toParameterize(fieldName)}";
+            }
+            return null;
+          },
+          initialValue: value,
+          onChanged: (val) => controller.updateFieldValue(fieldName, val),
+          hint: "Enter ${fieldData['field_text'] ?? fieldName}",
+        );
+      }),
     );
   }
 
@@ -235,20 +257,36 @@ class GenericFormFieldWidget extends StatelessWidget {
     Map<String, dynamic> config = Map<String, dynamic>.from(
       dig(fieldData, ['field_config']) ?? {},
     );
-    DateTime minDate = DateTime.now().add(
-      Duration(days: config['min_date'] ?? -1),
-    );
-    DateTime maxDate = DateTime.now().add(
-      Duration(days: config['max_date'] ?? 365),
-    );
+    // Use num.tryParse to handle doubles or ints, default to 0 and 30 for safety
+    int minDays = (num.tryParse(config['min_date']?.toString() ?? '') ?? 0)
+        .toInt();
+    int maxDays = (num.tryParse(config['max_date']?.toString() ?? '') ?? 30)
+        .toInt();
+
+    DateTime now = DateTime.now();
+    // Normalize to start of day to avoid time-of-day edge cases in picker
+    DateTime today = DateTime(now.year, now.month, now.day);
+    DateTime minDate = today.add(Duration(days: minDays));
+    DateTime maxDate = today.add(Duration(days: maxDays));
+
+    // Ensure minDate is before or equal to maxDate
+    if (minDate.isAfter(maxDate)) {
+      maxDate = minDate.add(const Duration(days: 1));
+    }
 
     return _buildWrapper(
       child: InkWell(
         onTap: isEditable
             ? () async {
+                // Normalize initial to start of day to match min/max
+                DateTime initial = DateTime(now.year, now.month, now.day);
+                // Clamp initial date within range to prevent Flutter crash/hang
+                if (initial.isBefore(minDate)) initial = minDate;
+                if (initial.isAfter(maxDate)) initial = maxDate;
+
                 DateTime? pickedDate = await showDatePicker(
                   context: context,
-                  initialDate: DateTime.now(),
+                  initialDate: initial,
                   firstDate: minDate,
                   lastDate: maxDate,
                 );
@@ -275,7 +313,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                       );
                       controller.updateFieldValue(
                         fieldName,
-                        DateFormat('yyyy-MM-dd hh:mm:ss a').format(dt),
+                        DateFormat('yyyy-MM-dd HH:mm:ss').format(dt),
                       );
                     }
                   }

@@ -2,11 +2,9 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
 // import 'dart:math';
-import 'package:appex_lead/controller/camera/camera_controller.dart';
 import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/utils/urls.dart';
-import 'package:camera/camera.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
@@ -17,6 +15,7 @@ import 'package:intl/intl.dart';
 import '../../main.dart';
 import '../../model/form_model.dart';
 import '../../utils/auth_service.dart';
+import '../../model/lead_model.dart';
 
 class GenericFormController extends GetxController {
   // List of available form templates (Mocking API data)
@@ -31,6 +30,7 @@ class GenericFormController extends GetxController {
   var fieldsData = <Map<String, dynamic>>[].obs;
   var formGroupsData = <Map<String, dynamic>>[].obs;
   FormModel? formModel;
+  Rx<LeadModel?> currentLead = Rx<LeadModel?>(null);
 
   // Map to hold dynamic form values
   var formValues = <String, dynamic>{}.obs;
@@ -138,12 +138,17 @@ class GenericFormController extends GetxController {
       );
 
       // If we are starting a NEW form session (not resuming), initialize
-      if (currentDraftId.isEmpty) {
+      if (currentDraftId.isEmpty && currentLead.value == null) {
         formValues.clear();
         _initializeForm();
       } else {
-        // If resuming, just ensure any missing auto-generated fields are handled
+        // If resuming or viewing a lead, just ensure any missing auto-generated fields are handled
         _initializeForm();
+
+        // Re-apply lead data if needed to ensure fields are populated correctly with the new structure
+        if (currentLead.value != null) {
+          resumeDraft(currentLead.value!);
+        }
       }
     } catch (e) {
       debugPrint("Error applying template: $e");
@@ -166,7 +171,25 @@ class GenericFormController extends GetxController {
     debugPrint("Form session cleared.");
   }
 
-  void resumeDraft(Map<String, dynamic> draftData) {
+  void resumeDraft(dynamic draftData) {
+    if (draftData == null) return;
+
+    if (draftData is LeadModel) {
+      currentLead.value = draftData;
+      if (draftData.fieldsRecord != null) {
+        formValues.assignAll(draftData.fieldsRecord!.toJson());
+
+        // Parse stringified GPS if present
+        formValues.forEach((key, value) {
+          if (value is String &&
+              value.contains('latitutde') &&
+              value.contains('{')) {
+            formValues[key] = _parseGpsString(value);
+          }
+        });
+      }
+      return;
+    }
     currentDraftId.value = (draftData['id'] ?? "").toString();
     currentFormTitle.value = (draftData['title'] ?? "").toString();
 
@@ -235,6 +258,25 @@ class GenericFormController extends GetxController {
     debugPrint("Resumed draft: ${currentDraftId.value}");
   }
 
+  Future<void> fetchLeadDetails(String url) async {
+    isLoadingTemplates.value = true;
+    try {
+      final response = await api.getLeadDetails(url);
+      if (response != null && response['response_status'] == 'success') {
+        final data = response['data'];
+        if (data != null) {
+          final lead = LeadModel.fromJson(data);
+          resumeDraft(lead);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching lead details: $e");
+      showToast(message: "Failed to refresh lead details");
+    } finally {
+      isLoadingTemplates.value = false;
+    }
+  }
+
   // Helper to parse messy stringified GPS data from API
   Map<String, dynamic>? _parseGpsString(String gpsStr) {
     try {
@@ -275,6 +317,12 @@ class GenericFormController extends GetxController {
     if (value is int) return value == 1;
     if (value is String) return value.toLowerCase() == "true" || value == "1";
     return false;
+  }
+
+  bool isConditionalFieldRequired(dynamic condition) {
+    // Access keys to ensure GetX tracks this dependency even if condition is simple
+    final _ = formValues.keys;
+    return evaluateFieldRequired(condition, formValues);
   }
 
   bool isHidden(value) {
@@ -468,7 +516,7 @@ class GenericFormController extends GetxController {
     for (var field in fieldsData) {
       if (isHidden(field['field_visibility'])) continue;
 
-      if (isTrue(field['field_required'])) {
+      if (isConditionalFieldRequired(field['field_required'])) {
         String name = field['field_name'] as String;
         var value = formValues[name];
 
@@ -487,6 +535,7 @@ class GenericFormController extends GetxController {
     // print(submissionURL ?? formModel?.submissionUrl ?? 'no submission url');
     log("Submitting form data....");
     if (validateForm()) {
+      showLoading(message: "Submitting...");
       // prettyPrint(formValues.toJson());
 
       var _data = await getFormData();
@@ -505,6 +554,7 @@ class GenericFormController extends GetxController {
             deleteProgress();
           }
           Get.back();
+          showSuccessMessage(message: "Lead submitted successfully!");
           return Map<String, dynamic>.from(formValues);
         }
       } catch (e) {

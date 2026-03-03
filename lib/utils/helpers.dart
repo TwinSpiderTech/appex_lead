@@ -244,49 +244,134 @@ validateURL(String url) {
 
 // dynamic form required condition
 
-bool isFieldRequired(
-  Map<String, dynamic> formFieldData,
-  Map<String, dynamic> fieldValidations,
+bool evaluateFieldRequired(
+  dynamic requiredCondition,
+  Map<String, dynamic> formValues,
 ) {
-  final fiedlData = {"person_designation": "director", 'name': 'john'};
+  if (requiredCondition == null) return false;
 
-  final required_condition = {
-    "_and": [
-      {
-        "person_designation": {"not_equal": 'none_avialable'},
-      },
-      {
-        "person_name": {"equal": 'ali'},
-      },
-      {
-        "_or": [
-          {
-            "area_id": {"equal": 3},
-          },
-          {
-            "_and": [
-              {
-                "province": {"equal": 'Punjab'},
-              },
-              {
-                "_or": [
-                  {
-                    "status": {"equal": 'verified'},
-                  },
-                  {
-                    "priority": {
-                      "in": ['High', 'Urgent'],
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+  // Simple boolean or string "1"/"true"
+  if (requiredCondition is bool) return requiredCondition;
+  if (requiredCondition is String) {
+    String lower = requiredCondition.toLowerCase();
+    return lower == 'true' || lower == '1' || lower == 'required';
+  }
 
+  // Complex logic Map
+  if (requiredCondition is Map<String, dynamic>) {
+    return _evaluateCondition(requiredCondition, formValues);
+  }
 
   return false;
 }
+
+bool _evaluateCondition(
+  Map<String, dynamic> condition,
+  Map<String, dynamic> formValues,
+) {
+  if (condition.isEmpty) return false;
+
+  // Logical AND
+  if (condition.containsKey('_and')) {
+    final list = condition['_and'];
+    if (list is List) {
+      return list.every(
+        (item) =>
+            item is Map<String, dynamic> &&
+            _evaluateCondition(item, formValues),
+      );
+    }
+  }
+
+  // Logical OR
+  if (condition.containsKey('_or')) {
+    final list = condition['_or'];
+    if (list is List) {
+      return list.any(
+        (item) =>
+            item is Map<String, dynamic> &&
+            _evaluateCondition(item, formValues),
+      );
+    }
+  }
+
+  // Single field condition: { "field_name": { "operator": expected_value } }
+  // or shorthand: { "field_name": expected_value } (treated as equal)
+  final fieldName = condition.keys.first;
+  final operatorData = condition[fieldName];
+  final actualValue = formValues[fieldName];
+
+  if (operatorData is Map<String, dynamic>) {
+    final operator = operatorData.keys.first;
+    final expectedValue = operatorData[operator];
+
+    switch (operator) {
+      case 'equal':
+      case 'eq':
+        return actualValue.toString().trim() == expectedValue.toString().trim();
+      case 'not_equal':
+      case 'neq':
+        return actualValue.toString().trim() != expectedValue.toString().trim();
+      case 'in':
+        if (expectedValue is List) {
+          return expectedValue
+              .map((e) => e.toString().trim())
+              .contains(actualValue.toString().trim());
+        }
+        return false;
+      case 'not_in':
+        if (expectedValue is List) {
+          return !expectedValue
+              .map((e) => e.toString().trim())
+              .contains(actualValue.toString().trim());
+        }
+        return true;
+      case 'contains':
+        return actualValue.toString().contains(expectedValue.toString());
+      case 'not_contains':
+        return !actualValue.toString().contains(expectedValue.toString());
+      default:
+        return false;
+    }
+  } else {
+    // Shorthand: { "field_name": expected_value }
+    return actualValue.toString().trim() == operatorData.toString().trim();
+  }
+}
+
+const demoCondition = {
+  "_and": [
+    {
+      "person_designation": {"not_equal": 'none_avialable'},
+    },
+    {
+      "person_name": {"equal": 'ali'},
+    },
+    {
+      "_or": [
+        {
+          "area_id": {"equal": 3},
+        },
+        {
+          "_and": [
+            {
+              "province": {"equal": 'Punjab'},
+            },
+            {
+              "_or": [
+                {
+                  "status": {"equal": 'verified'},
+                },
+                {
+                  "priority": {
+                    "in": ['High', 'Urgent'],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

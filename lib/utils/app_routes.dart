@@ -26,7 +26,6 @@ class AppPages {
   static const profile = '/profile';
   static const formsList = '/forms_list';
   static const drafts = '/drafts';
-  static const leadShow = '/lead_show';
 
   static const noInternet = '/no-internet';
 
@@ -47,13 +46,7 @@ class AppPages {
     GetPage(name: localStorage, page: () => SharePrefScreen()),
     GetPage(name: formsList, page: () => AvailableForms()),
     GetPage(name: drafts, page: () => DraftsScreen()),
-    GetPage(
-      name: leadShow,
-      page: () => LeadDetailsScreen(
-        apiData: Get.arguments['leadData'] ?? {},
-        title: Get.arguments['title'] ?? "Lead Details",
-      ),
-    ),
+    
     GetPage(name: appSetting, page: () => AppSettings()),
   ];
 }

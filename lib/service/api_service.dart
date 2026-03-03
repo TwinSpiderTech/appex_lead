@@ -13,9 +13,6 @@ class ApiServices {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          //  options.connectTimeout: const Duration(seconds: 15),
-          // receiveTimeout: const Duration(seconds: 20),
-          // sendTimeout: const Duration(seconds: 20),
           options.headers['App-Ref'] = 'trading';
           final requiresToken = options.extra[isTokenRequired] != false;
 
@@ -25,28 +22,26 @@ class ApiServices {
               options.headers['Authorization'] = 'Bearer $token';
             }
           }
-          onError:
-          (DioException e, handler) async {
-            var statusCode = e.response?.data?['status'] ?? 0;
-
-            if (statusCode >= 500) {
-              showErrorMessage(message: 'Server Error');
-              log('Server error with status code: $statusCode');
-            } else if (statusCode == 401) {
-              showErrorMessage(message: "Unauthorized request");
-              log('Unauthorized request');
-            } else if (statusCode >= 400) {
-              // Client errors
-              final message =
-                  e.response?.data['message'] ??
-                  'Request failed. Please check your input.';
-              showErrorMessage(message: message);
-            } else {
-              showErrorMessage(message: 'Network error. Please try again.');
-            }
-          };
-
           return handler.next(options);
+        },
+        onError: (DioException e, handler) async {
+          var statusCode = e.response?.data?['status'] ?? 0;
+
+          if (statusCode >= 500) {
+            showErrorMessage(message: 'Server Error');
+            log('Server error with status code: $statusCode');
+          } else if (statusCode == 401) {
+            showErrorMessage(message: "Unauthorized request");
+            log('Unauthorized request');
+          } else if (statusCode >= 400) {
+            final message =
+                e.response?.data['message'] ??
+                'Request failed. Please check your input.';
+            showErrorMessage(message: message);
+          } else {
+            showErrorMessage(message: 'Network error. Please try again.');
+          }
+          return handler.next(e);
         },
       ),
     );
@@ -73,13 +68,10 @@ class ApiServices {
   }
 
   Future<Map<String, dynamic>?> getData(String token, String url) async {
-    // String? subdomain = await AuthService.getSubdomain();
     String _url = "${Urls.env == 'dev' ? "http://" : "https://"}$url";
-
     try {
-      String url = _url;
-      log(url);
-      final response = await _dio.get(url);
+      log(_url);
+      final response = await _dio.get(_url);
       if (response.data?['status'] == 200) {
         return response.data;
       } else {
@@ -115,13 +107,39 @@ class ApiServices {
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         await logoutUser(toastMessage: "Session Expired!");
-
         return null;
       }
       log('Dio error: ${e.message}');
       return null;
     } catch (e) {
-      log('Error occurred ---: $e');
+      log('Error occurred: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getLeadDetails(String url) async {
+    try {
+      String finalUrl = url;
+      if (!url.startsWith('http') && !url.startsWith(Urls.base)) {
+        finalUrl = Urls.base + (url.startsWith('/') ? '' : '/') + url;
+      }
+      String _url = finalUrl.startsWith('http')
+          ? finalUrl
+          : "${Urls.env == 'dev' ? "http://" : "https://"}$finalUrl";
+      log("Fetching Lead Details: $_url");
+      final response = await _dio.get(_url);
+      log("Response Status Code: ${response.statusCode}");
+      log("Response Body: ${response.data}");
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        await logoutUser(toastMessage: "Session Expired!");
+        return null;
+      }
+      log('Dio error: ${e.message}');
+      return null;
+    } catch (e) {
+      log('Error occurred: $e');
       return null;
     }
   }
@@ -131,14 +149,11 @@ class ApiServices {
     Map<String, dynamic>? data,
     FormData? formData,
   }) async {
-    // String? subdomain = await AuthService.getSubdomain();
     String _url = "${Urls.env == 'dev' ? "http://" : "https://"}$url";
-
     try {
-      String url = _url;
-      log(url);
+      log(_url);
       final response = await _dio.post(
-        url,
+        _url,
         data: data ?? formData ?? {},
         options: Options(extra: {isTokenRequired: true}),
       );
@@ -161,13 +176,9 @@ class ApiServices {
     String email,
     String password,
   ) async {
-    log(email);
-    // String? subdomain = await AuthService.getSubdomain();
-
     try {
       String url =
           "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.authenticationURL}";
-      // String url = "https://${Urls.authenticationURL}";
       log(url);
       var data = {'email': email, 'password': password};
       final response = await _dio.post(
@@ -191,7 +202,6 @@ class ApiServices {
   }
 
   Future<Map<String, dynamic>?> loadDashboard() async {
-    // log(appVerionUrl);
     try {
       String url =
           "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.loadDashboardUrl}";
@@ -211,6 +221,7 @@ class ApiServices {
     } catch (e) {
       showToast(message: 'Failed to load dashboard data!');
       log('Error on loading dashboard data: $e');
+      return null;
     }
   }
 
@@ -218,8 +229,6 @@ class ApiServices {
     try {
       String url =
           "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.signoutUrl}";
-      print(url);
-
       await _dio.delete(url, options: Options(extra: {isTokenRequired: true}));
     } catch (e) {
       showToast(message: 'Failed to logout!');
@@ -228,17 +237,14 @@ class ApiServices {
   }
 
   Future<Map<String, dynamic>?> updateDeviceToken(String deviceToken) async {
-    // log(appVerionUrl);
     try {
       String url = Urls.deviceTokenUpdateURL;
-      print(url);
       var data = {'device_token': deviceToken};
       final response = await _dio.put(url, data: data);
       return response.data;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         await logoutUser(toastMessage: "Session Expired!");
-
         return null;
       }
       log('Dio error: ${e.message}');

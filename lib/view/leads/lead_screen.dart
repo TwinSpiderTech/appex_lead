@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:appex_lead/component/custom_appbar.dart';
 import 'package:appex_lead/component/custom_button.dart';
 import 'package:appex_lead/component/custom_input_field.dart';
@@ -6,6 +8,7 @@ import 'package:appex_lead/main.dart';
 import 'package:appex_lead/model/lead_model.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/forms.dart';
+import 'package:appex_lead/view/form/lead_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -24,7 +27,7 @@ class LeadScreen extends StatelessWidget {
               cont.clearForm();
               Get.back();
             },
-            title: 'Complaints',
+            title: 'Leads',
             bottom: TabBar(
               controller: cont.tabController,
               indicatorColor: colorManager.primaryColor,
@@ -86,13 +89,13 @@ class LeadScreen extends StatelessWidget {
             ],
           ),
           floatingActionButton: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 32),
             child: Column(
               spacing: 4,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 SizedBox(
-                  height: 40,
+                  height: 50,
                   child: GetBuilder<LeadController>(
                     builder: (c) {
                       int currentPage = 1;
@@ -156,14 +159,14 @@ class LeadScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                CustomButton(
-                  textColr: colorManager.whiteColor,
-                  backgroundColor: colorManager.primaryColor,
-                  label: "Register New Complaint",
-                  onTap: () {
-                    // Get.to(() => AddNewCompalint(cont: cont));
-                  },
-                ),
+                // CustomButton(
+                //   textColr: colorManager.whiteColor,
+                //   backgroundColor: colorManager.primaryColor,
+                //   label: "Register New Complaint",
+                //   onTap: () {
+                //     // Get.to(() => AddNewCompalint(cont: cont));
+                //   },
+                // ),
               ],
             ),
           ),
@@ -177,7 +180,7 @@ class LeadScreen extends StatelessWidget {
 
 class HistoryTab extends StatelessWidget {
   final LeadController cont;
-  final List<LeadModel>? history;
+  final List<Map<String, dynamic>>? history;
   final RxBool isLoading;
   final String status;
 
@@ -243,20 +246,31 @@ class HistoryTab extends StatelessWidget {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 4.0),
                               child: InkWell(
+                                onTap: () {
+                                  String url =
+                                      cont.leadEndPoint.value +
+                                      l['id'].toString();
+                                  log("${l}");
+                                  Get.to(
+                                    () =>
+                                        LeadDetailsScreen(url: url, cont: cont),
+                                  );
+                                },
                                 child: Card(
+                                  color: colorManager.accentColor.withValues(),
                                   child: ListTile(
                                     leading: HugeIcon(
                                       icon: HugeIcons.strokeRoundedHugeicons,
                                       color: colorManager.whiteColor,
                                     ),
                                     title: Text(
-                                      l.fieldsRecord?.businessName ?? '',
+                                      l['business_name'] ?? '',
                                       style: primaryTextStyle.copyWith(
                                         color: colorManager.whiteColor,
                                       ),
                                     ),
                                     subtitle: Text(
-                                      l.fieldsRecord?.personDesignation ?? '',
+                                      l['person_designation'] ?? '',
                                       style: primaryTextStyle.copyWith(
                                         color: colorManager.whiteColor,
                                       ),
@@ -279,7 +293,7 @@ class HistoryTab extends StatelessWidget {
                               // ),
                             );
                           }),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),
