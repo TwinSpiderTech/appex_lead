@@ -3,7 +3,7 @@ import 'package:appex_lead/view/auth/login.dart';
 import 'package:appex_lead/view/complaints/complaint_screen.dart';
 import 'package:appex_lead/view/dashboard.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
-import 'package:appex_lead/view/form/lead_details_screen.dart';
+import 'package:appex_lead/view/leads/lead_details_screen.dart';
 import 'package:appex_lead/view/form/forms.dart';
 import 'package:appex_lead/view/internet/no_internet_screen.dart';
 

@@ -1,87 +1,83 @@
+import 'dart:async';
 import 'dart:developer';
 
+import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/utils/urls.dart';
-import 'package:appex_lead/view/form/lead_details_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DashController extends GetxController {
   RxBool isLoading = false.obs;
-  // Map<String, dynamic> dashboardData = <String, dynamic>{};
-  List<Map<String, dynamic>> leads = [];
-  Map<String, dynamic> chartData = {};
-  Map<String, dynamic> tables = {};
-  String headerTitle = "Welcome to Appex Leads";
-  String headerSubTitle = "Here's what's happening with your leads.";
+  RxList<Map<String, dynamic>> upcomingLeads = <Map<String, dynamic>>[].obs;
+  RxList<Map<String, dynamic>> pendingLeads = <Map<String, dynamic>>[].obs;
 
-  RxBool hasNextPage = false.obs;
-  int currentPage = 1;
+  String headerTitle = "Welcome back!";
+  String headerSubTitle = "Here's the latest update on your leads.";
 
-  var response = {
-    "response_status": "success",
-    "messages": [],
-    "meta": {},
-    "data": {
-      "fields_record": {
-        "visit_proof_image":
-            "http://localhost:3000/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBb0FDIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--f6c498e1fdea51b7e43ab984209519c4349c8454/logo.png",
-        "business_name": "asdfasds Cehckasdfssaaa",
-        "mobile_no": "03001234567",
-        "area_id": 1,
-        "setup_status": "grey_structure",
-        "gps_points":
-            "{latitutde: 1212.23, longitude: 121.32, location: \"HTi sis agujr\"}",
-        "person_name": "Testing Doctor Name",
-        "person_designation": "director",
-        "phone_no": null,
-        "email_address": null,
-        "address": null,
-        "expected_closing_timeline": "six_twelve",
-        "lead_status": "new_lead",
-      },
-      "followup": [
-        {
-          "title":
-              "Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. ",
-          "description":
-              "Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. ",
-          "time": "Nov 22 10:00 AM",
-        },
-        {
-          "title":
-              "Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. ",
-          "description":
-              "Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. ",
-          "time": "Aug 14 10:00 AM",
-        },
-        {
-          "title":
-              "Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. Title 3. ",
-          "description":
-              "Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. Description goes here. ",
-          "time": "Jul 25 10:00 AM",
-        },
-      ],
-    },
-    "status": 200,
-  };
-  LeadModel? lead;
-  getLeadDetails() {
-    try {
-      lead = LeadModel.fromJson(dig(response, ['data']) ?? {});
-      if (lead != null) {
-        // leadUrl.value = lead!.url ?? '';
-        // Get.to(() => LeadDetailsScreen(url: leadUrl.value));
-      }
-    } catch (e) {}
-  }
+  final TextEditingController searchCont = TextEditingController();
+  Timer? _searchTimer;
 
   @override
   void onInit() {
     super.onInit();
+    // Ensure LeadController is initialized as it's needed for navigation and data mapping
+    Get.put(LeadController());
+    refreshDashboard();
+  }
+
+  Future<void> refreshDashboard() async {
+    isLoading.value = true;
+    update();
+
+    try {
+      await Future.wait([fetchPendingLeads(), fetchUpcomingLeads()]);
+    } catch (e) {
+      log("Error refreshing dashboard: $e");
+    } finally {
+      isLoading.value = false;
+      update();
+    }
+  }
+
+  Future<void> fetchPendingLeads() async {
+    final response = await api.getLeads(
+      1,
+      status: 'pending',
+      search: searchCont.text,
+    );
+    if (response != null && response['response_status'] == 'success') {
+      final data = response['data'] ?? [];
+      final tableRecord = List<Map<String, dynamic>>.from(
+        dig(data, ['table_record'])?.map((e) => e).toList() ?? [],
+      );
+
+      pendingLeads.value = tableRecord;
+    }
+  }
+
+  Future<void> fetchUpcomingLeads() async {
+    final response = await api.getUpcomingLeads(1, search: searchCont.text);
+    if (response != null && response['response_status'] == 'success') {
+      final data = response['data'] ?? [];
+      final tableRecord = List<Map<String, dynamic>>.from(
+        dig(data, ['table_record'])?.map((e) => e).toList() ?? [],
+      );
+
+      upcomingLeads.value = tableRecord;
+    }
+  }
+
+  void onSearchChanged(String value) {
+    _searchTimer?.cancel();
+    _searchTimer = Timer(const Duration(milliseconds: 500), () {
+      refreshDashboard();
+    });
+  }
+
+  String getLeadDetailUrl(Map<String, dynamic> lead) {
+    // Assuming detail_endpoint follows a pattern or is provided in the response
+    // Based on LeadController, it's often a base path + id
+    return "/api/v1/business/leads/${lead['id']}";
   }
 }

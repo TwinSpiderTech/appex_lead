@@ -25,21 +25,25 @@ class ApiServices {
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
-          var statusCode = e.response?.data?['status'] ?? 0;
-
+          var statusCode = e.response?.statusCode ?? 0;
           if (statusCode >= 500) {
             showErrorMessage(message: 'Server Error');
             log('Server error with status code: $statusCode');
           } else if (statusCode == 401) {
-            showErrorMessage(message: "Unauthorized request");
+            // Handled in individual methods or sub-interceptors
             log('Unauthorized request');
           } else if (statusCode >= 400) {
             final message =
-                e.response?.data['message'] ??
+                e.response?.data?['message'] ??
                 'Request failed. Please check your input.';
             showErrorMessage(message: message);
-          } else {
-            showErrorMessage(message: 'Network error. Please try again.');
+          } else if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout) {
+            showErrorMessage(message: 'Connection timeout. Please try again.');
+          } else if (e.type != DioExceptionType.cancel) {
+            log('Dio Error (${e.type}): ${e.message}');
+            // Only show generic error if it's not a handled case
+            // showErrorMessage(message: 'Network error. Please try again.');
           }
           return handler.next(e);
         },
@@ -98,6 +102,34 @@ class ApiServices {
       if (status != null && status.isNotEmpty) {
         url += "&lead_status=$status";
       }
+      if (search != null && search.isNotEmpty) {
+        url += "&search=$search";
+      }
+      print(url);
+      final response = await _dio.get(url);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        await logoutUser(toastMessage: "Session Expired!");
+        return null;
+      }
+      log('Dio error: ${e.message}');
+      return null;
+    } catch (e) {
+      log('Error occurred: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUpcomingLeads(
+    int pageNo, {
+
+    String? search,
+  }) async {
+    try {
+      String url =
+          "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.upcomingLeadsURL}$pageNo";
+
       if (search != null && search.isNotEmpty) {
         url += "&search=$search";
       }

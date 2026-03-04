@@ -44,11 +44,6 @@ class LeadController extends GetxController
         update();
       }
     });
-
-    // Initial fetch for all tabs
-    await getLeads(reset: true, status: 'pending');
-    await getLeads(reset: true, status: 'ongoing');
-    await getLeads(reset: true, status: 'closed');
   }
 
   clearForm() {
@@ -187,13 +182,13 @@ class LeadController extends GetxController
   void nextPage() async {
     String? status;
     if (tabController.index == 0) {
-      if (!pendingHasNext) return;
-      pendingPage++;
-      status = 'pending';
-    } else if (tabController.index == 1) {
       if (!ongoingHasNext) return;
       ongoingPage++;
       status = 'ongoing';
+    } else if (tabController.index == 1) {
+      if (!pendingHasNext) return;
+      pendingPage++;
+      status = 'pending';
     } else if (tabController.index == 2) {
       if (!closedHasNext) return;
       closedPage++;
@@ -206,13 +201,13 @@ class LeadController extends GetxController
   void previousPage() async {
     String? status;
     if (tabController.index == 0) {
-      if (pendingPage <= 1) return;
-      pendingPage--;
-      status = 'pending';
-    } else if (tabController.index == 1) {
       if (ongoingPage <= 1) return;
       ongoingPage--;
       status = 'ongoing';
+    } else if (tabController.index == 1) {
+      if (pendingPage <= 1) return;
+      pendingPage--;
+      status = 'pending';
     } else if (tabController.index == 2) {
       if (closedPage <= 1) return;
       closedPage--;

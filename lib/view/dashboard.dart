@@ -1,19 +1,18 @@
-import 'package:appex_lead/component/custom_dropdown.dart';
-import 'package:appex_lead/component/custom_line_chart.dart';
-import 'package:appex_lead/component/custom_searchable_dropdown.dart';
-import 'package:appex_lead/component/dynamic_table.dart';
+import 'package:appex_lead/component/custom_drawer.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
+import 'package:appex_lead/controller/lead/lead_controller.dart';
+import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/constants.dart';
+import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/camera/camera_screen.dart';
-
+import 'package:appex_lead/view/interaction/interaction_form.dart';
+import 'package:appex_lead/view/leads/lead_details_layout2.dart';
+import 'package:appex_lead/view/leads/lead_screen.dart';
+import 'package:appex_lead/view/form/form_details.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:appex_lead/component/custom_drawer.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/utils/dummy_data.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -24,178 +23,173 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isFabExpanded = false;
 
-  String filterType = 'weekly';
+  void _toggleFab() {
+    setState(() {
+      _isFabExpanded = !_isFabExpanded;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder(
+    return GetBuilder<DashController>(
       init: DashController(),
       builder: (controller) {
         return Scaffold(
           key: _scaffoldKey,
-          backgroundColor: colorManager.isDark
-              ? colorManager.bgDark
-              : Colors.grey.shade50,
+          backgroundColor: colorManager.whiteColor,
           drawer: CustomDrawer(),
           body: RefreshIndicator(
             color: colorManager.primaryColor,
-            onRefresh: () async {},
+            onRefresh: () => controller.refreshDashboard(),
             child: CustomScrollView(
               slivers: [
-                SliverAppBar(
-                  backgroundColor: colorManager.accentColor,
-                  pinned: true,
-                  snap: true,
-                  floating: true,
-                  expandedHeight: 150,
-                  toolbarHeight: 80,
-                  collapsedHeight: 80,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Padding(
-                      padding: const EdgeInsets.only(top: 110.0, bottom: 20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 18.0),
-                              child: Obx(() {
-                                return Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      controller.isLoading.value
-                                          ? "******"
-                                          : controller.headerTitle,
-                                      style: primaryTextStyle.copyWith(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w800,
-                                        color: colorManager.primaryColor,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-
-                                    Text(
-                                      controller.isLoading.value
-                                          ? "******"
-                                          : controller.headerSubTitle,
-                                      style: primaryTextStyle.copyWith(
-                                        fontSize: 12,
-                                        color: colorManager.whiteColor,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                );
-                              }),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    centerTitle: true,
-                  ),
-                  leadingWidth: 0,
-                  leading: SizedBox(width: 0),
-                  title: Row(
-                    spacing: 12,
-                    children: [
-                      Container(
-                        child: GestureDetector(
-                          onTap: () {
-                            _scaffoldKey.currentState?.openDrawer();
-                          },
-                          child: Icon(
-                            Icons.menu, // color: colorManager.iconColor,
-                            color: colorManager.primaryColor,
-                            size: 32,
-                          ),
-                        ),
-                      ),
-
-                      Text(
-                        "Dashboard",
-                        style: primaryTextStyle.copyWith(
-                          fontSize: 22,
-                          color: colorManager.whiteColor,
-                        ),
-                      ),
-                      Spacer(),
-                      IconButton(
-                        onPressed: () {
-                          Get.toNamed(AppPages.notificationScreen);
-                        },
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedNotification01,
-                          color: colorManager.primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildAppBar(controller),
                 SliverToBoxAdapter(
-                  child: Column(
-                    // spacing: 12,
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ElevatedButton(
-                      //   onPressed: () {
-                      //     controller.getLeadDetails();
-                      //   },
-                      //   child: Text('Press'),
-                      // ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSearchBar(controller),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader("Upcoming Leads", () {
+                          Get.find<LeadController>().tabController.index = 0;
+                          Get.to(() => const LeadScreen());
+                        }),
+                        const SizedBox(height: 12),
+                        _buildUpcomingList(controller),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader("Pending Leads", () {
+                          Get.find<LeadController>().tabController.index = 1;
+                          Get.to(() => const LeadScreen());
+                        }),
+                        _buildPendingList(controller),
+                        // const SizedBox(height: 12),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: colorManager.primaryColor,
-            onPressed: () {
-              Get.to(() => CameraScreen());
-            },
-            child: Icon(Icons.camera, color: colorManager.whiteColor),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isFabExpanded) ...[
+                _buildFabOption(
+                  icon: HugeIcons.strokeRoundedUserAdd01,
+                  label: "Add Lead",
+                  onTap: () {
+                    _toggleFab();
+                    Get.to(
+                      () => const FormDetails(
+                        url: "/api/v1/business/leads/get_form_template",
+                        title: "Add New Lead",
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildFabOption(
+                  icon: HugeIcons.strokeRoundedPlusSignSquare,
+                  label: "Add Interaction",
+                  onTap: () {
+                    _toggleFab();
+                    Get.to(() => const InteractionForm());
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+              FloatingActionButton(
+                backgroundColor: colorManager.primaryColor,
+                onPressed: _toggleFab,
+                child: Icon(
+                  _isFabExpanded ? Icons.close : Icons.add,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildReusableCard({
-    required String title,
-    required Function() onTap,
-    required icon,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 60,
-        width: 120,
-        margin: const EdgeInsets.only(right: 12),
-        // padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colorManager.primaryColor,
-          // color: colorManager.isDark
-          //     ? colorManager.bgLight
-          //     : colorManager.secondaryColor,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+  Widget _buildAppBar(DashController controller) {
+    return SliverAppBar(
+      backgroundColor: colorManager.accentColor,
+      pinned: true,
+      snap: true,
+      floating: true,
+      expandedHeight: 150,
+      toolbarHeight: 80,
+      collapsedHeight: 80,
+      leadingWidth: 0,
+      leading: const SizedBox(width: 0),
+      title: Row(
+        children: [
+          GestureDetector(
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            child: Icon(Icons.menu, color: colorManager.primaryColor, size: 32),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            "Dashboard",
+            style: primaryTextStyle.copyWith(
+              fontSize: 22,
+              color: colorManager.whiteColor,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () => Get.toNamed(AppPages.notificationScreen),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedNotification01,
+              color: colorManager.primaryColor,
+            ),
+          ),
+        ],
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Padding(
+          padding: const EdgeInsets.only(top: 110.0, bottom: 20),
+          child: Row(
             children: [
-              HugeIcon(icon: icon, color: colorManager.whiteColor, size: 32),
-              Text(
-                title,
-                style: primaryTextStyle.copyWith(
-                  color: colorManager.whiteColor,
-                  fontSize: 16,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 18.0),
+                  child: Obx(() {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          controller.isLoading.value
+                              ? "******"
+                              : controller.headerTitle,
+                          style: primaryTextStyle.copyWith(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: colorManager.primaryColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          controller.isLoading.value
+                              ? "******"
+                              : controller.headerSubTitle,
+                          style: primaryTextStyle.copyWith(
+                            fontSize: 12,
+                            color: colorManager.whiteColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    );
+                  }),
                 ),
               ),
             ],
@@ -205,80 +199,244 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  Widget _buildTableCard({
-    required String title,
-    List<List<String>>? rows,
-    List<Map<String, dynamic>>? data,
-    required List<String> headers,
-    String? groupBy,
-    Function()? onTap,
-    Color? groupRowColor,
-  }) {
-    return Column(
-      spacing: defaultHorizontalPaddingVal,
+  Widget _buildSearchBar(DashController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller.searchCont,
+        onChanged: controller.onSearchChanged,
+        decoration: InputDecoration(
+          hintText: "Search your leads...",
+          hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+          prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, VoidCallback onTap) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        TextButton(
+          onPressed: onTap,
+          child: Text(
+            "View All",
+            style: TextStyle(color: colorManager.primaryColor),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUpcomingList(DashController controller) {
+    return Obx(() {
+      if (controller.isLoading.value && controller.upcomingLeads.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (controller.upcomingLeads.isEmpty) {
+        return _buildEmptyState("No upcoming leads");
+      }
+      return SizedBox(
+        height: 160,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: controller.upcomingLeads.length,
+          itemBuilder: (context, index) {
+            final lead = controller.upcomingLeads[index];
+            return _buildUpcomingCard(controller, lead);
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _buildUpcomingCard(
+    DashController controller,
+    Map<String, dynamic> lead,
+  ) {
+    return GestureDetector(
+      onTap: () => Get.to(
+        () => LeadDetailsLayout2(
+          url: controller.getLeadDetailUrl(lead),
+          cont: Get.find<LeadController>(),
+        ),
+      ),
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorManager.primaryColor.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colorManager.primaryColor.withOpacity(0.5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                toParameterize(title),
-                style: primaryTextStyle.copyWith(
-                  fontSize: 18,
-                  color: colorManager.secondaryColor,
-                ),
-                overflow: TextOverflow.ellipsis,
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.white,
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedUser,
+                color: colorManager.primaryColor,
+                size: 20,
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                onTap?.call();
-              },
-              child: HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                color: colorManager.secondaryColor,
+            const Spacer(),
+            Text(
+              lead['business_name'] ?? 'Undefined',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: primaryTextStyle.copyWith(
+                fontWeight: FontWeight.bold,
+
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              lead['person_name'] ?? 'Contact person',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: primaryTextStyle.copyWith(
+                color: colorManager.textColor,
+                fontSize: 13,
               ),
             ),
           ],
         ),
-        DynamicTable(
-          headerBgColor: colorManager.accentColor,
-          isScrollable: true,
+      ),
+    );
+  }
 
-          // clipText: false,
-          colSpans: headers.map((e) => 1).toList(),
-          alignments: List.generate(
-            headers.length,
-            (index) => index == 0
-                ? TextAlign.start
-                : index == headers.length - 1
-                ? TextAlign.end
-                : TextAlign.start,
-          ),
-          onRowTap: (index, row) {
-            print("Tapped row $index: $row");
-          },
-          headers: headers,
+  Widget _buildPendingList(DashController controller) {
+    return Obx(() {
+      if (controller.isLoading.value && controller.pendingLeads.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (controller.pendingLeads.isEmpty) {
+        return _buildEmptyState("No pending leads found");
+      }
+      return ListView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: controller.pendingLeads.length,
+        itemBuilder: (context, index) {
+          final lead = controller.pendingLeads[index];
+          return _buildPendingCard(controller, lead);
+        },
+      );
+    });
+  }
 
-          headerStyle: primaryTextStyle.copyWith(
-            color: colorManager.whiteColor,
+  Widget _buildPendingCard(
+    DashController controller,
+    Map<String, dynamic> lead,
+  ) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      color: colorManager.accentColor.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: ListTile(
+        onTap: () => Get.to(
+          () => LeadDetailsLayout2(
+            url: controller.getLeadDetailUrl(lead),
+            cont: Get.find<LeadController>(),
           ),
-          cellStyle: primaryTextStyle.copyWith(color: colorManager.textColor),
-          showTotal: false,
-          rows: rows,
-          data: data,
-          groupBy: groupBy,
-          groupRowColor: groupRowColor,
         ),
-        if ((rows != null && rows.isEmpty))
-          Center(
-            child: Text(
-              'No Data Available',
-              style: primaryTextStyle.copyWith(
-                color: colorManager.textColor,
-                // fontSize: 18,
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colorManager.accentColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: HugeIcon(
+            icon: HugeIcons.strokeRoundedClock01,
+            color: colorManager.accentColor,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          lead['business_name'] ?? 'Undefined Business',
+          style: primaryTextStyle.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+        subtitle: Text(lead['lead_status'] ?? 'Pending'),
+        trailing: Icon(Icons.arrow_forward_ios, size: 14),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Text(message, style: TextStyle(color: Colors.grey.shade500)),
+      ),
+    );
+  }
+
+  DashController get dashController => Get.find<DashController>();
+
+  Widget _buildFabOption({
+    required dynamic icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
+            ],
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
             ),
           ),
+        ),
+        const SizedBox(width: 12),
+        FloatingActionButton.small(
+          heroTag: label,
+          backgroundColor: colorManager.primaryColor,
+          elevation: 4,
+          onPressed: onTap,
+          child: HugeIcon(icon: icon, color: Colors.white, size: 20),
+        ),
       ],
     );
   }

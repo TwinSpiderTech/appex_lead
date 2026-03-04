@@ -5,16 +5,30 @@ import 'package:appex_lead/component/custom_button.dart';
 import 'package:appex_lead/component/custom_input_field.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart';
 import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/form/forms.dart';
-import 'package:appex_lead/view/form/lead_details_screen.dart';
+import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-class LeadScreen extends StatelessWidget {
+class LeadScreen extends StatefulWidget {
   const LeadScreen({super.key});
+
+  @override
+  State<LeadScreen> createState() => _LeadScreenState();
+}
+
+class _LeadScreenState extends State<LeadScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cont = Get.find<LeadController>();
+      cont.getLeads(reset: true, status: 'pending');
+      cont.getLeads(reset: true, status: 'ongoing');
+      cont.getLeads(reset: true, status: 'closed');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +50,7 @@ class LeadScreen extends StatelessWidget {
               tabs: [
                 Tab(
                   child: Text(
-                    "Pending",
+                    "Ongoing",
                     style: primaryTextStyle.copyWith(
                       color: colorManager.whiteColor,
                       fontSize: 16,
@@ -45,13 +59,14 @@ class LeadScreen extends StatelessWidget {
                 ),
                 Tab(
                   child: Text(
-                    "Ongoing",
+                    "Pending",
                     style: primaryTextStyle.copyWith(
                       color: colorManager.whiteColor,
                       fontSize: 16,
                     ),
                   ),
                 ),
+
                 Tab(
                   child: Text(
                     "Closed",
@@ -70,15 +85,15 @@ class LeadScreen extends StatelessWidget {
             children: [
               HistoryTab(
                 cont: cont,
-                history: cont.pendingLeads,
-                isLoading: cont.pendingLoading,
-                status: 'pending',
-              ),
-              HistoryTab(
-                cont: cont,
                 history: cont.ongoingLeads,
                 isLoading: cont.ongoingLoading,
                 status: 'ongoing',
+              ),
+              HistoryTab(
+                cont: cont,
+                history: cont.pendingLeads,
+                isLoading: cont.pendingLoading,
+                status: 'pending',
               ),
               HistoryTab(
                 cont: cont,
@@ -103,13 +118,13 @@ class LeadScreen extends StatelessWidget {
                       bool isLoading = false;
 
                       if (c.tabController.index == 0) {
-                        currentPage = c.pendingPage;
-                        hasNext = c.pendingHasNext;
-                        isLoading = c.pendingLoading.value;
-                      } else if (c.tabController.index == 1) {
                         currentPage = c.ongoingPage;
                         hasNext = c.ongoingHasNext;
                         isLoading = c.ongoingLoading.value;
+                      } else if (c.tabController.index == 1) {
+                        currentPage = c.pendingPage;
+                        hasNext = c.pendingHasNext;
+                        isLoading = c.pendingLoading.value;
                       } else if (c.tabController.index == 2) {
                         currentPage = c.closedPage;
                         hasNext = c.closedHasNext;
@@ -159,14 +174,6 @@ class LeadScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                // CustomButton(
-                //   textColr: colorManager.whiteColor,
-                //   backgroundColor: colorManager.primaryColor,
-                //   label: "Register New Complaint",
-                //   onTap: () {
-                //     // Get.to(() => AddNewCompalint(cont: cont));
-                //   },
-                // ),
               ],
             ),
           ),
@@ -200,7 +207,7 @@ class HistoryTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: CustomInputField(
             isRequired: false,
-            hint: "Search complaints...",
+            hint: "Search Leads...",
             prefixIcon: Icon(Icons.search, color: colorManager.dynamicColor),
             controller: status == 'pending'
                 ? cont.pendingSearchCont
@@ -234,7 +241,7 @@ class HistoryTab extends StatelessWidget {
                             height: 500,
                             child: Center(
                               child: Text(
-                                'No complaint found!',
+                                'No lead found!',
                                 style: primaryTextStyle.copyWith(
                                   color: colorManager.textColor,
                                 ),
@@ -252,15 +259,17 @@ class HistoryTab extends StatelessWidget {
                                       l['id'].toString();
                                   log("${l}");
                                   Get.to(
-                                    () =>
-                                        LeadDetailsScreen(url: url, cont: cont),
+                                    () => LeadDetailsLayout2(
+                                      url: url,
+                                      cont: cont,
+                                    ),
                                   );
                                 },
                                 child: Card(
                                   color: colorManager.accentColor.withValues(),
                                   child: ListTile(
                                     leading: HugeIcon(
-                                      icon: HugeIcons.strokeRoundedHugeicons,
+                                      icon: HugeIcons.strokeRoundedFolder01,
                                       color: colorManager.whiteColor,
                                     ),
                                     title: Text(
