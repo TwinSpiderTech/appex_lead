@@ -17,7 +17,7 @@ String formatDateTime(String? dateTimeString) {
   if (dateTimeString == null || dateTimeString.isEmpty) return "N/A";
   try {
     DateTime dt = DateTime.parse(dateTimeString).toLocal();
-    return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+    return previewableDateTimeFormat(dt);
   } catch (e) {
     return dateTimeString;
   }

@@ -7,10 +7,11 @@ import 'package:intl/intl.dart';
 import 'image_preview_screen.dart';
 import '../../controller/form/generic_form_controller.dart';
 import '../../view/camera/camera_screen.dart';
-import '../../component/custom_input_field.dart';
-import '../../component/custom_searchable_dropdown.dart';
+import 'package:appex_lead/component/custom_input_field.dart';
+import 'package:appex_lead/component/custom_checkbox_field.dart';
+import 'package:appex_lead/component/custom_searchable_dropdown.dart';
 import '../../component/custom_searchable_dropdown2.dart';
-import '../../component/custom_button.dart';
+import 'package:appex_lead/component/custom_button.dart';
 import '../../main.dart'; // for colorManager
 
 class GenericFormFieldWidget extends StatelessWidget {
@@ -32,38 +33,100 @@ class GenericFormFieldWidget extends StatelessWidget {
     String fieldType = fieldData['field_type'] ?? "string";
     bool isEditable = (fieldData['field_editable'] ?? true) && !isReadOnly;
     String fieldName = fieldData['field_name'] ?? "unknown";
+    String fieldMessage = dig(fieldData, ['field_config', 'message']) ?? "";
 
+    Map<String, dynamic> config = Map<String, dynamic>.from(
+      dig(fieldData, ['field_config']) ?? {},
+    );
+
+    int? maxLength = config['max_length'] != null
+        ? int.tryParse(config['max_length'].toString())
+        : null;
+    int? minLength = config['min_length'] != null
+        ? int.tryParse(config['min_length'].toString())
+        : null;
+    String regex = config['regax'] ?? '';
     // debugPrint(
     //   "Building $fieldType: $fieldName (Editable: $isEditable) RawEditable: ${fieldData['field_editable']}",
     // );
 
     switch (fieldType) {
       case 'string':
-        return _buildStringField(isEditable, TextInputType.text);
+        return _buildStringField(
+          isEditable,
+          TextInputType.text,
+          fieldName,
+          minLength,
+          maxLength,
+          fieldMessage,
+          regex,
+        );
       case 'email':
-        return _buildStringField(isEditable, TextInputType.emailAddress);
+        return _buildStringField(
+          isEditable,
+          TextInputType.emailAddress,
+          fieldName,
+          minLength,
+          maxLength,
+          fieldMessage,
+          regex,
+        );
       case 'phone':
-        return _buildStringField(isEditable, TextInputType.phone);
+        return _buildStringField(
+          isEditable,
+          TextInputType.phone,
+          fieldName,
+          minLength,
+          maxLength,
+          fieldMessage,
+          regex,
+        );
       case 'text':
-        return _buildTextField(isEditable, TextInputType.text);
+        return _buildTextField(
+          isEditable,
+          TextInputType.text,
+          fieldName,
+          minLength,
+          maxLength,
+          fieldMessage,
+          regex,
+        );
       case 'select':
       case 'dropdown':
       case 'select_with_add':
       case 'select_or_auto':
-        return _buildDropdownField(isEditable);
+        return _buildDropdownField(isEditable, fieldName, fieldMessage);
       case 'datetime':
       case 'date':
-        return _buildDateTimeField(context, isEditable);
+        return _buildDateTimeField(
+          context,
+          isEditable,
+          fieldName,
+          fieldMessage,
+          config,
+        );
+      case 'checkbox':
+      case 'checkbox_group':
+        return _buildCheckboxFieldMap(isEditable, fieldName, fieldMessage);
+
       case 'gps':
-        return _buildGpsField();
+        return _buildGpsField(fieldName, fieldMessage);
       case 'camera':
-        return _buildCameraField(isEditable);
+        return _buildCameraField(isEditable, fieldName, fieldMessage);
       default:
-        return _buildStringField(isEditable, TextInputType.text);
+        return _buildStringField(
+          isEditable,
+          TextInputType.text,
+          fieldName,
+          minLength,
+          maxLength,
+          fieldMessage,
+          regex,
+        );
     }
   }
 
-  Widget _buildWrapper({required Widget child}) {
+  Widget _buildWrapper({required Widget child, String fieldMessage = ""}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -73,7 +136,7 @@ class GenericFormFieldWidget extends StatelessWidget {
             children: [
               Text(
                 fieldData['field_text'] ?? '',
-                style: TextStyle(
+                style: primaryTextStyle.copyWith(
                   color: colorManager.textColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -92,25 +155,31 @@ class GenericFormFieldWidget extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           child,
+          if (fieldMessage.isNotEmpty) const SizedBox(height: 6),
+          if (fieldMessage.isNotEmpty)
+            Text(
+              fieldMessage,
+              style: primaryTextStyle.copyWith(
+                color: colorManager.textColor.withOpacity(0.6),
+                fontSize: 10,
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildStringField(bool isEditable, TextInputType keyboardType) {
-    String fieldName = fieldData['field_name'] ?? "unknown";
-    Map<String, dynamic> config = Map<String, dynamic>.from(
-      dig(fieldData, ['field_config']) ?? {},
-    );
-    int? maxLength = config['max_length'] != null
-        ? int.tryParse(config['max_length'].toString())
-        : null;
-    int? minLength = config['min_length'] != null
-        ? int.tryParse(config['min_length'].toString())
-        : null;
-    String regex = config['regax'] ?? '';
-
+  Widget _buildStringField(
+    bool isEditable,
+    TextInputType keyboardType,
+    String fieldName,
+    int? minLength,
+    int? maxLength,
+    String fieldMessage,
+    String regex,
+  ) {
     return _buildWrapper(
+      fieldMessage: fieldMessage,
       child: Obx(() {
         String? value = controller.formValues[fieldName]?.toString();
         bool isRequired = controller.isConditionalFieldRequired(
@@ -142,20 +211,17 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(bool isEditable, TextInputType keyboardType) {
-    String fieldName = fieldData['field_name'] ?? "unknown";
-    Map<String, dynamic> config = Map<String, dynamic>.from(
-      dig(fieldData, ['field_config']) ?? {},
-    );
-    int? maxLength = config['max_length'] != null
-        ? int.tryParse(config['max_length'].toString())
-        : null;
-    int? minLength = config['min_length'] != null
-        ? int.tryParse(config['min_length'].toString())
-        : null;
-    String regex = config['regax'] ?? '';
-
+  Widget _buildTextField(
+    bool isEditable,
+    TextInputType keyboardType,
+    String fieldName,
+    int? minLength,
+    int? maxLength,
+    String fieldMessage,
+    String regex,
+  ) {
     return _buildWrapper(
+      fieldMessage: fieldMessage,
       child: Obx(() {
         String? value = controller.formValues[fieldName]?.toString();
         bool isRequired = controller.isConditionalFieldRequired(
@@ -188,14 +254,18 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDropdownField(bool isEditable) {
-    String fieldName = fieldData['field_name'] ?? "unknown";
+  Widget _buildDropdownField(
+    bool isEditable,
+    String fieldName,
+    String fieldMessage,
+  ) {
     var rawOptions =
         fieldData['field_options'] ??
         fieldData['options'] ??
         fieldData['choices'];
 
     return _buildWrapper(
+      fieldMessage: fieldMessage,
       child: Obx(() {
         var currentValue = controller.formValues[fieldName];
 
@@ -251,12 +321,15 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDateTimeField(BuildContext context, bool isEditable) {
-    String fieldName = fieldData['field_name'] ?? "unknown";
+  Widget _buildDateTimeField(
+    BuildContext context,
+    bool isEditable,
+    String fieldName,
+    String fieldMessage,
+    Map<String, dynamic> config,
+  ) {
     bool isDateOnly = fieldData['field_type'] == 'date';
-    Map<String, dynamic> config = Map<String, dynamic>.from(
-      dig(fieldData, ['field_config']) ?? {},
-    );
+
     // Use num.tryParse to handle doubles or ints, default to 0 and 30 for safety
     int minDays = (num.tryParse(config['min_date']?.toString() ?? '') ?? 0)
         .toInt();
@@ -275,6 +348,7 @@ class GenericFormFieldWidget extends StatelessWidget {
     }
 
     return _buildWrapper(
+      fieldMessage: fieldMessage,
       child: InkWell(
         onTap: isEditable
             ? () async {
@@ -295,7 +369,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                   if (isDateOnly) {
                     controller.updateFieldValue(
                       fieldName,
-                      DateFormat('yyyy-MM-dd').format(pickedDate),
+                      formatDateToString(pickedDate),
                     );
                   } else {
                     if (!context.mounted) return;
@@ -313,7 +387,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                       );
                       controller.updateFieldValue(
                         fieldName,
-                        DateFormat('yyyy-MM-dd HH:mm:ss').format(dt),
+                        previewableDateTimeFormat(dt),
                       );
                     }
                   }
@@ -353,10 +427,183 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildGpsField() {
-    String fieldName = fieldData['field_name'];
+  Widget _buildCheckboxField(
+    bool isEditable,
+    String fieldName,
+    String fieldMessage,
+  ) {
+    var rawOptions =
+        fieldData['field_options'] ??
+        fieldData['options'] ??
+        fieldData['choices'];
+
+    List<String> options = [];
+    if (rawOptions is List) {
+      options = List<String>.from(rawOptions.map((e) => e.toString()));
+    } else if (rawOptions is String && rawOptions.isNotEmpty) {
+      options = rawOptions.split(',').map((e) => e.trim()).toList();
+    }
 
     return _buildWrapper(
+      fieldMessage: fieldMessage,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: colorManager.secondaryColor),
+          borderRadius: BorderRadius.circular(borderRadius),
+          color: isEditable
+              ? Colors.transparent
+              : colorManager.primaryColor.withAlpha(25),
+        ),
+        child: Obx(() {
+          var rawValue = controller.formValues[fieldName];
+          List<String> currentSelections = [];
+
+          if (rawValue is List) {
+            currentSelections = List<String>.from(
+              rawValue.map((e) => e.toString()),
+            );
+          } else if (rawValue is String && rawValue.isNotEmpty) {
+            // Trim brackets just in case it's saved as a stringified list like "[A, B]"
+            String cleanVal = rawValue.replaceAll('[', '').replaceAll(']', '');
+            currentSelections = cleanVal
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          }
+
+          if (options.isEmpty) {
+            return Text(
+              "No options available",
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            );
+          }
+
+          return Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: options.map((option) {
+              final isSelected = currentSelections.contains(option);
+              return GestureDetector(
+                onTap: isEditable
+                    ? () {
+                        List<String> newSelections = List.from(
+                          currentSelections,
+                        );
+                        if (isSelected) {
+                          newSelections.remove(option);
+                        } else {
+                          newSelections.add(option);
+                        }
+                        // Update form values with the new List of strings
+                        controller.updateFieldValue(fieldName, newSelections);
+                      }
+                    : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? colorManager.primaryColor.withOpacity(0.08)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? colorManager.primaryColor
+                          : colorManager.secondaryColor,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank,
+                        color: isSelected
+                            ? colorManager.primaryColor
+                            : colorManager.textColor.withOpacity(0.5),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        option,
+                        style: primaryTextStyle.copyWith(
+                          color: isSelected
+                              ? colorManager.primaryColor
+                              : colorManager.textColor,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCheckboxFieldMap(
+    bool isEditable,
+    String fieldName,
+    String fieldMessage,
+  ) {
+    var rawOptions =
+        fieldData['field_options'] ??
+        fieldData['options'] ??
+        fieldData['choices'];
+
+    Map<String, dynamic> optionsMap = {};
+    if (rawOptions is Map) {
+      optionsMap = Map<String, dynamic>.from(rawOptions);
+    }
+
+    return _buildWrapper(
+      fieldMessage: fieldMessage,
+      child: Obx(() {
+        var rawValue = controller.formValues[fieldName];
+        List<String> currentSelections = [];
+
+        if (rawValue is List) {
+          currentSelections = List<String>.from(
+            rawValue.map((e) => e.toString()),
+          );
+        } else if (rawValue is String && rawValue.isNotEmpty) {
+          String cleanVal = rawValue.replaceAll('[', '').replaceAll(']', '');
+          currentSelections = cleanVal
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+        }
+
+        return CustomCheckboxField(
+          items: optionsMap,
+          initialSelections: currentSelections,
+          enabled: isEditable,
+          label: fieldData['field_text'] ?? fieldName,
+          borderRadius: borderRadius,
+          onChange: (newSelections) {
+            controller.updateFieldValue(fieldName, newSelections);
+          },
+        );
+      }),
+    );
+  }
+
+  Widget _buildGpsField(String fieldName, String fieldMessage) {
+    return _buildWrapper(
+      fieldMessage: fieldMessage,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.only(
@@ -410,10 +657,13 @@ class GenericFormFieldWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCameraField(bool isEditable) {
-    String fieldName = fieldData['field_name'] ?? "unknown";
-
+  Widget _buildCameraField(
+    bool isEditable,
+    String fieldName,
+    String fieldMessage,
+  ) {
     return _buildWrapper(
+      fieldMessage: fieldMessage,
       child: Obx(() {
         var imagePath = controller.formValues[fieldName] as String?;
 
@@ -469,12 +719,14 @@ class GenericFormFieldWidget extends StatelessWidget {
                           debugPrint("Background processing done: $path");
                           controller.updateFieldValue(fieldName, path);
                           controller.updateAllGpsFields();
+                          controller.updateAllTimestampFields();
                         },
                       ),
                     );
                     if (result != null && result is String) {
                       controller.updateFieldValue(fieldName, result);
                       controller.updateAllGpsFields();
+                      controller.updateAllTimestampFields();
                     }
                   },
                   label: imagePath == null ? "Capture Photo" : "Retake Photo",

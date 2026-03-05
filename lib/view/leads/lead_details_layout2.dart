@@ -38,6 +38,7 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
 
     lead = await widget.cont.loadLeadDetails(widget.url!);
     if (lead != null) {
+      prettyPrint(lead);
       controller.currentLead.value = lead;
       await controller.fetchTemplate(
         "/api/v1/business/leads/get_form_template",
@@ -132,6 +133,27 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                                 ),
                               ),
                             ),
+                          if (_lead.fieldsRecord?.personName != null)
+                            Container(
+                              margin: const EdgeInsets.only(top: 6, bottom: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                _lead.fieldsRecord?.personName?.toUpperCase() ??
+                                    "",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -140,35 +162,45 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
               ),
             ];
           },
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildQuickActions(_lead),
-                const SizedBox(height: 24),
+          body: RefreshIndicator(
+            color: colorManager.primaryColor,
+            onRefresh: () async {
+              await initData();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildQuickActions(_lead),
+                  const SizedBox(height: 24),
 
-                // Form Fields Grouped in Cards
-                ...controller.formGroupsData.map((group) {
-                  return _buildGroupCard(group);
-                }).toList(),
+                  // Form Fields Grouped in Cards
+                  ...controller.formGroupsData.map((group) {
+                    return _buildGroupCard(group);
+                  }).toList(),
 
-                const SizedBox(height: 32),
+                  // _buildAdditionalInfoGroup(
+                  //   controller.currentLead.value ?? lead!,
+                  // ),
+                  const SizedBox(height: 32),
 
-                if (followups.isNotEmpty) ...[
-                  Text(
-                    "Follow up History",
-                    style: TextStyle(
-                      color: colorManager.primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                  if (followups.isNotEmpty) ...[
+                    Text(
+                      "Follow up History",
+                      style: TextStyle(
+                        color: colorManager.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ...followups.map((f) => _buildTimelineItem(f)).toList(),
+                    const SizedBox(height: 16),
+                    ...followups.map((f) => _buildTimelineItem(f)).toList(),
+                  ],
+                  const SizedBox(height: 40),
                 ],
-                const SizedBox(height: 40),
-              ],
+              ),
             ),
           ),
         );
@@ -185,18 +217,28 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   Widget _buildQuickActions(LeadModel lead) {
     final phone =
         controller.formValues['phone_number'] ?? lead.fieldsRecord?.phoneNo;
+    final mobileNO =
+        controller.formValues['mobile_number'] ?? lead.fieldsRecord?.mobileNo;
 
     final email = lead.fieldsRecord?.emailAddress;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _actionButton(
-          icon: HugeIcons.strokeRoundedCall,
-          label: "Call",
-          color: Colors.green,
-          onTap: () => _launchUrl("tel:$phone"),
-        ),
+        if (mobileNO != null && mobileNO.toString().trim().isNotEmpty)
+          _actionButton(
+            icon: HugeIcons.strokeRoundedCall,
+            label: "Call",
+            color: Colors.green,
+            onTap: () => _launchWhatsappUrl(mobileNO),
+          ),
+        if (phone != null && phone.toString().trim().isNotEmpty)
+          _actionButton(
+            icon: HugeIcons.strokeRoundedTelephone,
+            label: "Call",
+            color: Colors.green,
+            onTap: () => _launchUrl("tel:$phone"),
+          ),
         if (email != null && email.toString().trim().isNotEmpty)
           _actionButton(
             icon: HugeIcons.strokeRoundedMail01,
@@ -317,6 +359,54 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
     );
   }
 
+  Widget _buildAdditionalInfoGroup(LeadModel lead) {
+    if (lead.fieldsRecord == null) return const SizedBox.shrink();
+
+    // Get all rendered keys from the template
+    Set<String> renderedKeys = {};
+    for (var group in controller.formGroupsData) {
+      final fields = group['fields'] as List? ?? [];
+      for (var f in fields) {
+        if (f['field_name'] != null) {
+          renderedKeys.add(f['field_name'].toString());
+        }
+      }
+    }
+
+    final data = lead.fieldsRecord!.toJson();
+
+    List<Map<String, dynamic>> extraFields = [];
+    data.forEach((key, value) {
+      if (!renderedKeys.contains(key) &&
+          value != null &&
+          value.toString().trim().isNotEmpty &&
+          value.toString().toLowerCase() != "null") {
+        // Convert snake_case to Title Case for labels
+        String label = key
+            .replaceAll('_', ' ')
+            .split(' ')
+            .map((word) {
+              if (word.isEmpty) return word;
+              return word[0].toUpperCase() + word.substring(1);
+            })
+            .join(' ');
+
+        extraFields.add({
+          'field_name': key,
+          'field_text': label,
+          'field_type': 'string',
+        });
+      }
+    });
+
+    if (extraFields.isEmpty) return const SizedBox.shrink();
+
+    return _buildGroupCard({
+      'group_title': 'Additional Information',
+      'fields': extraFields,
+    });
+  }
+
   Widget _buildTimelineItem(Followup followup) {
     return IntrinsicHeight(
       child: Row(
@@ -385,6 +475,24 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   }
 
   Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        log("Could not launch $url");
+      }
+    } catch (e) {
+      log("Error launching URL: $e");
+    }
+  }
+
+  Future<void> _launchWhatsappUrl(String phoneNumber) async {
+    String number = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    if (number.startsWith("0")) {
+      number = "92${number.substring(1)}";
+    }
+    String url = "https://wa.me/$number";
     final uri = Uri.parse(url);
     try {
       if (await canLaunchUrl(uri)) {

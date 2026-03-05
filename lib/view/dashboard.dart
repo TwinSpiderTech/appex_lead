@@ -10,6 +10,8 @@ import 'package:appex_lead/view/interaction/interaction_form.dart';
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/form/form_details.dart';
+import 'package:appex_lead/view/form/drafts_screen.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -54,13 +56,18 @@ class _DashboardState extends State<Dashboard> {
                       children: [
                         _buildSearchBar(controller),
                         const SizedBox(height: 24),
-                        _buildSectionHeader("Upcoming Leads", () {
+                        _buildSectionHeader("Upcoming Follow-ups", () {
                           Get.find<LeadController>().tabController.index = 0;
                           Get.to(() => const LeadScreen());
                         }),
                         const SizedBox(height: 12),
                         _buildUpcomingList(controller),
                         const SizedBox(height: 24),
+                        _buildSectionHeader("Drafts", () {
+                          Get.to(() => const DraftsScreen());
+                        }),
+                        const SizedBox(height: 12),
+                        _buildDraftsList(controller),
                         _buildSectionHeader("Pending Leads", () {
                           Get.find<LeadController>().tabController.index = 1;
                           Get.to(() => const LeadScreen());
@@ -225,10 +232,10 @@ class _DashboardState extends State<Dashboard> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: primaryTextStyle.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: colorManager.primaryColor,
           ),
         ),
         TextButton(
@@ -244,8 +251,11 @@ class _DashboardState extends State<Dashboard> {
 
   Widget _buildUpcomingList(DashController controller) {
     return Obx(() {
-      if (controller.isLoading.value && controller.upcomingLeads.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+      if (controller.isLoading.value) {
+        return const SizedBox(
+          height: 160,
+          child: Center(child: CircularProgressIndicator()),
+        );
       }
       if (controller.upcomingLeads.isEmpty) {
         return _buildEmptyState("No upcoming leads");
@@ -317,6 +327,18 @@ class _DashboardState extends State<Dashboard> {
                 fontSize: 13,
               ),
             ),
+            if (lead['next_followup'] != null &&
+                lead['next_followup'].toString().isNotEmpty)
+              const SizedBox(height: 2),
+            Text(
+              lead['next_followup'] ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: primaryTextStyle.copyWith(
+                color: colorManager.textColor,
+                fontSize: 10,
+              ),
+            ),
           ],
         ),
       ),
@@ -325,8 +347,11 @@ class _DashboardState extends State<Dashboard> {
 
   Widget _buildPendingList(DashController controller) {
     return Obx(() {
-      if (controller.isLoading.value && controller.pendingLeads.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+      if (controller.isLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Center(child: CircularProgressIndicator()),
+        );
       }
       if (controller.pendingLeads.isEmpty) {
         return _buildEmptyState("No pending leads found");
@@ -386,6 +411,99 @@ class _DashboardState extends State<Dashboard> {
         trailing: Icon(Icons.arrow_forward_ios, size: 14),
       ),
     );
+  }
+
+  Widget _buildDraftsList(DashController controller) {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      if (controller.drafts.isEmpty) {
+        return _buildEmptyState("No saved drafts");
+      }
+      return ListView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: controller.drafts.length > 3 ? 3 : controller.drafts.length,
+        itemBuilder: (context, index) {
+          final draft = controller.drafts[index];
+          final String formattedDate = _formatDraftDate(draft['updated_at']);
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            elevation: 0,
+            // color: colorManager.accentColor.withOpacity(0.08),
+            color: colorManager.accentColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: ListTile(
+              onTap: () async {
+                final String url = draft['template_url'] ?? '';
+                if (url.isNotEmpty) {
+                  await Get.to(
+                    () => FormDetails(
+                      url: url,
+                      draftData: draft,
+                      title: draft['business_name'] ?? 'Untitled Draft',
+                    ),
+                  );
+                  controller.fetchDrafts();
+                }
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colorManager.whiteColor.withOpacity(0.4),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.description_outlined,
+                  color: colorManager.whiteColor,
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                draft['title'] ?? 'Untitled Draft',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: primaryTextStyle.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: colorManager.whiteColor,
+                ),
+              ),
+              subtitle: Text(
+                "Last updated: $formattedDate",
+                style: primaryTextStyle.copyWith(
+                  fontSize: 12,
+                  color: colorManager.whiteColor.withOpacity(0.6),
+                ),
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: colorManager.whiteColor,
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  String _formatDraftDate(String? updatedAt) {
+    try {
+      if (updatedAt == null) return '';
+      final dt = DateTime.parse(updatedAt);
+      return previewableDateTimeFormat(dt);
+    } catch (_) {
+      return updatedAt ?? '';
+    }
   }
 
   Widget _buildEmptyState(String message) {

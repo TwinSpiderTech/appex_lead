@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:appex_lead/utils/helpers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -374,7 +375,7 @@ class CustomCameraController extends GetxController {
 
       // 10. Draw the Timestamp Text.
       final timeStr = captureTime.value != null
-          ? DateFormat('dd-MM-yyyy hh:mm:ss a').format(captureTime.value!)
+          ? previewableDateTimeFormat(captureTime.value!)
           : "";
       textPainter.text = TextSpan(
         text: timeStr,

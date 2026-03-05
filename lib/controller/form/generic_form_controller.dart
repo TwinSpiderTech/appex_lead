@@ -16,6 +16,7 @@ import '../../main.dart';
 import '../../model/form_model.dart';
 import '../../utils/auth_service.dart';
 import '../../model/lead_model.dart';
+import '../dash/dash_controller.dart';
 
 class GenericFormController extends GetxController {
   // List of available form templates (Mocking API data)
@@ -77,7 +78,7 @@ class GenericFormController extends GetxController {
   }
 
   void _applyTemplate(Map<String, dynamic> data) {
-    prettyPrint(data);
+    // prettyPrint(data);
     try {
       formModel = FormModel.fromJson(data);
       currentFormTitle.value = formModel?.title ?? "";
@@ -133,6 +134,7 @@ class GenericFormController extends GetxController {
 
       fieldsData.assignAll(flatFieldList);
       formGroupsData.assignAll(groupList);
+      // prettyPrint(formGroupsData);
       debugPrint(
         "Fields loaded: ${fieldsData.length}, Groups: ${formGroupsData.length}",
       );
@@ -345,15 +347,15 @@ class GenericFormController extends GetxController {
       String name = (field['field_name'] ?? "").toString();
       if (name.isEmpty) continue;
 
-      // Only initialize if the value is currently null
-      if (formValues[name] == null) {
+      // Only initialize if the value is currently null or strictly an empty string
+      final currentValue = formValues[name];
+      if (currentValue == null ||
+          (currentValue is String && currentValue.trim().isEmpty)) {
         // Auto generate values if needed
         if (isTrue(field['field_auto_generated']) ||
             isHidden(field['field_visibility'])) {
           if (field['field_type'] == 'datetime') {
-            formValues[name] = DateFormat(
-              'yyyy-MM-dd - hh:mm:ss a',
-            ).format(DateTime.now());
+            formValues[name] = formatDateTimeToString(DateTime.now());
           } else if (field['field_type'] == 'gps') {
             if (cameraPresent) {
               formValues[name] = "Capture photo to update GPS";
@@ -364,15 +366,15 @@ class GenericFormController extends GetxController {
           }
         } else if (field['field_default'] != null &&
             field['field_default'] != "") {
-          // Handle pre-filled fixed defaults (note: field_default from API)
+          // Handle pre-filled fixed defaults
           formValues[name] = field['field_default'];
         } else {
-          // Initialize with null or empty
+          // Initialize with null
           formValues[name] = null;
         }
       } else if (field['field_type'] == 'gps' && !cameraPresent) {
         // If resuming but no camera, and it was "Capture photo...", refresh it
-        if (formValues[name] == "Capture photo to update GPS") {
+        if (currentValue == "Capture photo to update GPS") {
           formValues[name] = "Fetching GPS automatically...";
           gpsUpdated = true;
         }
@@ -497,6 +499,27 @@ class GenericFormController extends GetxController {
 
   void updateFieldValue(String fieldName, dynamic value) {
     formValues[fieldName] = value;
+  }
+
+  /// Updates `captured_at` form field with the current datetime.
+  void updateAllTimestampFields() {
+    final now = formatDateTimeToString(DateTime.now());
+
+    // Always update captured_at directly in form values
+    formValues['captured_at'] = now;
+
+    // Additionally ensure if it exists in the template, it gets updated
+    for (var field in fieldsData) {
+      final fieldName = (field['field_name'] ?? '').toString().toLowerCase();
+
+      if (fieldName == 'captured_at') {
+        final key = field['field_name']?.toString();
+        if (key != null && key.isNotEmpty) {
+          formValues[key] = now;
+          debugPrint("Timestamp field '$key' updated to: $now");
+        }
+      }
+    }
   }
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -633,14 +656,12 @@ class GenericFormController extends GetxController {
 
       showToast(message: "Draft saved successfully!");
 
-      // Get.snackbar(
-      //   "Saved",
-      //   "Draft saved successfully.",
-      //   backgroundColor: Colors.blueAccent,
-      //   colorText: Colors.white,
-      //   snackPosition: SnackPosition.BOTTOM,
-      //   duration: const Duration(seconds: 2),
-      // );
+      // Refresh draft list on dashboard if it is active
+      try {
+        if (Get.isRegistered<DashController>()) {
+          Get.find<DashController>().fetchDrafts();
+        }
+      } catch (_) {}
     } catch (e) {
       debugPrint("Error saving progress: $e");
     }

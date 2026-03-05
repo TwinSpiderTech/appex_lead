@@ -114,7 +114,7 @@ class _MyAppState extends State<MyApp> {
       opaqueRoute: true,
       popGesture: true,
       debugShowCheckedModeBanner: false,
-      title: 'Appex Trading',
+      title: 'Appex Lead',
       theme: ThemeData(
         dialogBackgroundColor: colorManager.bgDark,
         fontFamily: 'SF Pro',

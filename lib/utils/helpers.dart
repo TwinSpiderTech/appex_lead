@@ -15,6 +15,7 @@ import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/view/auth/login.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String hexToColor(String hexColor) {
@@ -375,3 +376,19 @@ const demoCondition = {
     },
   ],
 };
+
+String previewableDateTimeFormat(DateTime dateTime) {
+  return DateFormat('dd MMM, yyyy - hh:mm a').format(dateTime);
+}
+
+String formatDateTimeToString(DateTime dateTime) {
+  return DateFormat('yyyy-MM-dd hh:mm:ss a').format(dateTime);
+}
+
+String formatDateToString(DateTime dateTime) {
+  return DateFormat('yyyy-MM-dd').format(dateTime);
+}
+
+String previewableDateFormat(DateTime dateTime) {
+  return DateFormat('dd MMM, yyyy').format(dateTime);
+}

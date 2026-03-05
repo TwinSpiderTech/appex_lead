@@ -1,4 +1,5 @@
 import 'package:appex_lead/component/custom_appbar.dart';
+import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -69,9 +70,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
               final DateTime updatedAt = DateTime.parse(
                 draft['updated_at'] ?? DateTime.now().toIso8601String(),
               );
-              final String formattedDate = DateFormat(
-                'MMM d, yyyy - hh:mm a',
-              ).format(updatedAt);
+              final String formattedDate = previewableDateTimeFormat(updatedAt);
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
