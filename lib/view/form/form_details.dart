@@ -67,6 +67,23 @@ class _FormDetailsState extends State<FormDetails> {
             Get.back();
           }
         },
+        trailing: Padding(
+          padding: const EdgeInsets.only(right: 12.0),
+          child: IconButton(
+            icon: Icon(Icons.info, color: colorManager.whiteColor),
+            onPressed: () {
+              customPopup(
+                context: context,
+                title: 'Description',
+                message:
+                    controller.formModel?.description ??
+                    "No description available",
+                showConfrimBtn: false,
+                cancelBtnText: 'close',
+              );
+            },
+          ),
+        ),
       ),
       body: Obx(() {
         if (controller.isLoadingTemplates.value &&
@@ -169,9 +186,7 @@ class _FormDetailsState extends State<FormDetails> {
                                   final field = Map<String, dynamic>.from(
                                     fieldData,
                                   );
-                                  return controller.isHidden(
-                                        field['field_visibility'],
-                                      )
+                                  return !controller.isFieldVisible(field)
                                       ? const SizedBox.shrink()
                                       : GenericFormFieldWidget(
                                           fieldData: field,

@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'package:appex_lead/controller/form/generic_form_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart';
+import 'package:appex_lead/model/lead_model.dart'; // for Followup
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/form_field_widgets.dart';
 import 'package:appex_lead/view/interaction/interaction_form.dart';
@@ -24,7 +24,10 @@ class LeadDetailsLayout2 extends StatefulWidget {
 
 class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   final controller = Get.put(GenericFormController());
-  LeadModel? lead;
+  Map<String, dynamic>? lead;
+
+  // Fields to hide from group cards (still accessible via controller.formValues)
+  final Set<String> _hiddenDetailFields = {'id', 'lead_status', 'whatsapp'};
 
   @override
   void initState() {
@@ -58,33 +61,45 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
         }
 
         final _lead = controller.currentLead.value ?? lead!;
-        final followups = _lead.followup ?? [];
+        final followupRaw = _lead['followup'] as List? ?? [];
+        final followups = followupRaw
+            .map((f) => Followup.fromJson(Map<String, dynamic>.from(f)))
+            .toList();
         final businessName =
-            controller.formValues['business_name'] ??
-            _lead.fieldsRecord?.businessName ??
-            "Lead Details";
+            controller.formValues['business_name'] ?? "Lead Details";
 
         return NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                expandedHeight: 200.0,
+                expandedHeight: 100.0,
                 floating: false,
                 pinned: true,
                 elevation: 0,
-                backgroundColor: colorManager.primaryColor,
+                backgroundColor: colorManager.accentColor,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Get.back(),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
-                  title: Text(
-                    businessName.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
+                  title: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 32.0,
+                      left: 16.0,
+                      right: 16.0,
+                    ),
+                    child: Text(
+                      businessName.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                        height: 1,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   background: Container(
@@ -93,70 +108,105 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          colorManager.primaryColor,
-                          colorManager.primaryColor.withOpacity(0.8),
+                          colorManager.accentColor,
+                          colorManager.accentColor,
                         ],
                       ),
                     ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 20),
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.white.withOpacity(0.2),
-                            child: const HugeIcon(
-                              icon: HugeIcons.strokeRoundedUser,
-                              color: Colors.white,
-                              size: 40,
+                    child:
+                        (controller.formValues['person_name'] != null &&
+                            controller.formValues['person_name']
+                                .toString()
+                                .trim()
+                                .isNotEmpty)
+                        ? Padding(
+                            padding: const EdgeInsets.only(
+                              top: 0,
+                              left: 52.0,
+                              right: 18,
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (_lead.fieldsRecord?.leadStatus != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                _lead.fieldsRecord?.leadStatus?.toUpperCase() ??
-                                    "",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        // radius: 20,
+                                        backgroundColor: Colors.white
+                                            .withOpacity(0.0),
+                                        child: const HugeIcon(
+                                          icon: HugeIcons.strokeRoundedUser,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+
+                                      if (controller
+                                                  .formValues['person_name'] !=
+                                              null &&
+                                          controller.formValues['person_name']
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty)
+                                        Expanded(
+                                          child: Text(
+                                            controller.formValues['person_name']
+                                                .toString()
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          if (_lead.fieldsRecord?.personName != null)
-                            Container(
-                              margin: const EdgeInsets.only(top: 6, bottom: 12),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                _lead.fieldsRecord?.personName?.toUpperCase() ??
-                                    "",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                Container(
+                                  child:
+                                      (controller.formValues['lead_status'] !=
+                                              null &&
+                                          controller.formValues['lead_status']
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty)
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(
+                                              0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            controller.formValues['lead_status']
+                                                .toString()
+                                                .toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        )
+                                      : SizedBox(),
                                 ),
-                              ),
+                              ],
                             ),
-                        ],
-                      ),
-                    ),
+                          )
+                        : SizedBox(),
                   ),
                 ),
               ),
@@ -181,9 +231,9 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                     return _buildGroupCard(group);
                   }).toList(),
 
-                  // _buildAdditionalInfoGroup(
-                  //   controller.currentLead.value ?? lead!,
-                  // ),
+                  _buildAdditionalInfoGroup(
+                    controller.currentLead.value ?? lead!,
+                  ),
                   const SizedBox(height: 32),
 
                   if (followups.isNotEmpty) ...[
@@ -206,21 +256,24 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
         );
       }),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: colorManager.primaryColor,
         onPressed: () {
           Get.to(() => InteractionForm(leadId: "1"));
         },
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add, color: colorManager.whiteColor),
       ),
     );
   }
 
-  Widget _buildQuickActions(LeadModel lead) {
+  Widget _buildQuickActions(Map<String, dynamic> lead) {
     final phone =
-        controller.formValues['phone_number'] ?? lead.fieldsRecord?.phoneNo;
+        controller.formValues['phone_number'] ??
+        controller.formValues['phone_no'];
     final mobileNO =
-        controller.formValues['mobile_number'] ?? lead.fieldsRecord?.mobileNo;
-
-    final email = lead.fieldsRecord?.emailAddress;
+        controller.formValues['mobile_number'] ??
+        controller.formValues['mobile_no'];
+    final whatsapp = controller.formValues['whatsapp'];
+    final email = controller.formValues['email_address'];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -229,14 +282,21 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
           _actionButton(
             icon: HugeIcons.strokeRoundedCall,
             label: "Call",
+            color: colorManager.primaryColor,
+            onTap: () => _launchUrl("tel:$mobileNO"),
+          ),
+        if (whatsapp != null && whatsapp.toString().trim().isNotEmpty)
+          _actionButton(
+            icon: HugeIcons.strokeRoundedWhatsapp,
+            label: "Whatsapp",
             color: Colors.green,
-            onTap: () => _launchWhatsappUrl(mobileNO),
+            onTap: () => _launchUrl(whatsapp),
           ),
         if (phone != null && phone.toString().trim().isNotEmpty)
           _actionButton(
             icon: HugeIcons.strokeRoundedTelephone,
             label: "Call",
-            color: Colors.green,
+            color: colorManager.accentColor,
             onTap: () => _launchUrl("tel:$phone"),
           ),
         if (email != null && email.toString().trim().isNotEmpty)
@@ -244,7 +304,7 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
             icon: HugeIcons.strokeRoundedMail01,
             label: "Email",
             color: Colors.blue,
-            onTap: () => _launchUrl("mailto:$email"),
+            onTap: () => _launchEmail(email),
           ),
       ],
     );
@@ -288,6 +348,7 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
 
     final visibleFields = fields.where((fieldData) {
       final fieldName = fieldData['field_name'];
+      if (_hiddenDetailFields.contains(fieldName)) return false;
       final value = controller.formValues[fieldName];
       if (value == null) return false;
       final strVal = value.toString().trim();
@@ -359,8 +420,9 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
     );
   }
 
-  Widget _buildAdditionalInfoGroup(LeadModel lead) {
-    if (lead.fieldsRecord == null) return const SizedBox.shrink();
+  Widget _buildAdditionalInfoGroup(Map<String, dynamic> lead) {
+    final fieldsRecord = lead['fields_record'];
+    if (fieldsRecord == null) return const SizedBox.shrink();
 
     // Get all rendered keys from the template
     Set<String> renderedKeys = {};
@@ -373,7 +435,7 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
       }
     }
 
-    final data = lead.fieldsRecord!.toJson();
+    final data = Map<String, dynamic>.from(fieldsRecord);
 
     List<Map<String, dynamic>> extraFields = [];
     data.forEach((key, value) {
@@ -484,6 +546,34 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
       }
     } catch (e) {
       log("Error launching URL: $e");
+    }
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      queryParameters: {
+        'subject': 'Hello',
+        'body': 'I want to contact you about...',
+      },
+    );
+
+    try {
+      bool launched = await launchUrl(
+        emailUri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        // fallback: open Gmail web page in browser
+        final Uri gmailWeb = Uri.parse(
+          'https://mail.google.com/mail/?view=cm&to=$email',
+        );
+        await launchUrl(gmailWeb, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Could not launch email: $e');
     }
   }
 

@@ -118,7 +118,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       Get.to(() => SharePrefScreen());
                     },
                   ),
-                if (token.isNotEmpty)
+                if (kDebugMode && token.isNotEmpty)
                   DrawerListTile(
                     title: "Settings",
                     icon: Icons.settings,
@@ -150,7 +150,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 //     },
                 //   ),
                 // ),
-                if (token.isNotEmpty)
+                if (kDebugMode && token.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 0.0),
                     child: DrawerListTile(
@@ -163,7 +163,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       },
                     ),
                   ),
-                if (token.isNotEmpty)
+                if (kDebugMode && token.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 0.0),
                     child: DrawerListTile(
@@ -175,42 +175,42 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       },
                     ),
                   ),
-
-                Card(
-                  elevation: 0,
-                  color: colorManager.secondaryColor.withValues(alpha: .1),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.dark_mode,
-                      color: colorManager.iconColor,
-                    ),
-                    title: Text(
-                      "Dark Mode",
-                      style: primaryTextStyle.copyWith(
-                        fontSize: 14,
-                        color: colorManager.textColor,
+                if (false && kDebugMode)
+                  Card(
+                    elevation: 0,
+                    color: colorManager.secondaryColor.withValues(alpha: .1),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.dark_mode,
+                        color: colorManager.iconColor,
                       ),
-                    ),
-                    trailing: CustomSwitch(
-                      width: 40,
-                      height: 25,
-                      value: colorManager.isDark,
-                      onChanged: (newValue) {
-                        colorManager.toggleTheme();
-                      },
-                      inactiveIcon: Icon(
-                        Icons.dark_mode_outlined,
-                        color: colorManager.primaryColor,
-                        size: 14,
+                      title: Text(
+                        "Dark Mode",
+                        style: primaryTextStyle.copyWith(
+                          fontSize: 14,
+                          color: colorManager.textColor,
+                        ),
                       ),
-                      activeIcon: Icon(
-                        Icons.light_mode_outlined,
-                        color: colorManager.primaryColor,
-                        size: 14,
+                      trailing: CustomSwitch(
+                        width: 40,
+                        height: 25,
+                        value: colorManager.isDark,
+                        onChanged: (newValue) {
+                          colorManager.toggleTheme();
+                        },
+                        inactiveIcon: Icon(
+                          Icons.dark_mode_outlined,
+                          color: colorManager.primaryColor,
+                          size: 14,
+                        ),
+                        activeIcon: Icon(
+                          Icons.light_mode_outlined,
+                          color: colorManager.primaryColor,
+                          size: 14,
+                        ),
                       ),
                     ),
                   ),
-                ),
                 SizedBox(height: 10),
                 Center(child: tsWatermark()),
                 Center(

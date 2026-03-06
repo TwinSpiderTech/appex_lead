@@ -143,11 +143,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                 ),
               ),
               Obx(
-                () =>
-                    controller.isConditionalFieldRequired(
-                      // demoCondition,
-                      fieldData['field_required'] ?? {},
-                    )
+                () => controller.isFieldRequired(fieldData)
                     ? const Text(" *", style: TextStyle(color: Colors.red))
                     : const SizedBox.shrink(),
               ),
@@ -182,9 +178,7 @@ class GenericFormFieldWidget extends StatelessWidget {
       fieldMessage: fieldMessage,
       child: Obx(() {
         String? value = controller.formValues[fieldName]?.toString();
-        bool isRequired = controller.isConditionalFieldRequired(
-          fieldData['field_required'],
-        );
+        bool isRequired = controller.isFieldRequired(fieldData);
         return CustomInputField(
           key: isEditable
               ? ValueKey(fieldName)
@@ -224,9 +218,7 @@ class GenericFormFieldWidget extends StatelessWidget {
       fieldMessage: fieldMessage,
       child: Obx(() {
         String? value = controller.formValues[fieldName]?.toString();
-        bool isRequired = controller.isConditionalFieldRequired(
-          fieldData['field_required'],
-        );
+        bool isRequired = controller.isFieldRequired(fieldData);
         return CustomInputField(
           key: isEditable
               ? ValueKey(fieldName)

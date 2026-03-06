@@ -3,8 +3,9 @@ class Urls {
 
   static const String base = env == 'dev'
       // ? '192.168.100.161'
-      ? '192.168.100.173'
-      // ? 'appex.lvh.me:3000'
+      // ? '192.168.100.173'
+      ? '9106-182-185-36-184.ngrok-free.app'
+      // : '9106-182-185-36-184.ngrok-free.app';
       : "appex.twincloud.app";
 
   static const String baseUrl = '$base/api/v1';

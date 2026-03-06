@@ -11,7 +11,7 @@ class AvailableForms extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: "Available Forms"),
+      appBar: CustomAppBar(title: "Available Forms",),
       body: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Column(

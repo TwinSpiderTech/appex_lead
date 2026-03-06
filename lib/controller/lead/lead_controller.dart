@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -61,7 +60,7 @@ class LeadController extends GetxController
     loading.value = value;
   }
 
-  Future<LeadModel?> loadLeadDetails(String url) async {
+  Future<Map<String, dynamic>?> loadLeadDetails(String url) async {
     try {
       isLoaded = true;
       var res = await api.getLeadDetails(url);
@@ -69,7 +68,7 @@ class LeadController extends GetxController
       if (res != null &&
           (res['status'] == 200 || res['response_status'] == 'success')) {
         var data = res['data'] ?? {};
-        return LeadModel.fromJson(data);
+        return Map<String, dynamic>.from(data);
       }
       update();
       return null;
@@ -79,27 +78,6 @@ class LeadController extends GetxController
     }
   }
 
-  // createNewComplaint() async {
-  //   try {
-  //     setLoading(true);
-  //     showLoading(message: "Creating...");
-  //     LeadModel complaint = LeadModel(
-  //         subject: subjectCont.text,
-  //         description: complaintCont.text,
-  //         mobileNo: phoneCont.text,
-  //         complaintID: selectedCategory!['id']);
-
-  //     await api.createNewComplaint(complaint.toJSON());
-
-  //     setLoading(false);
-  //     showSuccessMessage(message: 'Complaint created successfully!');
-  //     Get.back();
-  //     await getComplaintHistory(reset: true, status: 'pending');
-  //   } catch (e) {
-  //     setLoading(false);
-  //     log(e.toString());
-  //   }
-  // }
 
   Future<void> getLeads({bool reset = false, String? status}) async {
     int currentPage;

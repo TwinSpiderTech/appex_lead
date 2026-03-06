@@ -3,7 +3,7 @@ import 'package:appex_lead/component/custom_appbar.dart';
 import 'package:appex_lead/controller/form/generic_form_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart';
+import 'package:appex_lead/model/lead_model.dart'; // for Followup
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/form_field_widgets.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class LeadDetailsScreen extends StatefulWidget {
 
 class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
   final controller = Get.put(GenericFormController());
-  LeadModel? lead;
+  Map<String, dynamic>? lead;
   @override
   void initState() {
     super.initState();
@@ -42,7 +42,7 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
     controller.clearSession(); // Clear previous data
 
     lead = await widget.cont.loadLeadDetails(widget.url!);
-    log("Fetched Lead: ${lead?.toJson()}");
+    log("Fetched Lead: $lead");
 
     if (lead != null) {
       // 1. Set current lead
@@ -74,7 +74,10 @@ class _LeadDetailsScreenState extends State<LeadDetailsScreen> {
         }
 
         final _lead = controller.currentLead.value ?? lead!;
-        final followups = _lead.followup ?? [];
+        final followupRaw = _lead['followup'] as List? ?? [];
+        final followups = followupRaw
+            .map((f) => Followup.fromJson(Map<String, dynamic>.from(f)))
+            .toList();
 
         return RefreshIndicator(
           onRefresh: () async {

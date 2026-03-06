@@ -15,8 +15,9 @@ import 'package:intl/intl.dart';
 import '../../main.dart';
 import '../../model/form_model.dart';
 import '../../utils/auth_service.dart';
-import '../../model/lead_model.dart';
+
 import '../dash/dash_controller.dart';
+import '../lead/lead_controller.dart';
 
 class GenericFormController extends GetxController {
   // List of available form templates (Mocking API data)
@@ -31,7 +32,7 @@ class GenericFormController extends GetxController {
   var fieldsData = <Map<String, dynamic>>[].obs;
   var formGroupsData = <Map<String, dynamic>>[].obs;
   FormModel? formModel;
-  Rx<LeadModel?> currentLead = Rx<LeadModel?>(null);
+  Rx<Map<String, dynamic>?> currentLead = Rx<Map<String, dynamic>?>(null);
 
   // Map to hold dynamic form values
   var formValues = <String, dynamic>{}.obs;
@@ -176,22 +177,31 @@ class GenericFormController extends GetxController {
   void resumeDraft(dynamic draftData) {
     if (draftData == null) return;
 
-    if (draftData is LeadModel) {
-      currentLead.value = draftData;
-      if (draftData.fieldsRecord != null) {
-        formValues.assignAll(draftData.fieldsRecord!.toJson());
+    // If this is an API lead response (has fields_record but no fields/groups),
+    // only populate formValues — don't overwrite the template structure.
+    if (draftData['fields_record'] != null &&
+        draftData['fields'] == null &&
+        draftData['groups'] == null) {
+      currentLead.value = Map<String, dynamic>.from(draftData);
+      Map<String, dynamic> record = Map<String, dynamic>.from(
+        draftData['fields_record'],
+      );
 
-        // Parse stringified GPS if present
-        formValues.forEach((key, value) {
-          if (value is String &&
-              value.contains('latitutde') &&
-              value.contains('{')) {
-            formValues[key] = _parseGpsString(value);
-          }
-        });
-      }
+      // Parse stringified GPS if present
+      record.forEach((key, value) {
+        if (value is String &&
+            value.contains('latitutde') &&
+            value.contains('{')) {
+          record[key] = _parseGpsString(value);
+        }
+      });
+
+      formValues.assignAll(record);
+      _initializeForm();
+      debugPrint("Resumed lead from API data.");
       return;
     }
+
     currentDraftId.value = (draftData['id'] ?? "").toString();
     currentFormTitle.value = (draftData['title'] ?? "").toString();
 
@@ -267,8 +277,8 @@ class GenericFormController extends GetxController {
       if (response != null && response['response_status'] == 'success') {
         final data = response['data'];
         if (data != null) {
-          final lead = LeadModel.fromJson(data);
-          resumeDraft(lead);
+          currentLead.value = Map<String, dynamic>.from(data);
+          resumeDraft(data);
         }
       }
     } catch (e) {
@@ -327,11 +337,39 @@ class GenericFormController extends GetxController {
     return evaluateFieldRequired(condition, formValues);
   }
 
+  bool isFieldVisible(Map<String, dynamic> field) {
+    // Touch formValues to ensure GetX tracks this dependency even for static fields
+    final _ = formValues.keys;
+
+    if (isHidden(field['field_visibility'])) return false;
+
+    return true;
+  }
+
+  bool isFieldRequired(Map<String, dynamic> field) {
+    // Touch formValues to ensure GetX tracks this dependency even for static fields
+    final _ = formValues.keys;
+
+    if (isTrue(field['field_required'])) {
+      return true;
+    }
+
+    if (field['required_condition'] != null) {
+      bool isRequired = isConditionalFieldRequired(
+        field['required_condition'] ?? {},
+      );
+      print("${field['field_name']} isRequired: $isRequired");
+      return isRequired;
+    }
+    return false;
+  }
+
   bool isHidden(value) {
     if (value == null) return false;
     if (value is bool) return value;
     if (value is int) return value == 1;
     if (value is String) return value.toLowerCase() == "hidden" || value == "1";
+    if (value is Map) return !isConditionalFieldRequired(value);
     return false;
   }
 
@@ -537,10 +575,13 @@ class GenericFormController extends GetxController {
 
     // Second, check required fields specifically in formValues
     for (var field in fieldsData) {
-      if (isHidden(field['field_visibility'])) continue;
+      // Skip validation if field is hidden (statically or dynamically)
+      if (!isFieldVisible(field)) continue;
 
-      if (isConditionalFieldRequired(field['field_required'])) {
-        String name = field['field_name'] as String;
+      if (isFieldRequired(field)) {
+        String name = (field['field_name'] ?? "").toString();
+        if (name.isEmpty) continue;
+
         var value = formValues[name];
 
         if (value == null || (value is String && value.trim().isEmpty)) {
@@ -575,6 +616,26 @@ class GenericFormController extends GetxController {
           prettyPrint(res);
           if (res['status'] == 200) {
             deleteProgress();
+
+            // Refresh dashboards and lead lists
+            try {
+              if (Get.isRegistered<DashController>()) {
+                Get.find<DashController>().refreshDashboard();
+              }
+            } catch (e) {
+              debugPrint("Error refreshing DashController: $e");
+            }
+
+            try {
+              if (Get.isRegistered<LeadController>()) {
+                Get.find<LeadController>().getLeads(
+                  status: 'pending',
+                  reset: true,
+                );
+              }
+            } catch (e) {
+              debugPrint("Error refreshing LeadController: $e");
+            }
           }
           Get.back();
           showSuccessMessage(message: "Lead submitted successfully!");
@@ -724,7 +785,7 @@ class GenericFormController extends GetxController {
     for (var entry in formValues.entries) {
       String name = entry.key;
       var value = entry.value;
-
+      print("name: $name, value: $value");
       // Skip empty string or null values
       if (value == null || (value is String && value.isEmpty)) continue;
 
@@ -749,11 +810,18 @@ class GenericFormController extends GetxController {
         } else {
           debugPrint("Failed to find file at path: $value");
         }
+      } else if (type == 'checkbox') {
+        // map[name] = {'options': value};
+        List options = value;
+        String val = '';
+        for (var i = 0; i < options.length; i++) {
+          val += options[i] + (i == options.length - 1 ? '' : ',');
+        }
+        map[name] = val;
       } else {
         map[name] = value;
       }
     }
-
     return map;
     // return dio.FormData.fromMap(map);
   }
