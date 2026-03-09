@@ -14,6 +14,10 @@ class ApiServices {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           options.headers['App-Ref'] = 'trading';
+          if (options.extra["appTypeRef"] != null) {
+            options.headers["App-Type-Ref"] = options.extra["appTypeRef"];
+          }
+
           final requiresToken = options.extra[isTokenRequired] != false;
 
           if (requiresToken) {
@@ -216,7 +220,9 @@ class ApiServices {
       final response = await _dio.post(
         url,
         data: data,
-        options: Options(extra: {isTokenRequired: false}),
+        options: Options(
+          extra: {isTokenRequired: false, "appTypeRef": "field_force_app"},
+        ),
       );
       if (response.data?['status'] == 200) {
         return response.data;

@@ -67,7 +67,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       width: MediaQuery.of(context).size.width * 0.1,
                     ),
                     title: Text(
-                      "Appex Lead",
+                      "Appex Field Force",
                       style: primaryTextStyle.copyWith(
                         fontSize: 18,
                         color: colorManager.textColor,

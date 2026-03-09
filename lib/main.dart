@@ -62,7 +62,6 @@ void main() async {
     services.handleNavigation(message);
   });
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
-
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   // await services.forgroundMessage();
@@ -114,7 +113,7 @@ class _MyAppState extends State<MyApp> {
       opaqueRoute: true,
       popGesture: true,
       debugShowCheckedModeBanner: false,
-      title: 'Appex Lead',
+      title: 'Appex Field Force',
       theme: ThemeData(
         dialogBackgroundColor: colorManager.bgDark,
         fontFamily: 'SF Pro',

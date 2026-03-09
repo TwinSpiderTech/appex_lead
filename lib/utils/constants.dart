@@ -20,6 +20,7 @@ customPopup({
   required BuildContext context,
   required String title,
   bool showConfrimBtn = true,
+  bool showCancelBtn = true,
   double btnTxtSize = 14,
   double btnHeight = 40,
   double btnWidth = 14,
@@ -30,65 +31,134 @@ customPopup({
   Color? confirmBtnColor,
   Widget? content,
   String? message,
+  Color? backgroundColor,
 }) async {
   await showDialog(
     context: context,
     builder: (_) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadiusGeometry.circular(8),
-        ),
-        contentPadding: EdgeInsets.all(8),
-        backgroundColor: colorManager.bgDark,
-        title: Text(
-          title,
-          style: primaryTextStyle.copyWith(
-            color: colorManager.primaryColor,
-            fontSize: 16,
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: backgroundColor ?? colorManager.bgDark,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Container(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 12,
+                  top: 12,
+                  bottom: 0,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: colorManager.secondaryColor.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: primaryTextStyle.copyWith(
+                          color: colorManager.primaryColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: colorManager.whiteColor,
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => Get.back(),
+                    ),
+                  ],
+                ),
+              ),
+              // Content Area
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 24.0,
+                  right: 24.0,
+                  bottom: 32,
+                ),
+                child:
+                    content ??
+                    Text(
+                      message ?? '',
+                      style: primaryTextStyle.copyWith(
+                        color: colorManager.textColor,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+              ),
+              // Action Buttons
+              if (showConfrimBtn || showCancelBtn)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    bottom: 20,
+                    top: 4,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (showCancelBtn)
+                        SizedBox(
+                          height: btnHeight,
+                          width: 80,
+                          child: CustomButton(
+                            padding: const EdgeInsets.all(4),
+                            labelSize: btnTxtSize,
+                            backgroundColor: Colors.transparent,
+                            textColr: colorManager.textColor,
+                            boderColor: colorManager.secondaryColor,
+                            label: cancelBtnText,
+                            onTap: () {
+                              onCancel?.call();
+                              Get.back();
+                            },
+                          ),
+                        ),
+                      if (showCancelBtn && showConfrimBtn)
+                        const SizedBox(width: 12),
+                      if (showConfrimBtn)
+                        SizedBox(
+                          height: btnHeight,
+                          width: 80,
+                          child: CustomButton(
+                            padding: const EdgeInsets.all(4),
+                            labelSize: btnTxtSize,
+                            backgroundColor:
+                                confirmBtnColor ?? colorManager.primaryColor,
+                            textColr: colorManager.whiteColor,
+                            label: confirmBtnText,
+                            onTap: () {
+                              onConfirm?.call();
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child:
-              content ??
-              Text(
-                message ?? '',
-                style: primaryTextStyle.copyWith(color: colorManager.textColor),
-              ),
-        ),
-        actions: [
-          if (showConfrimBtn)
-            SizedBox(
-              height: btnHeight,
-              width: 80,
-              child: CustomButton(
-                padding: const EdgeInsets.all(4),
-                labelSize: btnTxtSize,
-                backgroundColor: confirmBtnColor ?? colorManager.primaryColor,
-                textColr: colorManager.whiteColor,
-                label: confirmBtnText,
-                onTap: () {
-                  onConfirm?.call();
-                },
-              ),
-            ),
-          SizedBox(
-            height: btnHeight,
-            width: 80,
-            child: CustomButton(
-              padding: const EdgeInsets.all(4),
-              labelSize: btnTxtSize,
-              backgroundColor: Colors.grey.shade300,
-              textColr: Colors.black,
-              //  colorManager.secondaryColor,
-              label: cancelBtnText,
-              onTap: () {
-                onCancel?.call();
-                Get.back();
-              },
-            ),
-          ),
-        ],
       );
     },
   );

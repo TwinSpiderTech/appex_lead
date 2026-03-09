@@ -10,6 +10,7 @@ class CustomCheckboxField extends StatefulWidget {
   final ValueChanged<List<String>> onChange;
   final String label;
   final double? borderRadius;
+  final FocusNode? focusNode;
 
   const CustomCheckboxField({
     super.key,
@@ -19,6 +20,7 @@ class CustomCheckboxField extends StatefulWidget {
     required this.onChange,
     required this.label,
     this.borderRadius,
+    this.focusNode,
   });
 
   @override
@@ -68,7 +70,7 @@ class _CustomCheckboxFieldState extends State<CustomCheckboxField> {
             }).toList();
 
             return Dialog(
-              backgroundColor: colorManager.primaryColor,
+              backgroundColor: colorManager.accentColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(widget.borderRadius ?? 12),
               ),
@@ -192,6 +194,7 @@ class _CustomCheckboxFieldState extends State<CustomCheckboxField> {
         children: [
           if (widget.enabled)
             CustomInputField(
+              focusNode: widget.focusNode,
               enable: widget.enabled,
               hint: "Search & Add ${widget.label}...",
               readOnly: true,

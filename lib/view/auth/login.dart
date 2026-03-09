@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           label: "Dev Login",
                           onTap: () {
                             cont.authenticate(
-                              email: 'executive@appex.com',
+                              email: 'ff@appex.com',
                               password: 'pass1234',
                             );
                           },

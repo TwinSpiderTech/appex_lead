@@ -10,6 +10,7 @@ class CustomSearchableDropdown extends StatefulWidget {
   final bool enabled, allowCustomValue;
   final double? borderRadius;
   final EdgeInsetsGeometry? padding;
+  final FocusNode? focusNode;
 
   const CustomSearchableDropdown({
     super.key,
@@ -22,6 +23,7 @@ class CustomSearchableDropdown extends StatefulWidget {
     this.enabled = true,
     this.allowCustomValue = true,
     this.borderRadius = 12,
+    this.focusNode,
   });
 
   @override
@@ -65,6 +67,7 @@ class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomInputField(
+          focusNode: widget.focusNode,
           controller: _controller,
           enable: widget.enabled,
           hint: widget.hint ?? "Search ${widget.label}...",

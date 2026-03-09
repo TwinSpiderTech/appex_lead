@@ -4,7 +4,8 @@ class Urls {
   static const String base = env == 'dev'
       // ? '192.168.100.161'
       // ? '192.168.100.173'
-      ? '9106-182-185-36-184.ngrok-free.app'
+      ? 'ed01-182-189-120-247.ngrok-free.app'
+      // : 'ed01-182-189-120-247.ngrok-free.app';
       // : '9106-182-185-36-184.ngrok-free.app';
       : "appex.twincloud.app";
 

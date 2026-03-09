@@ -9,6 +9,7 @@ class CustomSearchableDropdown2 extends StatefulWidget {
   final bool enabled, allowCustomValue;
   final double? borderRadius;
   final EdgeInsetsGeometry? padding;
+  final FocusNode? focusNode;
 
   const CustomSearchableDropdown2({
     super.key,
@@ -21,6 +22,7 @@ class CustomSearchableDropdown2 extends StatefulWidget {
     this.enabled = true,
     this.allowCustomValue = true,
     this.borderRadius = 12,
+    this.focusNode,
   });
 
   @override
@@ -76,6 +78,7 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomInputField(
+          focusNode: widget.focusNode,
           controller: _controller,
 
           enable: widget.enabled,
@@ -118,7 +121,7 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
             }).toList();
 
             return Dialog(
-              backgroundColor: colorManager.primaryColor,
+              backgroundColor: colorManager.accentColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(widget.borderRadius ?? 12),
               ),

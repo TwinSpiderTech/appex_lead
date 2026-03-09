@@ -18,6 +18,7 @@ class GenericFormFieldWidget extends StatelessWidget {
   final Map<String, dynamic> fieldData;
   final GenericFormController controller;
   final double borderRadius;
+  final FocusNode? focusNode;
   final bool isReadOnly;
 
   const GenericFormFieldWidget({
@@ -26,6 +27,7 @@ class GenericFormFieldWidget extends StatelessWidget {
     required this.controller,
     this.borderRadius = 12,
     this.isReadOnly = false,
+    this.focusNode,
   });
 
   @override
@@ -126,7 +128,11 @@ class GenericFormFieldWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildWrapper({required Widget child, String fieldMessage = ""}) {
+  Widget _buildWrapper({
+    required Widget child,
+    String fieldName = "",
+    String fieldMessage = "",
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -151,6 +157,19 @@ class GenericFormFieldWidget extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           child,
+          Obx(() {
+            final error = controller.errors[fieldName];
+            if (error != null && error.isNotEmpty) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 4.0),
+                child: Text(
+                  error,
+                  style: const TextStyle(color: Colors.red, fontSize: 11),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
           if (fieldMessage.isNotEmpty) const SizedBox(height: 6),
           if (fieldMessage.isNotEmpty)
             Text(
@@ -175,11 +194,13 @@ class GenericFormFieldWidget extends StatelessWidget {
     String regex,
   ) {
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
       child: Obx(() {
         String? value = controller.formValues[fieldName]?.toString();
         bool isRequired = controller.isFieldRequired(fieldData);
         return CustomInputField(
+          focusNode: controller.getOrCreateFocusNode(fieldName),
           key: isEditable
               ? ValueKey(fieldName)
               : ValueKey("${fieldName}_${value ?? ''}_$isRequired"),
@@ -215,11 +236,13 @@ class GenericFormFieldWidget extends StatelessWidget {
     String regex,
   ) {
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
       child: Obx(() {
         String? value = controller.formValues[fieldName]?.toString();
         bool isRequired = controller.isFieldRequired(fieldData);
         return CustomInputField(
+          focusNode: controller.getOrCreateFocusNode(fieldName),
           key: isEditable
               ? ValueKey(fieldName)
               : ValueKey("${fieldName}_${value ?? ''}_$isRequired"),
@@ -240,6 +263,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           },
           initialValue: value,
           onChanged: (val) => controller.updateFieldValue(fieldName, val),
+
           hint: "Enter ${fieldData['field_text'] ?? fieldName}",
         );
       }),
@@ -257,6 +281,7 @@ class GenericFormFieldWidget extends StatelessWidget {
         fieldData['choices'];
 
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
       child: Obx(() {
         var currentValue = controller.formValues[fieldName];
@@ -266,6 +291,7 @@ class GenericFormFieldWidget extends StatelessWidget {
             rawOptions,
           );
           return CustomSearchableDropdown2(
+            focusNode: controller.getOrCreateFocusNode(fieldName),
             items: optionsMap,
             enabled: isEditable,
             allowCustomValue: true,
@@ -293,6 +319,7 @@ class GenericFormFieldWidget extends StatelessWidget {
         }
 
         return CustomSearchableDropdown(
+          focusNode: controller.getOrCreateFocusNode(fieldName),
           items: options,
           enabled: isEditable, // Pass enablement here
           allowCustomValue: true,
@@ -340,8 +367,10 @@ class GenericFormFieldWidget extends StatelessWidget {
     }
 
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
       child: InkWell(
+        focusNode: controller.getOrCreateFocusNode(fieldName),
         onTap: isEditable
             ? () async {
                 // Normalize initial to start of day to match min/max
@@ -350,7 +379,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                 if (initial.isBefore(minDate)) initial = minDate;
                 if (initial.isAfter(maxDate)) initial = maxDate;
 
-                DateTime? pickedDate = await showDatePicker(
+                DateTime? pickedDate = await showCustomDatePicker(
                   context: context,
                   initialDate: initial,
                   firstDate: minDate,
@@ -437,110 +466,116 @@ class GenericFormFieldWidget extends StatelessWidget {
     }
 
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: colorManager.secondaryColor),
-          borderRadius: BorderRadius.circular(borderRadius),
-          color: isEditable
-              ? Colors.transparent
-              : colorManager.primaryColor.withAlpha(25),
-        ),
-        child: Obx(() {
-          var rawValue = controller.formValues[fieldName];
-          List<String> currentSelections = [];
+      child: Focus(
+        focusNode: controller.getOrCreateFocusNode(fieldName),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: colorManager.secondaryColor),
+            borderRadius: BorderRadius.circular(borderRadius),
+            color: isEditable
+                ? Colors.transparent
+                : colorManager.primaryColor.withAlpha(25),
+          ),
+          child: Obx(() {
+            var rawValue = controller.formValues[fieldName];
+            List<String> currentSelections = [];
 
-          if (rawValue is List) {
-            currentSelections = List<String>.from(
-              rawValue.map((e) => e.toString()),
-            );
-          } else if (rawValue is String && rawValue.isNotEmpty) {
-            // Trim brackets just in case it's saved as a stringified list like "[A, B]"
-            String cleanVal = rawValue.replaceAll('[', '').replaceAll(']', '');
-            currentSelections = cleanVal
-                .split(',')
-                .map((e) => e.trim())
-                .where((e) => e.isNotEmpty)
-                .toList();
-          }
+            if (rawValue is List) {
+              currentSelections = List<String>.from(
+                rawValue.map((e) => e.toString()),
+              );
+            } else if (rawValue is String && rawValue.isNotEmpty) {
+              // Trim brackets just in case it's saved as a stringified list like "[A, B]"
+              String cleanVal = rawValue
+                  .replaceAll('[', '')
+                  .replaceAll(']', '');
+              currentSelections = cleanVal
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
+            }
 
-          if (options.isEmpty) {
-            return Text(
-              "No options available",
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-            );
-          }
+            if (options.isEmpty) {
+              return Text(
+                "No options available",
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+              );
+            }
 
-          return Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: options.map((option) {
-              final isSelected = currentSelections.contains(option);
-              return GestureDetector(
-                onTap: isEditable
-                    ? () {
-                        List<String> newSelections = List.from(
-                          currentSelections,
-                        );
-                        if (isSelected) {
-                          newSelections.remove(option);
-                        } else {
-                          newSelections.add(option);
+            return Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: options.map((option) {
+                final isSelected = currentSelections.contains(option);
+                return GestureDetector(
+                  onTap: isEditable
+                      ? () {
+                          List<String> newSelections = List.from(
+                            currentSelections,
+                          );
+                          if (isSelected) {
+                            newSelections.remove(option);
+                          } else {
+                            newSelections.add(option);
+                          }
+                          // Update form values with the new List of strings
+                          controller.updateFieldValue(fieldName, newSelections);
                         }
-                        // Update form values with the new List of strings
-                        controller.updateFieldValue(fieldName, newSelections);
-                      }
-                    : null,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? colorManager.primaryColor.withOpacity(0.08)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? colorManager.primaryColor
-                          : colorManager.secondaryColor,
+                      : null,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.check_box
-                            : Icons.check_box_outline_blank,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colorManager.primaryColor.withOpacity(0.08)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
                         color: isSelected
                             ? colorManager.primaryColor
-                            : colorManager.textColor.withOpacity(0.5),
-                        size: 18,
+                            : colorManager.secondaryColor,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        option,
-                        style: primaryTextStyle.copyWith(
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.check_box
+                              : Icons.check_box_outline_blank,
                           color: isSelected
                               ? colorManager.primaryColor
-                              : colorManager.textColor,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontSize: 13,
+                              : colorManager.textColor.withOpacity(0.5),
+                          size: 18,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Text(
+                          option,
+                          style: primaryTextStyle.copyWith(
+                            color: isSelected
+                                ? colorManager.primaryColor
+                                : colorManager.textColor,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
-          );
-        }),
+                );
+              }).toList(),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -580,6 +615,7 @@ class GenericFormFieldWidget extends StatelessWidget {
         }
 
         return CustomCheckboxField(
+          focusNode: controller.getOrCreateFocusNode(fieldName),
           items: optionsMap,
           initialSelections: currentSelections,
           enabled: isEditable,
@@ -595,55 +631,54 @@ class GenericFormFieldWidget extends StatelessWidget {
 
   Widget _buildGpsField(String fieldName, String fieldMessage) {
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 18,
-          bottom: 18,
-        ),
-        decoration: BoxDecoration(
-          border: Border.all(color: colorManager.secondaryColor),
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.location_on, color: Colors.blueAccent),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Obx(() {
-                var val = controller.formValues[fieldName];
-                String displayValue = "Getting location...";
+      child: Focus(
+        focusNode: controller.getOrCreateFocusNode(fieldName),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 18,
+            bottom: 18,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: colorManager.secondaryColor),
+            borderRadius: BorderRadius.circular(borderRadius),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.location_on, color: Colors.blueAccent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Obx(() {
+                  var val = controller.formValues[fieldName];
+                  String displayValue = "Getting location...";
 
-                if (val is Map) {
-                  double? lat = val['latitude'];
-                  double? lng = val['longitude'];
-                  String? address = val['position'] ?? val['address'];
-                  if (lat != null && lng != null) {
-                    displayValue = address ?? "";
-                    //     "Lat: ${lat.toStringAsFixed(4)}, Long: ${lng.toStringAsFixed(4)}";
-                    // if (address != null && address.isNotEmpty) {
-                    //   displayValue += "\n$address";
-                    // }
+                  if (val is Map) {
+                    double? lat = val['latitude'];
+                    double? lng = val['longitude'];
+                    String? address = val['position'] ?? val['address'];
+                    if (lat != null && lng != null) {
+                      displayValue = address ?? "";
+                    }
+                  } else if (val != null) {
+                    displayValue = val.toString();
+                  } else {
+                    displayValue = controller.hasCameraField()
+                        ? "Capture photo to update GPS"
+                        : "Fetching GPS automatically...";
                   }
-                } else if (val != null) {
-                  displayValue = val.toString();
-                } else {
-                  // Fallback for null
-                  displayValue = controller.hasCameraField()
-                      ? "Capture photo to update GPS"
-                      : "Fetching GPS automatically...";
-                }
 
-                return Text(
-                  displayValue,
-                  style: TextStyle(color: colorManager.textColor),
-                );
-              }),
-            ),
-          ],
+                  return Text(
+                    displayValue,
+                    style: TextStyle(color: colorManager.textColor),
+                  );
+                }),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -655,76 +690,80 @@ class GenericFormFieldWidget extends StatelessWidget {
     String fieldMessage,
   ) {
     return _buildWrapper(
+      fieldName: fieldName,
       fieldMessage: fieldMessage,
       child: Obx(() {
         var imagePath = controller.formValues[fieldName] as String?;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (imagePath != null && imagePath.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: GestureDetector(
-                    onTap: () {
-                      Get.to(
-                        () => ImagePreviewScreen(
-                          imagePath: imagePath,
-                          title: fieldData['field_text'] ?? "Image Preview",
-                        ),
-                      );
-                    },
-                    child: Hero(
-                      tag: imagePath,
-                      child: imagePath.startsWith('http')
-                          ? Image.network(
-                              imagePath,
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.bottomCenter,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image, size: 50),
-                            )
-                          : Image.file(
-                              File(imagePath),
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.bottomCenter,
-                            ),
+        return Focus(
+          focusNode: controller.getOrCreateFocusNode(fieldName),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (imagePath != null && imagePath.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: GestureDetector(
+                      onTap: () {
+                        Get.to(
+                          () => ImagePreviewScreen(
+                            imagePath: imagePath,
+                            title: fieldData['field_text'] ?? "Image Preview",
+                          ),
+                        );
+                      },
+                      child: Hero(
+                        tag: imagePath,
+                        child: imagePath.startsWith('http')
+                            ? Image.network(
+                                imagePath,
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                alignment: Alignment.bottomCenter,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image, size: 50),
+                              )
+                            : Image.file(
+                                File(imagePath),
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                alignment: Alignment.bottomCenter,
+                              ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            if (isEditable) // Hide buttons if not editable
-              SizedBox(
-                width: double.infinity,
-                child: CustomButton(
-                  onTap: () async {
-                    final result = await Get.to(
-                      () => CameraScreen(
-                        usedOnForm: true,
-                        onProcessed: (path) {
-                          debugPrint("Background processing done: $path");
-                          controller.updateFieldValue(fieldName, path);
-                          controller.updateAllGpsFields();
-                          controller.updateAllTimestampFields();
-                        },
-                      ),
-                    );
-                    if (result != null && result is String) {
-                      controller.updateFieldValue(fieldName, result);
-                      controller.updateAllGpsFields();
-                      controller.updateAllTimestampFields();
-                    }
-                  },
-                  label: imagePath == null ? "Capture Photo" : "Retake Photo",
+              if (isEditable)
+                SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    onTap: () async {
+                      final result = await Get.to(
+                        () => CameraScreen(
+                          usedOnForm: true,
+                          onProcessed: (path) {
+                            debugPrint("Background processing done: $path");
+                            controller.updateFieldValue(fieldName, path);
+                            controller.updateAllGpsFields();
+                            controller.updateAllTimestampFields();
+                          },
+                        ),
+                      );
+                      if (result != null && result is String) {
+                        controller.updateFieldValue(fieldName, result);
+                        controller.updateAllGpsFields();
+                        controller.updateAllTimestampFields();
+                      }
+                    },
+                    label: imagePath == null ? "Capture Photo" : "Retake Photo",
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       }),
     );

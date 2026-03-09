@@ -31,12 +31,14 @@ class _FormDetailsState extends State<FormDetails> {
   @override
   void initState() {
     super.initState();
-    if (widget.draftData != null) {
-      controller.resumeDraft(widget.draftData!);
-    } else {
-      controller.clearSession();
-    }
-    controller.fetchTemplate(widget.url);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.draftData != null) {
+        controller.resumeDraft(widget.draftData!);
+      } else {
+        controller.clearSession();
+      }
+      controller.fetchTemplate(widget.url);
+    });
   }
 
   _isFormEmpty() {
@@ -45,199 +47,239 @@ class _FormDetailsState extends State<FormDetails> {
   }
 
   @override
+  void dispose() {
+    // Explicitly delete the controller when leaving FormDetails
+    // to ensure onClose is called and FocusNodes are disposed.
+    // Use the tag if you started using them, otherwise this works for the singleton.
+    Get.delete<GenericFormController>();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: widget.title,
-        onNavigateBack: () {
-          // print(controller.formValues.values.first != null);
-          if (false && !_isFormEmpty()) {
-            customPopup(
-              context: context,
-              title: "Save Draft",
-              message: "Do you want to save the draft?",
-              onConfirm: () {
-                controller.saveProgress();
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: CustomAppBar(
+            title: widget.title,
+            onNavigateBack: () {
+              // print(controller.formValues.values.first != null);
+              if (false && !_isFormEmpty()) {
+                customPopup(
+                  context: context,
+                  title: "Save Draft",
+                  message: "Do you want to save the draft?",
+                  onConfirm: () {
+                    controller.saveProgress();
 
+                    Get.back();
+                  },
+                  onCancel: () {},
+                );
+              } else {
                 Get.back();
-              },
-              onCancel: () {},
-            );
-          } else {
-            Get.back();
-          }
-        },
-        trailing: Padding(
-          padding: const EdgeInsets.only(right: 12.0),
-          child: IconButton(
-            icon: Icon(Icons.info, color: colorManager.whiteColor),
-            onPressed: () {
-              customPopup(
-                context: context,
-                title: 'Description',
-                message:
-                    controller.formModel?.description ??
-                    "No description available",
-                showConfrimBtn: false,
-                cancelBtnText: 'close',
-              );
+              }
             },
-          ),
-        ),
-      ),
-      body: Obx(() {
-        if (controller.isLoadingTemplates.value &&
-            controller.fieldsData.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+            trailing: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: IconButton(
+                icon: Icon(Icons.info, color: colorManager.whiteColor),
+                onPressed: () {
+                  customPopup(
+                    backgroundColor: colorManager.accentColor,
+                    context: context,
+                    title: 'Description',
 
-        return RefreshIndicator(
-          backgroundColor: colorManager.bgDark,
-          color: colorManager.primaryColor,
-          onRefresh: () =>
-              controller.fetchTemplate(widget.url, forceRefresh: true),
-          child: Form(
-            key: controller.formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(
-                //     horizontal: 16,
-                //     vertical: 8,
-                //   ),
-                //   child: Text(
-                //     controller.formModel?.description ?? "",
-                //     style: primaryTextStyle.copyWith(
-                //       color: colorManager.textColor,
-                //     ),
-                //     textAlign: TextAlign.left,
-                //   ),
-                // ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 0,
+                    content: Text(
+                      controller.formModel?.description ??
+                          "No description available",
+                      style: primaryTextStyle.copyWith(
+                        fontSize: 14,
+                        color: colorManager.whiteColor,
+                      ),
                     ),
-                    itemCount: controller.formGroupsData.length,
-                    itemBuilder: (context, groupIndex) {
-                      final group = controller.formGroupsData[groupIndex];
-                      final fields = group['fields'] as List? ?? [];
-                      final groupTitle = group['group_title'];
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (groupTitle != null &&
-                              groupTitle.toString().isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: 24.0,
-                                bottom: 12.0,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    groupTitle.toString(),
-                                    style: TextStyle(
-                                      color: colorManager.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    height: 2,
-                                    width: 40,
-                                    decoration: BoxDecoration(
-                                      color: colorManager.primaryColor,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: colorManager.primaryColor.withOpacity(
-                                  .3,
-                                ),
-                              ),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(0),
-                                topRight: Radius.circular(18),
-                                bottomLeft: Radius.circular(18),
-                                bottomRight: Radius.circular(18),
-                              ),
-                              // color: Colors.grey.shade100,
-                            ),
-                            child: Column(
-                              children: [
-                                ...fields.map((fieldData) {
-                                  final field = Map<String, dynamic>.from(
-                                    fieldData,
-                                  );
-                                  return !controller.isFieldVisible(field)
-                                      ? const SizedBox.shrink()
-                                      : GenericFormFieldWidget(
-                                          fieldData: field,
-                                          controller: controller,
-                                        );
-                                }).toList(),
-                                if (groupIndex <
-                                    controller.formGroupsData.length - 1)
-                                  const SizedBox(height: 16),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    spacing: 12,
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          backgroundColor: colorManager.accentColor,
-                          onTap: () async {
-                            await controller.saveProgress();
-                            Get.back(); // Pop FormDetails
-                          },
-                          label: "Save Draft",
-                        ),
-                      ),
-                      Expanded(
-                        child: CustomButton(
-                          onTap: () async {
-                            var res = await controller.submitForm(
-                              submissionURL:
-                                  widget.draftData?['submission_url'],
-                            );
-                          },
-                          label: "Submit",
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                    showCancelBtn: false,
+                    showConfrimBtn: false,
+                  );
+                },
+              ),
             ),
           ),
-        );
-      }),
+          body: Obx(() {
+            if (controller.isLoadingTemplates.value &&
+                controller.fieldsData.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return RefreshIndicator(
+              backgroundColor: colorManager.bgDark,
+              color: colorManager.primaryColor,
+              onRefresh: () =>
+                  controller.fetchTemplate(widget.url, forceRefresh: true),
+              child: Form(
+                key: controller.formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ),
+                        children: controller.formGroupsData.map((group) {
+                          final fields = group['fields'] as List? ?? [];
+                          final groupTitle = group['group_title'];
+                          final groupIndex = controller.formGroupsData.indexOf(
+                            group,
+                          );
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (groupTitle != null &&
+                                  groupTitle.toString().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 24.0,
+                                    bottom: 12.0,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        groupTitle.toString(),
+                                        style: TextStyle(
+                                          color: colorManager.primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        height: 2,
+                                        width: 40,
+                                        decoration: BoxDecoration(
+                                          color: colorManager.primaryColor,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: colorManager.primaryColor
+                                        .withOpacity(.3),
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(0),
+                                    topRight: Radius.circular(18),
+                                    bottomLeft: Radius.circular(18),
+                                    bottomRight: Radius.circular(18),
+                                  ),
+                                  // color: Colors.grey.shade100,
+                                ),
+                                child: Column(
+                                  children: [
+                                    ...fields.map((fieldData) {
+                                      final field = Map<String, dynamic>.from(
+                                        fieldData,
+                                      );
+                                      return !controller.isFieldVisible(field)
+                                          ? const SizedBox.shrink()
+                                          : GenericFormFieldWidget(
+                                              fieldData: field,
+                                              controller: controller,
+                                            );
+                                    }).toList(),
+                                    if (groupIndex <
+                                        controller.formGroupsData.length - 1)
+                                      const SizedBox(height: 16),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Obx(
+                        () => Row(
+                          spacing: 12,
+                          children: [
+                            Expanded(
+                              child: CustomButton(
+                                backgroundColor: colorManager.accentColor,
+                                disabled: controller.isSubmitting.value,
+                                onTap: () async {
+                                  await controller.saveProgress();
+                                  Get.back(); // Pop FormDetails
+                                },
+                                label: "Save Draft",
+                              ),
+                            ),
+                            Expanded(
+                              child: CustomButton(
+                                // backgroundColor: coloman,
+                                isLoading: controller.isSubmitting.value,
+                                disabled: controller.isSubmitting.value,
+                                onTap: () async {
+                                  var res = await controller.submitForm(
+                                    submissionURL:
+                                        widget.draftData?['submission_url'],
+                                  );
+                                },
+                                label: "Submit",
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+        Obx(() {
+          if (controller.isSubmitting.value) {
+            return Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(color: Colors.white),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Submitting Form...",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }),
+      ],
     );
   }
 }

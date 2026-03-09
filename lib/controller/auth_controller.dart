@@ -25,7 +25,7 @@ class AuthController extends GetxController {
           email ?? emailCont.text,
           password ?? passCont.text,
         );
-        if (res != null) {
+        if (res != null && res['status'] == 200) {
           prettyPrint(res);
           var data = res['data'];
           String email = data['email'] ?? '';
@@ -36,7 +36,7 @@ class AuthController extends GetxController {
           }
           if (email.isEmpty) {
             log('Token not found!');
-            // return;
+            return;
           }
 
           await AuthService.updateSession(email: email, token: token);

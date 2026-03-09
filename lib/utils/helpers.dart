@@ -387,3 +387,45 @@ String formatDateToString(DateTime dateTime) {
 String previewableDateFormat(DateTime dateTime) {
   return DateFormat('dd MMM, yyyy').format(dateTime);
 }
+
+Future<DateTime?> showCustomDatePicker({
+  required BuildContext context,
+  required DateTime initialDate,
+  required DateTime firstDate,
+  required DateTime lastDate,
+}) async {
+  return showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: colorManager
+                .primaryColor, // Header background color, Selector color
+            onPrimary: Colors.white, // Header text color, Selected text color
+            surface: colorManager.accentColor, // Picker background color
+            onSurface: Colors.white, // Default text color for the calendar grid
+          ),
+          dialogTheme: DialogThemeData(backgroundColor: colorManager.accentColor),
+          dialogBackgroundColor:
+              colorManager.accentColor, // Dialog background color
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(color: Colors.white), // Dates text
+            bodyMedium: TextStyle(color: Colors.white), // Secondary dates/text
+            titleSmall: TextStyle(color: Colors.white), // Header label
+            labelSmall: TextStyle(color: Colors.white), // AM/PM or small labels
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: colorManager.primaryColor, // Button text color
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+}

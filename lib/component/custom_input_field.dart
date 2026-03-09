@@ -106,9 +106,9 @@ class _CustomInputFieldState extends State<CustomInputField> {
           },
           onTap: widget.onTap,
           validator: (value) {
-            if (widget.isRequired && (value == null || value.isEmpty)) {
-              return "Field can't be empty!";
-            }
+            // if (widget.isRequired && (value == null || value.isEmpty)) {
+            //   return "Field can't be empty!";
+            // }
             if (value != null &&
                 value.isNotEmpty &&
                 widget.minLength != null &&
@@ -209,61 +209,58 @@ class CustomInput2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      child: TextFormField(
-        enabled: enabled,
-        style: TextStyle(color: colorManager.textColor),
-        onTap: onTap,
-        controller: controller,
-        onChanged: onChange,
-        focusNode: focusNode,
-        textInputAction: TextInputAction.next,
-        onFieldSubmitted: onFieldSubmitted,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(
-            color: colorManager.textColor,
-            fontWeight: FontWeight.w300,
-            height: 0.7,
-            fontSize: fontSize,
-          ),
-          floatingLabelStyle: TextStyle(
-            fontFamily: 'SF Pro',
-            color: colorManager.primaryColor,
-            height: 0.8,
-            fontSize: 12,
-          ),
-          contentPadding: contentPadding,
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorManager.primaryColor),
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.red),
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.red),
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorManager.primaryColor),
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorManager.primaryColor),
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          border: OutlineInputBorder(
-            borderSide: BorderSide(color: colorManager.primaryColor),
-          ),
-          // label: Text("data"),
-          labelStyle: TextStyle(
-            fontFamily: 'SF Pro',
-            fontSize: fontSize,
-            color: colorManager.primaryColor,
-          ),
+    return TextFormField(
+      enabled: enabled,
+      style: TextStyle(color: colorManager.textColor),
+      onTap: onTap,
+      controller: controller,
+      onChanged: onChange,
+      focusNode: focusNode,
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: onFieldSubmitted,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(
+          color: colorManager.textColor,
+          fontWeight: FontWeight.w300,
+          height: 0.7,
+          fontSize: fontSize,
+        ),
+        floatingLabelStyle: TextStyle(
+          fontFamily: 'SF Pro',
+          color: colorManager.primaryColor,
+          height: 0.8,
+          fontSize: 12,
+        ),
+        contentPadding: contentPadding,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: colorManager.primaryColor),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.red),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.red),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: colorManager.primaryColor),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: colorManager.primaryColor),
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: colorManager.primaryColor),
+        ),
+        // label: Text("data"),
+        labelStyle: TextStyle(
+          fontFamily: 'SF Pro',
+          fontSize: fontSize,
+          color: colorManager.primaryColor,
         ),
       ),
     );

@@ -11,10 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 import '../../main.dart';
 import '../../model/form_model.dart';
 import '../../utils/auth_service.dart';
+import '../../utils/validations.dart';
 
 import '../dash/dash_controller.dart';
 import '../lead/lead_controller.dart';
@@ -37,9 +38,35 @@ class GenericFormController extends GetxController {
   // Map to hold dynamic form values
   var formValues = <String, dynamic>{}.obs;
 
+  // Map to hold field-level validation errors
+  var errors = <String, String>{}.obs;
+
+  // Track if the form is currently being submitted
+  var isSubmitting = false.obs;
+
+  // Store FocusNodes for each field to enable "scroll to error"
+  final Map<String, FocusNode> fieldFocusNodes = {};
+
+  FocusNode getOrCreateFocusNode(String fieldName) {
+    if (!fieldFocusNodes.containsKey(fieldName)) {
+      fieldFocusNodes[fieldName] = FocusNode();
+    }
+    return fieldFocusNodes[fieldName]!;
+  }
+
   @override
   void onInit() {
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    // Dispose all focus nodes when controller is destroyed
+    for (var node in fieldFocusNodes.values) {
+      node.dispose();
+    }
+    fieldFocusNodes.clear();
+    super.onClose();
   }
 
   Future<void> fetchTemplate(
@@ -169,8 +196,12 @@ class GenericFormController extends GetxController {
   void clearSession() {
     currentDraftId.value = "";
     formValues.clear();
+    errors.clear();
     fieldsData.clear();
     formGroupsData.clear();
+    // Don't dispose here, onClose will handle it,
+    // or we might want to reuse nodes if the controller stays alive
+    fieldFocusNodes.clear();
     debugPrint("Form session cleared.");
   }
 
@@ -531,12 +562,17 @@ class GenericFormController extends GetxController {
 
   void resetForm() {
     formValues.clear();
+    errors.clear();
     currentDraftId.value = "";
     _initializeForm();
   }
 
   void updateFieldValue(String fieldName, dynamic value) {
     formValues[fieldName] = value;
+    // Clear error for this field when user types/changes value
+    if (errors.containsKey(fieldName)) {
+      errors.remove(fieldName);
+    }
   }
 
   /// Updates `captured_at` form field with the current datetime.
@@ -563,35 +599,101 @@ class GenericFormController extends GetxController {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   bool validateForm() {
+    Map<String, String> newErrors = {};
+    errors.clear();
     bool isValid = true;
-    log("Validating form...");
+    String? firstErrorField;
 
     // First, check basic Form widget validation (regex, length, etc.)
+    // Note: This trigger validators in individual fields which might set controller.errors
     if (formKey.currentState != null && !formKey.currentState!.validate()) {
       isValid = false;
-      showToast(message: "Please fix the errors in the form.");
-      // return false; // Stop here to let user fix visible errors
+      debugPrint("Form widget validation failed.");
     }
 
-    // Second, check required fields specifically in formValues
-    for (var field in fieldsData) {
-      // Skip validation if field is hidden (statically or dynamically)
-      if (!isFieldVisible(field)) continue;
+    // Second, check required fields and custom validations specifically in formValues
+    // Iterate over formGroupsData to ensure visual order is maintained for firstErrorField
+    for (var group in formGroupsData) {
+      final fields = group['fields'] as List? ?? [];
+      for (var field in fields) {
+        if (!isFieldVisible(field)) continue;
 
-      if (isFieldRequired(field)) {
         String name = (field['field_name'] ?? "").toString();
         if (name.isEmpty) continue;
 
+        bool isRequired = isFieldRequired(field);
         var value = formValues[name];
 
-        if (value == null || (value is String && value.trim().isEmpty)) {
+        if (isRequired &&
+            (value == null ||
+                (value is String && value.trim().isEmpty) ||
+                (value is List && value.isEmpty))) {
           isValid = false;
           String label = field['field_text'] ?? name;
-          showToast(message: "$label is required.");
-          return false; // Show only the first missing field
+          newErrors[name] = "$label is required.";
+          if (firstErrorField == null) firstErrorField = name;
+          debugPrint("Validation error: $label is required.");
+        }
+
+        // Custom validation if needed (e.g., regex)
+        Map<String, dynamic> config = Map<String, dynamic>.from(
+          field['field_config'] ?? {},
+        );
+        String regex = config['regax'] ?? ''; // Typo 'regax' from original code
+        if (regex.isNotEmpty) {
+          if (value != null &&
+              value.toString().isNotEmpty &&
+              !Validations.isValidPattern(value.toString(), regex)) {
+            isValid = false;
+            String label = field['field_text'] ?? name;
+            newErrors[name] = "Invalid ${label.toLowerCase()} format.";
+            if (firstErrorField == null) firstErrorField = name;
+            debugPrint("Validation error: Invalid format for $label.");
+          }
         }
       }
     }
+
+    errors.assignAll(newErrors); // Batch update errors
+
+    if (!isValid) {
+      showToast(message: "Please fix the errors in the form.");
+      debugPrint("Form validation failed. Total errors: ${errors.length}");
+
+      // Attempt to find the first error field if not already set by manual check
+      if (firstErrorField == null && errors.isNotEmpty) {
+        firstErrorField = errors.keys.first;
+      }
+
+      if (firstErrorField != null) {
+        FocusNode? node = fieldFocusNodes[firstErrorField];
+        debugPrint(
+          "Attempting to scroll to first error field: $firstErrorField. Node found: ${node != null}. Context: ${node?.context != null}",
+        );
+
+        // Use a small delay to let error messages expand and layout settle
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (node != null && node.context != null && node.context!.mounted) {
+            // node.requestFocus(); // Optional, sometimes focus can interrupt scroll
+            Scrollable.ensureVisible(
+              node.context!,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              alignment: 0.5, // Center the field in the viewport
+            );
+            debugPrint("Scrolled to field: $firstErrorField");
+          } else {
+            debugPrint(
+              "Context NOT available for scrolling to $firstErrorField after delay.",
+            );
+          }
+        });
+      }
+    } else {
+      debugPrint("Form validation successful.");
+    }
+
     return isValid;
   }
 
@@ -599,7 +701,8 @@ class GenericFormController extends GetxController {
     // print(submissionURL ?? formModel?.submissionUrl ?? 'no submission url');
     log("Submitting form data....");
     if (validateForm()) {
-      showLoading(message: "Submitting...");
+      isSubmitting.value = true;
+      // showLoading(message: "Submitting..."); // We use isSubmitting overlay now
       // prettyPrint(formValues.toJson());
 
       var _data = await getFormData();
@@ -608,7 +711,10 @@ class GenericFormController extends GetxController {
       log(url);
       Map<String, dynamic> data = {"business_lead": _data};
 
-      var _formData = dio.FormData.fromMap(data);
+      var _formData = dio.FormData.fromMap(
+        data,
+        dio.ListFormat.multiCompatible,
+      );
 
       try {
         var res = await api.postData(url, formData: _formData);
@@ -617,7 +723,8 @@ class GenericFormController extends GetxController {
           if (res['status'] == 200) {
             deleteProgress();
 
-            // Refresh dashboards and lead lists
+            isSubmitting.value = false;
+
             try {
               if (Get.isRegistered<DashController>()) {
                 Get.find<DashController>().refreshDashboard();
@@ -634,6 +741,9 @@ class GenericFormController extends GetxController {
                 );
               }
             } catch (e) {
+              showToast(
+                message: "Failed to refresh lead list: ${e.toString()}",
+              );
               debugPrint("Error refreshing LeadController: $e");
             }
           }
@@ -644,7 +754,10 @@ class GenericFormController extends GetxController {
       } catch (e) {
         showToast(message: "Failed to submit form: ${e.toString()}");
         log(e.toString());
+        isSubmitting.value = false;
         return null;
+      } finally {
+        isSubmitting.value = false;
       }
 
       // Get.snackbar(
@@ -810,14 +923,10 @@ class GenericFormController extends GetxController {
         } else {
           debugPrint("Failed to find file at path: $value");
         }
-      } else if (type == 'checkbox') {
-        // map[name] = {'options': value};
-        List options = value;
-        String val = '';
-        for (var i = 0; i < options.length; i++) {
-          val += options[i] + (i == options.length - 1 ? '' : ',');
-        }
-        map[name] = val;
+      } else if (type == 'checkbox' || value is List) {
+        // Dio with ListFormat.multiCompatible will natively handle Lists
+        // as field_name[]=value1&field_name[]=value2
+        map[name] = value;
       } else {
         map[name] = value;
       }
