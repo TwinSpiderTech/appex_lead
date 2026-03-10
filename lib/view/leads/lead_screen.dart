@@ -279,9 +279,10 @@ class HistoryTab extends StatelessWidget {
                                       ),
                                     ),
                                     subtitle: Text(
-                                      l['person_designation'] ?? '',
+                                      l['person_name'] ?? '',
                                       style: primaryTextStyle.copyWith(
                                         color: colorManager.whiteColor,
+                                        fontSize: 12,
                                       ),
                                     ),
                                     trailing: HugeIcon(

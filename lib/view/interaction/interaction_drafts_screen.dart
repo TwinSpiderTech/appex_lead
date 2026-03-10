@@ -2,26 +2,28 @@ import 'package:appex_lead/component/custom_appbar.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import '../../controller/form/generic_form_controller.dart';
+import '../../controller/interaction/interaction_form_controller.dart';
 import '../../main.dart';
-import 'form_details.dart';
+import 'interaction_form.dart';
 
-class DraftsScreen extends StatefulWidget {
-  const DraftsScreen({super.key});
+class InteractionDraftsScreen extends StatefulWidget {
+  const InteractionDraftsScreen({super.key});
 
   @override
-  State<DraftsScreen> createState() => _DraftsScreenState();
+  State<InteractionDraftsScreen> createState() =>
+      _InteractionDraftsScreenState();
 }
 
-class _DraftsScreenState extends State<DraftsScreen> {
-  final GenericFormController controller = Get.put(GenericFormController());
+class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
+  final InteractionFormController controller = Get.put(
+    InteractionFormController(),
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: colorManager.bgDark,
-      appBar: CustomAppBar(title: 'Saved Leads'),
+      appBar: CustomAppBar(title: 'Interaction Drafts'),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: controller.getSavedDrafts(),
         builder: (context, snapshot) {
@@ -32,7 +34,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
           if (snapshot.hasError) {
             return Center(
               child: Text(
-                "Error loading draft leads",
+                "Error loading drafts",
                 style: TextStyle(color: Colors.red),
               ),
             );
@@ -46,13 +48,13 @@ class _DraftsScreenState extends State<DraftsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.drafts_outlined,
+                    Icons.chat_bubble_outline,
                     size: 64,
                     color: colorManager.iconColor.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No draft leads found",
+                    "No interaction drafts found",
                     style: TextStyle(
                       color: colorManager.textColor.withOpacity(0.7),
                     ),
@@ -76,11 +78,25 @@ class _DraftsScreenState extends State<DraftsScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: Icon(
-                    Icons.description_outlined,
+                    Icons.history_outlined,
                     color: colorManager.primaryColor,
                   ),
                   title: Text(
-                    draft['title'] ?? 'Untitled Draft',
+                    () {
+                      final values =
+                          draft['values'] as Map<String, dynamic>? ?? {};
+                      // Try to find business name in values first
+                      String? bizName;
+                      for (var entry in values.entries) {
+                        if (entry.key.toLowerCase().contains('business_name')) {
+                          bizName = entry.value?.toString();
+                          break;
+                        }
+                      }
+                      return bizName ??
+                          draft['title'] ??
+                          'Untitled Interaction';
+                    }(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -118,10 +134,10 @@ class _DraftsScreenState extends State<DraftsScreen> {
                     final String url = draft['template_url'] ?? "";
                     if (url.isNotEmpty) {
                       await Get.to(
-                        () => FormDetails(
+                        () => InteractionForm(
                           url: url,
                           draftData: draft,
-                          title: draft['title'] ?? 'Untitled Draft',
+                          title: draft['title'] ?? 'Untitled Interaction',
                         ),
                       );
                       setState(() {}); // Refresh list when coming back
@@ -145,7 +161,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
 
   void _confirmDelete(
     BuildContext context,
-    GenericFormController controller,
+    InteractionFormController controller,
     Map<String, dynamic> draft,
   ) {
     Get.dialog(

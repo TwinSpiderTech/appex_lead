@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:appex_lead/controller/theme/theme_controller.dart';
+import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -112,8 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomButton(
                       backgroundColor: colorManager.primaryColor,
                       label: "Login",
-                      onTap: () {
-                        cont.authenticate();
+                      onTap: () async {
+                        showLoading(message: 'Logging in...');
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        await cont.authenticate();
                       },
                     ),
                     if (kDebugMode)

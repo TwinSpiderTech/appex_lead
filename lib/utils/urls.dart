@@ -7,6 +7,7 @@ class Urls {
       ? 'ed01-182-189-120-247.ngrok-free.app'
       // : 'ed01-182-189-120-247.ngrok-free.app';
       // : '9106-182-185-36-184.ngrok-free.app';
+      // : "a37f-182-189-120-247.ngrok-free.app";
       : "appex.twincloud.app";
 
   static const String baseUrl = '$base/api/v1';

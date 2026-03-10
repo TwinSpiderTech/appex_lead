@@ -5,6 +5,7 @@ import 'package:appex_lead/main.dart';
 import 'package:appex_lead/model/lead_model.dart'; // for Followup
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/form_field_widgets.dart';
+import 'package:appex_lead/view/interaction/interaction_details_layout.dart';
 import 'package:appex_lead/view/interaction/interaction_form.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -61,7 +62,7 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
         }
 
         final _lead = controller.currentLead.value ?? lead!;
-        final followupRaw = _lead['followup'] as List? ?? [];
+        final followupRaw = _lead['followup_history'] as List? ?? [];
         final followups = followupRaw
             .map((f) => Followup.fromJson(Map<String, dynamic>.from(f)))
             .toList();
@@ -258,7 +259,16 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: colorManager.primaryColor,
         onPressed: () {
-          Get.to(() => InteractionForm(leadId: "1"));
+          Get.to(
+            () => InteractionForm(
+              callbackFunction: () => initData(),
+              fromLead: true,
+              leadDetails: lead,
+              url: 'api/v1/business/interactions/get_form_template',
+              title: 'Add Interaction',
+            ),
+          );
+          // Get.to(() => InteractionForm(leadId: "1"));
         },
         child: Icon(Icons.add, color: colorManager.whiteColor),
       ),
@@ -470,68 +480,92 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   }
 
   Widget _buildTimelineItem(Followup followup) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Column(
-            children: [
-              CircleAvatar(
-                radius: 12,
-                backgroundColor: colorManager.primaryColor.withOpacity(0.1),
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedClock01,
-                  color: colorManager.primaryColor,
-                  size: 14,
-                ),
-              ),
-              Expanded(
-                child: Container(width: 2, color: Colors.grey.withOpacity(0.2)),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () {
+        // Get.to(
+        //   () => InteractionDetailsLayout(
+        //     followup: followup,
+        //     leadTitle:
+        //         controller.formValues['business_name']?.toString() ?? "Lead",
+        //   ),
+        // );
+      },
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        followup.title ?? "",
-                        style: primaryTextStyle.copyWith(
-                          color: colorManager.textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      followup.time ?? "",
-                      style: primaryTextStyle.copyWith(
-                        fontSize: 11,
-                        color: colorManager.textColor.withOpacity(0.5),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  followup.description ?? "",
-                  style: primaryTextStyle.copyWith(
-                    fontSize: 13,
-                    color: colorManager.textColor.withOpacity(0.8),
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: colorManager.primaryColor.withOpacity(0.1),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedClock01,
+                    color: colorManager.primaryColor,
+                    size: 14,
                   ),
                 ),
-                const SizedBox(height: 20),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: Colors.grey.withOpacity(0.2),
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          followup.title ?? "",
+                          style: primaryTextStyle.copyWith(
+                            color: colorManager.textColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        followup.time ?? "",
+                        style: primaryTextStyle.copyWith(
+                          fontSize: 11,
+                          color: colorManager.textColor.withOpacity(0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  if (followup.type != null)
+                    Text(
+                      followup.type != null
+                          ? toParameterize(followup.type!)
+                          : "",
+                      style: primaryTextStyle.copyWith(
+                        fontSize: 12,
+                        color: colorManager.primaryColor.withOpacity(0.8),
+                      ),
+                    ),
+                  Text(
+                    followup.description ?? "",
+                    style: primaryTextStyle.copyWith(
+                      fontSize: 13,
+                      color: colorManager.textColor.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -8,9 +8,9 @@ class LeadModel {
     fieldsRecord = json['fields_record'] != null
         ? Map<String, dynamic>.from(json['fields_record'])
         : null;
-    if (json['followup'] != null) {
+    if (json['followup_history'] != null) {
       followup = <Followup>[];
-      json['followup'].forEach((v) {
+      json['followup_history'].forEach((v) {
         followup!.add(Followup.fromJson(v));
       });
     }
@@ -22,7 +22,7 @@ class LeadModel {
       data['fields_record'] = fieldsRecord;
     }
     if (followup != null) {
-      data['followup'] = followup!.map((v) => v.toJson()).toList();
+      data['followup_history'] = followup!.map((v) => v.toJson()).toList();
     }
     return data;
   }
@@ -30,22 +30,30 @@ class LeadModel {
 
 class Followup {
   String? title;
+  String? type;
   String? description;
   String? time;
+  Map<String, dynamic>? rawData;
 
-  Followup({this.title, this.description, this.time});
+  Followup({this.title, this.description, this.time, this.rawData});
 
   Followup.fromJson(Map<String, dynamic> json) {
     title = json['title'];
     description = json['description'];
+    type = json['interaction_type'];
     time = json['time'];
+    rawData = json;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['title'] = title;
     data['description'] = description;
+    data['interaction_type'] = type;
     data['time'] = time;
+    if (rawData != null) {
+      data.addAll(rawData!);
+    }
     return data;
   }
 }

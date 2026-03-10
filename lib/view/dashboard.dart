@@ -3,15 +3,12 @@ import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/app_routes.dart';
-import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/camera/camera_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_form.dart';
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/form/form_details.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -87,13 +84,13 @@ class _DashboardState extends State<Dashboard> {
               if (_isFabExpanded) ...[
                 _buildFabOption(
                   icon: HugeIcons.strokeRoundedUserAdd01,
-                  label: "Add Lead",
+                  label: "Add " + controller.leadFormTitle.value,
                   onTap: () {
                     _toggleFab();
                     Get.to(
-                      () => const FormDetails(
+                      () => FormDetails(
                         url: "/api/v1/business/leads/get_form_template",
-                        title: "Add New Lead",
+                        title: "Add " + controller.leadFormTitle.value,
                       ),
                     );
                   },
@@ -101,10 +98,18 @@ class _DashboardState extends State<Dashboard> {
                 const SizedBox(height: 12),
                 _buildFabOption(
                   icon: HugeIcons.strokeRoundedPlusSignSquare,
-                  label: "Add Interaction",
+                  label: "Add " + controller.interactionFormTitle.value,
                   onTap: () {
                     _toggleFab();
-                    Get.to(() => const InteractionForm());
+
+                    Get.to(
+                      () => InteractionForm(
+                        url: "/api/v1/business/interactions/get_form_template",
+                        title: "Add " + controller.interactionFormTitle.value,
+                      ),
+                    );
+
+                    // Get.to(() => const InteractionForm());
                   },
                 ),
                 const SizedBox(height: 12),
@@ -407,7 +412,9 @@ class _DashboardState extends State<Dashboard> {
             fontSize: 15,
           ),
         ),
-        subtitle: Text(lead['lead_status'] ?? 'Pending'),
+        subtitle: lead['person_name'] != null && lead['person_name'].isNotEmpty
+            ? Text(lead['person_name'] ?? '')
+            : null,
         trailing: Icon(Icons.arrow_forward_ios, size: 14),
       ),
     );

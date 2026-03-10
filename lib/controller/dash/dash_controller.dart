@@ -29,6 +29,9 @@ class DashController extends GetxController {
     refreshDashboard();
   }
 
+  RxString leadFormTitle = "Lead".obs;
+  RxString interactionFormTitle = "Interaction".obs;
+
   Future<void> refreshDashboard() async {
     isLoading.value = true;
     update();
@@ -39,6 +42,9 @@ class DashController extends GetxController {
         fetchUpcomingLeads(),
         fetchDrafts(),
       ]);
+      leadFormTitle.value = await getleadFormTitle() ?? 'Lead';
+      interactionFormTitle.value =
+          await getinteractionFormTitle() ?? 'Interaction';
     } catch (e) {
       log("Error refreshing dashboard: $e");
     } finally {

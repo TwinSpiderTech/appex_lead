@@ -12,7 +12,7 @@ import 'package:get/get.dart';
 class FormDetails extends StatefulWidget {
   final String url;
   final String title;
-  final Map<String, dynamic>? draftData; // Optional data for resumption
+  final Map<String, dynamic>? draftData;
 
   const FormDetails({
     super.key,
@@ -131,6 +131,8 @@ class _FormDetailsState extends State<FormDetails> {
                         children: controller.formGroupsData.map((group) {
                           final fields = group['fields'] as List? ?? [];
                           final groupTitle = group['group_title'];
+                          final groupDescription =
+                              group['group_description'] ?? '';
                           final groupIndex = controller.formGroupsData.indexOf(
                             group,
                           );
@@ -149,14 +151,51 @@ class _FormDetailsState extends State<FormDetails> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        groupTitle.toString(),
-                                        style: TextStyle(
-                                          color: colorManager.primaryColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          letterSpacing: 0.5,
-                                        ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            groupTitle.toString(),
+                                            style: TextStyle(
+                                              color: colorManager.primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                          if (groupDescription.isNotEmpty)
+                                            GestureDetector(
+                                              onTap: () {
+                                                customPopup(
+                                                  backgroundColor:
+                                                      colorManager.accentColor,
+                                                  context: context,
+                                                  title: 'Description',
+
+                                                  content: Text(
+                                                    groupDescription,
+
+                                                    style: primaryTextStyle
+                                                        .copyWith(
+                                                          fontSize: 14,
+                                                          color: colorManager
+                                                              .whiteColor,
+                                                        ),
+                                                  ),
+                                                  showCancelBtn: false,
+                                                  showConfrimBtn: false,
+                                                );
+                                              },
+                                              child: Icon(
+                                                Icons.info,
+                                                color:
+                                                    colorManager.primaryColor,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                       const SizedBox(height: 4),
                                       Container(
@@ -218,7 +257,6 @@ class _FormDetailsState extends State<FormDetails> {
                       padding: const EdgeInsets.all(16.0),
                       child: Obx(
                         () => Row(
-                          spacing: 12,
                           children: [
                             Expanded(
                               child: CustomButton(

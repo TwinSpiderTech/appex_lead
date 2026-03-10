@@ -20,20 +20,20 @@ import '../../utils/validations.dart';
 import '../dash/dash_controller.dart';
 import '../lead/lead_controller.dart';
 
-class GenericFormController extends GetxController {
+class InteractionFormController extends GetxController {
   // List of available form templates (Mocking API data)
   var availableTemplates = <Map<String, dynamic>>[].obs;
   var isLoadingTemplates = false.obs;
 
-  // Track the current form being edited
   var currentFormTitle = "".obs;
-  var currentDraftId = "".obs; // Unique ID for each draft session
-  var currentTemplateUrl = "".obs; // Store URL for re-fetching
-  var currentSubmissionUrl = "".obs; // Store URL for re-fetching
+  var currentDraftId = "".obs;
+  var currentTemplateUrl = "".obs;
+  var currentSubmissionUrl = "".obs;
   var fieldsData = <Map<String, dynamic>>[].obs;
   var formGroupsData = <Map<String, dynamic>>[].obs;
   FormModel? formModel;
   Rx<Map<String, dynamic>?> currentLead = Rx<Map<String, dynamic>?>(null);
+  Map<String, dynamic>? parentLeadData;
 
   // Map to hold dynamic form values
   var formValues = <String, dynamic>{}.obs;
@@ -41,7 +41,6 @@ class GenericFormController extends GetxController {
   // Map to hold field-level validation errors
   var errors = <String, String>{}.obs;
 
-  // Track if the form is currently being submitted
   var isSubmitting = false.obs;
 
   // Track fields manually edited by the user to prevent auto-generation overwriting
@@ -81,7 +80,7 @@ class GenericFormController extends GetxController {
     isLoadingTemplates.value = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cacheKey = 'template_cache_${url.replaceAll("/", "_")}';
+      final cacheKey = 'interaction_template_cache_${url.replaceAll("/", "_")}';
 
       if (!forceRefresh) {
         String? cached = prefs.getString(cacheKey);
@@ -109,11 +108,11 @@ class GenericFormController extends GetxController {
   }
 
   void _applyTemplate(Map<String, dynamic> data) {
-    prettyPrint(data);
+    // prettyPrint(data);
     try {
       formModel = FormModel.fromJson(data);
       currentFormTitle.value = formModel?.title ?? "";
-      updateLeadFormTitle(formModel?.title ?? "");
+      updateInteractionFormTitle(formModel?.title ?? "");
       debugPrint("Applied Template: ${currentFormTitle.value}");
       currentSubmissionUrl.value = formModel?.submissionUrl ?? '';
       // Build groupList and flatFieldList while preserving order
@@ -424,6 +423,11 @@ class GenericFormController extends GetxController {
     bool cameraPresent = hasCameraField();
     bool gpsUpdated = false;
 
+    log("Initializing form. Parent data present: ${parentLeadData != null}");
+    if (parentLeadData != null) {
+      log("Parent data keys: ${parentLeadData!.keys.toList()}");
+    }
+
     for (var field in fieldsData) {
       String name = (field['field_name'] ?? "").toString();
       if (name.isEmpty) continue;
@@ -452,6 +456,39 @@ class GenericFormController extends GetxController {
         } else {
           // Initialize with null
           formValues[name] = null;
+        }
+
+        // Populate from parent details if available
+        if (parentLeadData != null && parentLeadData!.isNotEmpty) {
+          var fieldConfig = Map<String, dynamic>.from(
+            field['field_config'] ?? {},
+          );
+          if (fieldConfig.isNotEmpty) {
+            String parentField = (fieldConfig['parent_field'] ?? "").toString();
+            if (parentField.isNotEmpty) {
+              log("Checking field $name for mapping to parent: $parentField");
+
+              // Use dig for potentially nested parent fields (e.g. "customer.name")
+              var parentValue = dig(parentLeadData!, parentField.split('.'));
+
+              if (parentValue != null && parentValue.toString().isNotEmpty) {
+                // If the parent value is a list, handle it based on target field type
+                if (parentValue is List) {
+                  final type = (field['field_type'] ?? "").toString();
+                  // Keep as List for checkbox fields, join for others (text fields)
+                  if (type != 'checkbox' && type != 'checkbox_group') {
+                    parentValue = parentValue.join(", ");
+                  }
+                }
+                formValues[name] = parentValue;
+                log("Successfully pre-populated $name with: $parentValue");
+              } else {
+                log(
+                  "No value found in parent for $parentField (dig result: $parentValue)",
+                );
+              }
+            }
+          }
         }
       } else if (field['field_type'] == 'gps' && !cameraPresent) {
         // If resuming but no camera, and it was "Capture photo...", refresh it
@@ -601,27 +638,27 @@ class GenericFormController extends GetxController {
     }
 
     // Handle real-time auto-generation for dependent fields
-    // for (var field in fieldsData) {
-    //   var config = Map<String, dynamic>.from(field['field_config'] ?? {});
-    //   String? autogenFrom = config['autogenerate_from']?.toString();
+    for (var field in fieldsData) {
+      var config = Map<String, dynamic>.from(field['field_config'] ?? {});
+      String? autogenFrom = config['autogenerate_from']?.toString();
 
-    //   if (autogenFrom != null && autogenFrom == fieldName) {
-    //     String depName = (field['field_name'] ?? "").toString();
-    //     debugPrint(
-    //       "MATCH FOUND: Dependent $depName has autogenerate_from: $fieldName",
-    //     );
+      if (autogenFrom != null && autogenFrom == fieldName) {
+        String depName = (field['field_name'] ?? "").toString();
+        debugPrint(
+          "MATCH FOUND: Dependent $depName has autogenerate_from: $fieldName",
+        );
 
-    //     if (depName.isNotEmpty && !manuallyEditedFields.contains(depName)) {
-    //       debugPrint("AUTO-GENERATING: Updating $depName with $value");
-    //       // Trigger automatic update for the dependent field
-    //       updateFieldValue(depName, value, isAutomatic: true);
-    //     } else {
-    //       debugPrint(
-    //         "AUTO-GEN SKIPPED: $depName is already manually edited or name is empty. Manually Edited: ${manuallyEditedFields.contains(depName)}",
-    //       );
-    //     }
-    //   }
-    // }
+        if (depName.isNotEmpty && !manuallyEditedFields.contains(depName)) {
+          debugPrint("AUTO-GENERATING: Updating $depName with $value");
+          // Trigger automatic update for the dependent field
+          updateFieldValue(depName, value, isAutomatic: true);
+        } else {
+          debugPrint(
+            "AUTO-GEN SKIPPED: $depName is already manually edited or name is empty. Manually Edited: ${manuallyEditedFields.contains(depName)}",
+          );
+        }
+      }
+    }
   }
 
   /// Updates `captured_at` form field with the current datetime.
@@ -746,12 +783,14 @@ class GenericFormController extends GetxController {
     return isValid;
   }
 
-  Future<Map<String, dynamic>?> submitForm({String? submissionURL}) async {
+  Future<Map<String, dynamic>?> submitForm({
+    String? submissionURL,
+    Function()? callbackFunction,
+  }) async {
     // print(submissionURL ?? formModel?.submissionUrl ?? 'no submission url');
     log("Submitting form data....");
     if (validateForm()) {
       isSubmitting.value = true;
-
       try {
         var _data = await getFormData();
         if (_data == null) {
@@ -761,7 +800,7 @@ class GenericFormController extends GetxController {
         print(_data);
         String url = Urls.base + validateURL(currentSubmissionUrl.value);
         log(url);
-        Map<String, dynamic> data = {"business_lead": _data};
+        Map<String, dynamic> data = {"business_interaction": _data};
 
         var _formData = dio.FormData.fromMap(
           data,
@@ -773,7 +812,6 @@ class GenericFormController extends GetxController {
           prettyPrint(res);
           if (res['status'] == 200) {
             deleteProgress();
-
             try {
               if (Get.isRegistered<DashController>()) {
                 Get.find<DashController>().refreshDashboard();
@@ -781,7 +819,7 @@ class GenericFormController extends GetxController {
             } catch (e) {
               debugPrint("Error refreshing DashController: $e");
             }
-
+            await callbackFunction?.call();
             try {
               if (Get.isRegistered<LeadController>()) {
                 Get.find<LeadController>().getLeads(
@@ -797,7 +835,7 @@ class GenericFormController extends GetxController {
             }
           }
           Get.back();
-          showSuccessMessage(message: "Lead submitted successfully!");
+          showSuccessMessage(message: "Interaction submitted successfully!");
           return Map<String, dynamic>.from(formValues);
         }
       } catch (e) {
@@ -807,27 +845,13 @@ class GenericFormController extends GetxController {
       } finally {
         isSubmitting.value = false;
       }
-
-      // Get.snackbar(
-      //   "Success",
-      //   "Form Validated Successfully!",
-      //   backgroundColor: Colors.green,
-      //   colorText: Colors.white,
-      //   snackPosition: SnackPosition.BOTTOM,
-      // );
-
-      // When successfully validated/submitted, delete it from local storage
-
-      // Return the key-value pair of the form data
     }
     return null;
   }
 
-  // --- SharedPreferences Progress Saving (Multiple Drafts) ---
-
   String get _storageKey {
     if (currentDraftId.isEmpty) return "";
-    return 'form_draft_${currentDraftId.value}';
+    return 'interaction_draft_${currentDraftId.value}';
   }
 
   Future<void> saveProgress() async {
@@ -909,7 +933,7 @@ class GenericFormController extends GetxController {
       List<Map<String, dynamic>> drafts = [];
 
       for (var key in keys) {
-        if (key.startsWith('form_draft_')) {
+        if (key.startsWith('interaction_draft_')) {
           try {
             String? jsonStr = prefs.getString(key);
             if (jsonStr != null) {
@@ -972,14 +996,11 @@ class GenericFormController extends GetxController {
           debugPrint("Failed to find file at path: $value");
         }
       } else if (type == 'checkbox' || value is List) {
-        // Dio with ListFormat.multiCompatible will natively handle Lists
-        // as field_name[]=value1&field_name[]=value2
         map[name] = value;
       } else {
         map[name] = value;
       }
     }
     return map;
-    // return dio.FormData.fromMap(map);
   }
 }

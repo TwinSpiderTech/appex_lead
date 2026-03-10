@@ -409,7 +409,9 @@ Future<DateTime?> showCustomDatePicker({
             surface: colorManager.accentColor, // Picker background color
             onSurface: Colors.white, // Default text color for the calendar grid
           ),
-          dialogTheme: DialogThemeData(backgroundColor: colorManager.accentColor),
+          dialogTheme: DialogThemeData(
+            backgroundColor: colorManager.accentColor,
+          ),
           dialogBackgroundColor:
               colorManager.accentColor, // Dialog background color
           textTheme: const TextTheme(
@@ -428,4 +430,23 @@ Future<DateTime?> showCustomDatePicker({
       );
     },
   );
+}
+
+String leadformTitleKey = 'leadform_title';
+String inteactionformTitleKey = 'interactionform_title';
+
+getleadFormTitle() async {
+  await getData(key: leadformTitleKey, type: 'string') ?? 'Lead';
+}
+
+getinteractionFormTitle() async {
+  await getData(key: inteactionformTitleKey, type: 'string') ?? 'Interaction';
+}
+
+updateLeadFormTitle(String title) async {
+  await setDataToPrefs(key: leadformTitleKey, value: title, type: 'string');
+}
+
+updateInteractionFormTitle(String title) {
+  setDataToPrefs(key: inteactionformTitleKey, value: title, type: 'string');
 }

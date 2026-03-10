@@ -101,11 +101,15 @@ class FormModel {
 
 class FormFieldGroup {
   String? groupTitle;
+  String? groupDescription;
   List<FormFileds>? fields;
 
-  FormFieldGroup({this.groupTitle, this.fields});
+  FormFieldGroup({this.groupTitle, this.fields, this.groupDescription});
 
   FormFieldGroup.fromJson(Map<String, dynamic> json) {
+    groupDescription =
+        (json['group_description'] ?? json['description'] ?? json['desc'])
+            ?.toString();
     groupTitle =
         (json['group_title'] ?? json['title'] ?? json['label'] ?? json['name'])
             ?.toString();
@@ -125,6 +129,7 @@ class FormFieldGroup {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['group_title'] = groupTitle;
+    data['group_description'] = groupDescription;
     if (fields != null) {
       data['fields'] = fields!.map((v) => v.toJson()).toList();
     }

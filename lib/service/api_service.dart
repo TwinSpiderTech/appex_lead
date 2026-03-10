@@ -14,9 +14,9 @@ class ApiServices {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           options.headers['App-Ref'] = 'trading';
-          if (options.extra["appTypeRef"] != null) {
-            options.headers["App-Type-Ref"] = options.extra["appTypeRef"];
-          }
+          // if (options.extra["appTypeRef"] != null) {
+          options.headers["App-Type-Ref"] = 'field_force_app';
+          // }
 
           final requiresToken = options.extra[isTokenRequired] != false;
 
@@ -38,7 +38,7 @@ class ApiServices {
             log('Unauthorized request');
           } else if (statusCode >= 400) {
             final message =
-                e.response?.data?['message'] ??
+                e.response?.data?['message'].toString() ??
                 'Request failed. Please check your input.';
             showErrorMessage(message: message);
           } else if (e.type == DioExceptionType.connectionTimeout ||
@@ -220,9 +220,7 @@ class ApiServices {
       final response = await _dio.post(
         url,
         data: data,
-        options: Options(
-          extra: {isTokenRequired: false, "appTypeRef": "field_force_app"},
-        ),
+        options: Options(extra: {isTokenRequired: false}),
       );
       if (response.data?['status'] == 200) {
         return response.data;

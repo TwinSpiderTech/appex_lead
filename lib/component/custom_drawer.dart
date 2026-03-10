@@ -3,6 +3,8 @@ import 'package:appex_lead/service/app_infor_service.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
+import 'package:appex_lead/view/form/drafts_screen.dart';
+import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';
 import 'package:appex_lead/view/form/forms.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:flutter/foundation.dart';
@@ -67,7 +69,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       width: MediaQuery.of(context).size.width * 0.1,
                     ),
                     title: Text(
-                      "Appex Field Force",
+                      "Field Force",
                       style: primaryTextStyle.copyWith(
                         fontSize: 18,
                         color: colorManager.textColor,
@@ -88,12 +90,38 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   child: ListView(
                     children: [
                       DrawerListTile(
-                        title: "Leads",
+                        title: "All Leads",
                         icon: Icons.list_alt_outlined,
                         press: () {
                           Get.back();
                           Get.to(() => LeadScreen());
                         },
+                      ),
+                      ExpansionTile(
+                        childrenPadding: EdgeInsets.only(bottom: 4),
+                        tilePadding: EdgeInsets.only(right: 12),
+                        title: DrawerListTile(title: "Draft", icon: Icons.save),
+                        children: [
+                          DrawerListTile(
+                            title:
+                                Get.find<DashController>().leadFormTitle.value,
+                            icon: Icons.list_alt_outlined,
+                            press: () {
+                              Get.back();
+                              Get.to(() => DraftsScreen());
+                            },
+                          ),
+                          DrawerListTile(
+                            title: Get.find<DashController>()
+                                .interactionFormTitle
+                                .value,
+                            icon: Icons.chat_bubble,
+                            press: () {
+                              Get.back();
+                              Get.to(() => InteractionDraftsScreen());
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -102,14 +130,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 // Spacer(),
                 Divider(color: Colors.grey.withValues(alpha: .3)),
 
-                Padding(
-                  padding: const EdgeInsets.only(left: 24.0),
-                  child: Text(
-                    'Preferences',
-                    style: TextStyle(color: colorManager.textColor),
-                  ),
-                ),
-                Divider(color: Colors.grey.withValues(alpha: .3)),
+                // Padding(
+                //   padding: const EdgeInsets.only(left: 24.0),
+                //   child: Text(
+                //     'Preferences',
+                //     style: TextStyle(color: colorManager.textColor),
+                //   ),
+                // ),
+                // Divider(color: Colors.grey.withValues(alpha: .3)),
                 if (kDebugMode)
                   DrawerListTile(
                     title: "Shared Prefs",
@@ -237,12 +265,12 @@ class DrawerListTile extends StatelessWidget {
     Key? key,
     // For selecting those three line once press "Command+D"
     required this.title,
-    required this.press,
+    this.press,
     this.icon,
   }) : super(key: key);
   final IconData? icon;
   final String title;
-  final VoidCallback press;
+  final VoidCallback? press;
 
   @override
   Widget build(BuildContext context) {

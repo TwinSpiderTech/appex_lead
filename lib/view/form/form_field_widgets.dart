@@ -1,22 +1,21 @@
 import 'dart:io';
+import 'package:appex_lead/component/custom_searchable_dropdown.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/utils/validations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'image_preview_screen.dart';
-import '../../controller/form/generic_form_controller.dart';
 import '../../view/camera/camera_screen.dart';
 import 'package:appex_lead/component/custom_input_field.dart';
 import 'package:appex_lead/component/custom_checkbox_field.dart';
-import 'package:appex_lead/component/custom_searchable_dropdown.dart';
 import '../../component/custom_searchable_dropdown2.dart';
 import 'package:appex_lead/component/custom_button.dart';
 import '../../main.dart'; // for colorManager
 
 class GenericFormFieldWidget extends StatelessWidget {
   final Map<String, dynamic> fieldData;
-  final GenericFormController controller;
+  final dynamic controller;
   final double borderRadius;
   final FocusNode? focusNode;
   final bool isReadOnly;
@@ -36,6 +35,9 @@ class GenericFormFieldWidget extends StatelessWidget {
     bool isEditable = (fieldData['field_editable'] ?? true) && !isReadOnly;
     String fieldName = fieldData['field_name'] ?? "unknown";
     String fieldMessage = dig(fieldData, ['field_config', 'message']) ?? "";
+    String fieldHint =
+        dig(fieldData, ['field_config', 'placeholder']) ??
+        "Enter ${fieldData['field_text'] ?? fieldName}";
 
     Map<String, dynamic> config = Map<String, dynamic>.from(
       dig(fieldData, ['field_config']) ?? {},
@@ -48,9 +50,6 @@ class GenericFormFieldWidget extends StatelessWidget {
         ? int.tryParse(config['min_length'].toString())
         : null;
     String regex = config['regax'] ?? '';
-    // debugPrint(
-    //   "Building $fieldType: $fieldName (Editable: $isEditable) RawEditable: ${fieldData['field_editable']}",
-    // );
 
     switch (fieldType) {
       case 'string':
@@ -62,6 +61,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           maxLength,
           fieldMessage,
           regex,
+          fieldHint,
         );
       case 'email':
         return _buildStringField(
@@ -72,6 +72,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           maxLength,
           fieldMessage,
           regex,
+          fieldHint,
         );
       case 'phone':
         return _buildStringField(
@@ -82,6 +83,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           maxLength,
           fieldMessage,
           regex,
+          fieldHint,
         );
       case 'text':
         return _buildTextField(
@@ -92,12 +94,19 @@ class GenericFormFieldWidget extends StatelessWidget {
           maxLength,
           fieldMessage,
           regex,
+          fieldHint,
         );
       case 'select':
       case 'dropdown':
+      case 'creatable_dropdown':
       case 'select_with_add':
       case 'select_or_auto':
-        return _buildDropdownField(isEditable, fieldName, fieldMessage);
+        return _buildDropdownField(
+          isEditable,
+          fieldName,
+          fieldMessage,
+          fieldHint,
+        );
       case 'datetime':
       case 'date':
         return _buildDateTimeField(
@@ -106,6 +115,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           fieldName,
           fieldMessage,
           config,
+          fieldHint,
         );
       case 'checkbox':
       case 'checkbox_group':
@@ -124,6 +134,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           maxLength,
           fieldMessage,
           regex,
+          fieldHint,
         );
     }
   }
@@ -192,6 +203,7 @@ class GenericFormFieldWidget extends StatelessWidget {
     int? maxLength,
     String fieldMessage,
     String regex,
+    String fieldHint,
   ) {
     return _buildWrapper(
       fieldName: fieldName,
@@ -220,7 +232,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           },
           initialValue: value,
           onChanged: (val) => controller.updateFieldValue(fieldName, val),
-          hint: "Enter ${fieldData['field_text'] ?? fieldName}",
+          hint: fieldHint,
         );
       }),
     );
@@ -234,6 +246,7 @@ class GenericFormFieldWidget extends StatelessWidget {
     int? maxLength,
     String fieldMessage,
     String regex,
+    String fieldHint,
   ) {
     return _buildWrapper(
       fieldName: fieldName,
@@ -264,7 +277,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           initialValue: value,
           onChanged: (val) => controller.updateFieldValue(fieldName, val),
 
-          hint: "Enter ${fieldData['field_text'] ?? fieldName}",
+          hint: fieldHint,
         );
       }),
     );
@@ -274,6 +287,7 @@ class GenericFormFieldWidget extends StatelessWidget {
     bool isEditable,
     String fieldName,
     String fieldMessage,
+    String fieldHint,
   ) {
     var rawOptions =
         fieldData['field_options'] ??
@@ -294,7 +308,7 @@ class GenericFormFieldWidget extends StatelessWidget {
             focusNode: controller.getOrCreateFocusNode(fieldName),
             items: optionsMap,
             enabled: isEditable,
-            allowCustomValue: true,
+            allowCustomValue: fieldData['field_type'] == 'creatable_dropdown',
             // fieldType == 'select_with_add' || fieldType == 'select_or_auto',
             selectedValue: currentValue?.toString(),
             label: fieldData['field_text'] ?? fieldName,
@@ -319,10 +333,11 @@ class GenericFormFieldWidget extends StatelessWidget {
         }
 
         return CustomSearchableDropdown(
+          hint: fieldHint,
           focusNode: controller.getOrCreateFocusNode(fieldName),
           items: options,
           enabled: isEditable, // Pass enablement here
-          allowCustomValue: true,
+          allowCustomValue: fieldData['field_type'] == 'creatable_dropdown',
           selectedValue: currentValue is String ? currentValue : null,
           label: fieldData['field_text'] ?? fieldName,
           borderRadius: borderRadius,
@@ -346,6 +361,7 @@ class GenericFormFieldWidget extends StatelessWidget {
     String fieldName,
     String fieldMessage,
     Map<String, dynamic> config,
+    String fieldHint,
   ) {
     bool isDateOnly = fieldData['field_type'] == 'date';
 
@@ -373,8 +389,26 @@ class GenericFormFieldWidget extends StatelessWidget {
         focusNode: controller.getOrCreateFocusNode(fieldName),
         onTap: isEditable
             ? () async {
-                // Normalize initial to start of day to match min/max
-                DateTime initial = DateTime(now.year, now.month, now.day);
+                // Get current value from controller
+                var currentVal = controller.formValues[fieldName];
+                DateTime initial = today;
+
+                if (currentVal != null && currentVal.toString().isNotEmpty) {
+                  try {
+                    if (isDateOnly) {
+                      initial = DateFormat(
+                        'yyyy-MM-dd',
+                      ).parse(currentVal.toString());
+                    } else {
+                      initial = DateFormat(
+                        'dd MMM, yyyy - hh:mm a',
+                      ).parse(currentVal.toString());
+                    }
+                  } catch (e) {
+                    debugPrint("Error parsing date for picker: $e");
+                  }
+                }
+
                 // Clamp initial date within range to prevent Flutter crash/hang
                 if (initial.isBefore(minDate)) initial = minDate;
                 if (initial.isAfter(maxDate)) initial = maxDate;
@@ -394,9 +428,22 @@ class GenericFormFieldWidget extends StatelessWidget {
                     );
                   } else {
                     if (!context.mounted) return;
+
+                    // Try to get existing time if available
+                    TimeOfDay initialTime = TimeOfDay.now();
+                    if (currentVal != null &&
+                        currentVal.toString().isNotEmpty) {
+                      try {
+                        DateTime dt = DateFormat(
+                          'dd MMM, yyyy - hh:mm a',
+                        ).parse(currentVal.toString());
+                        initialTime = TimeOfDay.fromDateTime(dt);
+                      } catch (_) {}
+                    }
+
                     TimeOfDay? pickedTime = await showTimePicker(
                       context: context,
-                      initialTime: TimeOfDay.now(),
+                      initialTime: initialTime,
                     );
                     if (pickedTime != null) {
                       final dt = DateTime(
@@ -433,7 +480,7 @@ class GenericFormFieldWidget extends StatelessWidget {
           child: Obx(() {
             var val = controller.formValues[fieldName];
             return Text(
-              val?.toString() ?? "Select ${fieldData['field_text']}",
+              val?.toString() ?? fieldHint,
               style: TextStyle(
                 color: val == null
                     ? Colors.grey.shade500
