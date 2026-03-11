@@ -29,7 +29,7 @@ class CustomInputField extends StatefulWidget {
   const CustomInputField({
     super.key,
     this.maxLine = 1,
-    this.fontSize = 12,
+    this.fontSize = 13,
     this.enable = true,
     this.controller,
     this.obsecure = false,
@@ -133,7 +133,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
             hintStyle: TextStyle(
               color: Colors.grey.shade500,
               fontWeight: FontWeight.w300,
-              height: 0.7,
+              height: 1.2,
               fontSize: widget.fontSize,
             ),
             floatingLabelStyle: TextStyle(

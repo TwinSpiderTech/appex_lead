@@ -82,7 +82,7 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
           controller: _controller,
 
           enable: widget.enabled,
-          hint: widget.hint ?? "Search ${widget.label}...",
+          hint: widget.hint ?? "Search ${widget.label ?? ''}...",
           readOnly: true, // Prevent direct typing, use dialog for selection
           borderRadius: widget.borderRadius ?? 12,
           isRequired: false,
@@ -131,7 +131,7 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Select ${widget.label}",
+                      "Available ${widget.label}",
                       style: TextStyle(
                         color: colorManager.bgDark,
                         fontWeight: FontWeight.bold,
@@ -143,7 +143,8 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
                       autofocus: true,
                       style: TextStyle(color: colorManager.bgDark),
                       decoration: InputDecoration(
-                        hintText: "Search...",
+                        hintText:
+                            widget.hint ?? " Search ${widget.label ?? ''}...",
                         hintStyle: TextStyle(
                           color: colorManager.bgDark.withOpacity(0.5),
                         ),
@@ -183,13 +184,7 @@ class _CustomSearchableDropdown2State extends State<CustomSearchableDropdown2> {
                                 value,
                                 style: TextStyle(color: colorManager.bgDark),
                               ),
-                              // subtitle: Text(
-                              //   key,
-                              //   style: TextStyle(
-                              //     color: colorManager.bgDark.withOpacity(0.5),
-                              //     fontSize: 12,
-                              //   ),
-                              // ),
+                             
                               onTap: () {
                                 widget.onChange?.call(key);
                                 _controller.text = value;

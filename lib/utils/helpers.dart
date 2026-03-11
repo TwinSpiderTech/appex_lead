@@ -432,6 +432,46 @@ Future<DateTime?> showCustomDatePicker({
   );
 }
 
+Future<TimeOfDay?> showCustomTimePicker({
+  required BuildContext context,
+  required TimeOfDay initialTime,
+}) async {
+  return showTimePicker(
+    context: context,
+    initialTime: initialTime,
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: colorManager.primaryColor,
+            onPrimary: Colors.white,
+            secondary: colorManager.primaryColor,
+            tertiary: colorManager.primaryColor,
+            surface: colorManager.accentColor,
+            onSurface: Colors.white,
+          ),
+          dialogTheme: DialogThemeData(
+            backgroundColor: colorManager.accentColor,
+          ),
+          dialogBackgroundColor: colorManager.accentColor,
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(color: Colors.white),
+            bodyMedium: TextStyle(color: Colors.white),
+            titleSmall: TextStyle(color: Colors.white),
+            labelSmall: TextStyle(color: Colors.white),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: colorManager.primaryColor,
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+}
+
 String leadformTitleKey = 'leadform_title';
 String inteactionformTitleKey = 'interactionform_title';
 

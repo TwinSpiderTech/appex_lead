@@ -287,7 +287,7 @@ class HistoryTab extends StatelessWidget {
                                     ),
                                     trailing: HugeIcon(
                                       icon: HugeIcons.strokeRoundedArrowRight01,
-                                      color: colorManager.whiteColor,
+                                    color: colorManager.whiteColor,
                                       size: 24,
                                     ),
                                   ),

@@ -99,6 +99,15 @@ class InteractionFormController extends GetxController {
         var data = dig(response, ['data']);
         await prefs.setString(cacheKey, jsonEncode(data));
         _applyTemplate(data);
+      } else {
+        String? cached = prefs.getString(cacheKey);
+        if (cached != null) {
+          debugPrint("Loading template from cache: $cacheKey");
+          final data = jsonDecode(cached);
+          _applyTemplate(data);
+          isLoadingTemplates.value = false;
+          return;
+        }
       }
     } catch (e) {
       debugPrint("Error fetching template: $e");

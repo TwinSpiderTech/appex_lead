@@ -37,7 +37,7 @@ class _FormDetailsState extends State<FormDetails> {
       } else {
         controller.clearSession();
       }
-      controller.fetchTemplate(widget.url);
+      controller.fetchTemplate(widget.url, forceRefresh: true);
     });
   }
 
@@ -257,6 +257,7 @@ class _FormDetailsState extends State<FormDetails> {
                       padding: const EdgeInsets.all(16.0),
                       child: Obx(
                         () => Row(
+                          spacing: 12,
                           children: [
                             Expanded(
                               child: CustomButton(

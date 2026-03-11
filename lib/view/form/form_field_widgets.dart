@@ -441,7 +441,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                       } catch (_) {}
                     }
 
-                    TimeOfDay? pickedTime = await showTimePicker(
+                    TimeOfDay? pickedTime = await showCustomTimePicker(
                       context: context,
                       initialTime: initialTime,
                     );
@@ -485,7 +485,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                 color: val == null
                     ? Colors.grey.shade500
                     : colorManager.textColor,
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: val == null ? FontWeight.w300 : FontWeight.normal,
               ),
             );

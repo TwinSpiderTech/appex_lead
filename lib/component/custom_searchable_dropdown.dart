@@ -120,7 +120,7 @@ class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Select ${widget.label}",
+                      "Available ${widget.label}",
                       style: TextStyle(
                         color: colorManager.bgDark,
                         fontWeight: FontWeight.bold,
@@ -132,7 +132,7 @@ class _CustomSearchableDropdownState extends State<CustomSearchableDropdown> {
                       autofocus: true,
                       style: TextStyle(color: colorManager.bgDark),
                       decoration: InputDecoration(
-                        hintText: "Search...",
+                        hintText: widget.hint ?? " Search ${widget.label}...",
                         hintStyle: TextStyle(
                           color: colorManager.bgDark.withOpacity(0.5),
                         ),
