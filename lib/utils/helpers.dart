@@ -35,17 +35,20 @@ toggleDrawer(GlobalKey<ScaffoldState> key) {
       : key.currentState!.openDrawer();
 }
 
-String toParameterize(String key) {
-  if (key.contains("_")) {
-    var words = key
+String toParameterize(dynamic key) {
+  String strKey = key?.toString() ?? "";
+  if (strKey.isEmpty) return "";
+  if (strKey.contains("_")) {
+    var words = strKey
         .split('_')
         .map((word) {
+          if (word.isEmpty) return "";
           return word[0].toUpperCase() + word.substring(1).toLowerCase();
         })
         .join(' ');
     return words;
   } else {
-    return key[0].toUpperCase() + key.substring(1).toLowerCase();
+    return strKey[0].toUpperCase() + strKey.substring(1).toLowerCase();
   }
 }
 
@@ -403,26 +406,21 @@ Future<DateTime?> showCustomDatePicker({
       return Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.light(
-            primary: colorManager
-                .primaryColor, // Header background color, Selector color
-            onPrimary: Colors.white, // Header text color, Selected text color
-            surface: colorManager.accentColor, // Picker background color
-            onSurface: Colors.white, // Default text color for the calendar grid
+            primary: colorManager.primaryColor,
+            onPrimary: Colors.white,
+            surface: colorManager.accentColor,
+            onSurface: Colors.white,
           ),
-          dialogTheme: DialogThemeData(
-            backgroundColor: colorManager.accentColor,
-          ),
-          dialogBackgroundColor:
-              colorManager.accentColor, // Dialog background color
+          dialogBackgroundColor: colorManager.accentColor,
           textTheme: const TextTheme(
-            bodyLarge: TextStyle(color: Colors.white), // Dates text
-            bodyMedium: TextStyle(color: Colors.white), // Secondary dates/text
-            titleSmall: TextStyle(color: Colors.white), // Header label
-            labelSmall: TextStyle(color: Colors.white), // AM/PM or small labels
+            bodyLarge: TextStyle(color: Colors.white),
+            bodyMedium: TextStyle(color: Colors.white),
+            titleSmall: TextStyle(color: Colors.white),
+            labelSmall: TextStyle(color: Colors.white),
           ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
-              foregroundColor: colorManager.primaryColor, // Button text color
+              foregroundColor: colorManager.primaryColor,
             ),
           ),
         ),
@@ -430,6 +428,64 @@ Future<DateTime?> showCustomDatePicker({
       );
     },
   );
+}
+
+Future<List<DateTime>?> showCustomDateRangePicker({
+  required BuildContext context,
+  DateTimeRange? initialDateRange,
+  required DateTime firstDate,
+  required DateTime lastDate,
+}) async {
+  final DateTimeRange? range = await showDateRangePicker(
+    context: context,
+    initialDateRange: initialDateRange,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    builder: (context, child) {
+      return Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: colorManager.primaryColor,
+            onPrimary: Colors.white,
+            surface: colorManager.accentColor,
+            onSurface: Colors.white,
+            secondary: colorManager.primaryColor,
+            primaryContainer: colorManager.primaryColor.withOpacity(0.2),
+            onPrimaryContainer: Colors.white,
+          ),
+          dialogBackgroundColor: colorManager.accentColor,
+          scaffoldBackgroundColor: colorManager.accentColor,
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(color: Colors.white),
+            bodyMedium: TextStyle(color: Colors.white),
+            titleSmall: TextStyle(color: Colors.white),
+            labelSmall: TextStyle(color: Colors.white),
+          ),
+          appBarTheme: AppBarTheme(
+            backgroundColor: colorManager.accentColor,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: colorManager.primaryColor,
+              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (range != null) {
+    return [range.start, range.end];
+  }
+  return null;
 }
 
 Future<TimeOfDay?> showCustomTimePicker({
@@ -475,18 +531,33 @@ Future<TimeOfDay?> showCustomTimePicker({
 String leadformTitleKey = 'leadform_title';
 String inteactionformTitleKey = 'interactionform_title';
 
-getleadFormTitle() async {
-  await getData(key: leadformTitleKey, type: 'string') ?? 'Lead';
+Future<String> getleadFormTitle() async {
+  return await getData(key: leadformTitleKey, type: 'string') ?? 'Lead';
 }
 
-getinteractionFormTitle() async {
-  await getData(key: inteactionformTitleKey, type: 'string') ?? 'Interaction';
+Future<String> getinteractionFormTitle() async {
+  return await getData(key: inteactionformTitleKey, type: 'string') ??
+      'Interaction';
 }
 
 updateLeadFormTitle(String title) async {
   await setDataToPrefs(key: leadformTitleKey, value: title, type: 'string');
 }
 
-updateInteractionFormTitle(String title) {
-  setDataToPrefs(key: inteactionformTitleKey, value: title, type: 'string');
+updateInteractionFormTitle(String title) async {
+  await setDataToPrefs(
+    key: inteactionformTitleKey,
+    value: title,
+    type: 'string',
+  );
+}
+
+String userNameKey = 'user_name';
+
+Future<String> getUserName() async {
+  return await getData(key: userNameKey, type: 'string') ?? '';
+}
+
+updateUserName(String name) async {
+  await setDataToPrefs(key: userNameKey, value: name, type: 'string');
 }

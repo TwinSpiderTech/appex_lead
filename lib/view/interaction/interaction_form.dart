@@ -48,11 +48,6 @@ class _InteractionFormState extends State<InteractionForm> {
     });
   }
 
-  _isFormEmpty() {
-    return controller.formValues.isNotEmpty &&
-        controller.formValues.values.first != null;
-  }
-
   @override
   void dispose() {
     // Explicitly delete the controller when leaving InteractionForm
@@ -67,35 +62,39 @@ class _InteractionFormState extends State<InteractionForm> {
     return Stack(
       children: [
         Scaffold(
-          appBar: CustomAppBar(
-            title: controller.formModel?.title ?? widget.title,
-            onNavigateBack: () {
-              // print(controller.formValues.values.first != null);
-
-              Get.back();
-            },
-            trailing: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: IconButton(
-                icon: Icon(Icons.info, color: colorManager.whiteColor),
-                onPressed: () {
-                  customPopup(
-                    backgroundColor: colorManager.accentColor,
-                    context: context,
-                    title: 'Description',
-
-                    content: Text(
-                      controller.formModel?.description ??
-                          "No description available",
-                      style: primaryTextStyle.copyWith(
-                        fontSize: 14,
-                        color: colorManager.whiteColor,
-                      ),
-                    ),
-                    showCancelBtn: false,
-                    showConfrimBtn: false,
-                  );
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: Obx(
+              () => CustomAppBar(
+                title: controller.currentFormTitle.value.isNotEmpty
+                    ? "Add ${controller.currentFormTitle.value}"
+                    : widget.title,
+                onNavigateBack: () {
+                  Get.back();
                 },
+                trailing: Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: IconButton(
+                    icon: Icon(Icons.info, color: colorManager.whiteColor),
+                    onPressed: () {
+                      customPopup(
+                        backgroundColor: colorManager.accentColor,
+                        context: context,
+                        title: 'Description',
+                        content: Text(
+                          controller.formModel?.description ??
+                              "No description available",
+                          style: primaryTextStyle.copyWith(
+                            fontSize: 14,
+                            color: colorManager.whiteColor,
+                          ),
+                        ),
+                        showCancelBtn: false,
+                        showConfrimBtn: false,
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),

@@ -33,7 +33,7 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
       : message.data["body"] ?? '';
   await services.flutterLocalNotification.show(
     DateTime.now().millisecondsSinceEpoch,
-    title,
+    title, 
     body,
     details,
     payload: jsonEncode({

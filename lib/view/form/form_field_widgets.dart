@@ -145,6 +145,9 @@ class GenericFormFieldWidget extends StatelessWidget {
     String fieldMessage = "",
   }) {
     return Padding(
+      key: fieldName.isNotEmpty
+          ? controller.getOrCreateGlobalKey(fieldName)
+          : null,
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

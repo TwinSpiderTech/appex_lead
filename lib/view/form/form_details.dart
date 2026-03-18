@@ -1,11 +1,13 @@
 import 'package:appex_lead/component/custom_appbar.dart';
 import 'package:appex_lead/component/custom_button.dart';
 import 'package:appex_lead/controller/form/generic_form_controller.dart';
+import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/form_field_widgets.dart';
+import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -41,11 +43,6 @@ class _FormDetailsState extends State<FormDetails> {
     });
   }
 
-  _isFormEmpty() {
-    return controller.formValues.isNotEmpty &&
-        controller.formValues.values.first != null;
-  }
-
   @override
   void dispose() {
     // Explicitly delete the controller when leaving FormDetails
@@ -60,48 +57,39 @@ class _FormDetailsState extends State<FormDetails> {
     return Stack(
       children: [
         Scaffold(
-          appBar: CustomAppBar(
-            title: widget.title,
-            onNavigateBack: () {
-              // print(controller.formValues.values.first != null);
-              if (false && !_isFormEmpty()) {
-                customPopup(
-                  context: context,
-                  title: "Save Draft",
-                  message: "Do you want to save the draft?",
-                  onConfirm: () {
-                    controller.saveProgress();
-
-                    Get.back();
-                  },
-                  onCancel: () {},
-                );
-              } else {
-                Get.back();
-              }
-            },
-            trailing: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: IconButton(
-                icon: Icon(Icons.info, color: colorManager.whiteColor),
-                onPressed: () {
-                  customPopup(
-                    backgroundColor: colorManager.accentColor,
-                    context: context,
-                    title: 'Description',
-
-                    content: Text(
-                      controller.formModel?.description ??
-                          "No description available",
-                      style: primaryTextStyle.copyWith(
-                        fontSize: 14,
-                        color: colorManager.whiteColor,
-                      ),
-                    ),
-                    showCancelBtn: false,
-                    showConfrimBtn: false,
-                  );
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: Obx(
+              () => CustomAppBar(
+                title: controller.currentFormTitle.value.isNotEmpty
+                    ? "Add ${controller.currentFormTitle.value}"
+                    : widget.title,
+                onNavigateBack: () {
+                  Get.back();
                 },
+                trailing: Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: IconButton(
+                    icon: Icon(Icons.info, color: colorManager.whiteColor),
+                    onPressed: () {
+                      customPopup(
+                        backgroundColor: colorManager.accentColor,
+                        context: context,
+                        title: 'Description',
+                        content: Text(
+                          controller.formModel?.description ??
+                              "No description available",
+                          style: primaryTextStyle.copyWith(
+                            fontSize: 14,
+                            color: colorManager.whiteColor,
+                          ),
+                        ),
+                        showCancelBtn: false,
+                        showConfrimBtn: false,
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -280,6 +268,15 @@ class _FormDetailsState extends State<FormDetails> {
                                     submissionURL:
                                         widget.draftData?['submission_url'],
                                   );
+                                  if (res != null &&
+                                      res['status'] == 200 &&
+                                      res['data'] != null) {
+                                        String url = dig(res, ['data', 'detail_endpoint'])??'';
+                                        Get.put(LeadController()).leadEndPoint.value = url;
+                                    Get.off(
+                                      () => LeadDetailsLayout2(cont: Get.put(LeadController())),
+                                    );
+                                  }
                                 },
                                 label: "Submit",
                               ),

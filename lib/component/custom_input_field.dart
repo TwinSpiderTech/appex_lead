@@ -126,6 +126,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
           maxLines: widget.maxLine,
 
           decoration: InputDecoration(
+            errorStyle: const TextStyle(height: 0, fontSize: 0),
             prefixIcon: widget.prefixIcon,
             labelText: widget.label,
             suffixIcon: widget.suffixIcon,

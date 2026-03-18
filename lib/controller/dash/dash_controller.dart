@@ -26,11 +26,17 @@ class DashController extends GetxController {
     super.onInit();
     // Ensure LeadController is initialized as it's needed for navigation and data mapping
     Get.put(LeadController());
+    loadTitles();
     refreshDashboard();
   }
 
   RxString leadFormTitle = "Lead".obs;
   RxString interactionFormTitle = "Interaction".obs;
+
+  Future<void> loadTitles() async {
+    leadFormTitle.value = await getleadFormTitle();
+    interactionFormTitle.value = await getinteractionFormTitle();
+  }
 
   Future<void> refreshDashboard() async {
     isLoading.value = true;
@@ -38,13 +44,11 @@ class DashController extends GetxController {
 
     try {
       await Future.wait([
-        fetchPendingLeads(),
+        // fetchPendingLeads(),
         fetchUpcomingLeads(),
-        fetchDrafts(),
+        // fetchDrafts(),
       ]);
-      leadFormTitle.value = await getleadFormTitle() ?? 'Lead';
-      interactionFormTitle.value =
-          await getinteractionFormTitle() ?? 'Interaction';
+      await loadTitles();
     } catch (e) {
       log("Error refreshing dashboard: $e");
     } finally {
@@ -82,21 +86,21 @@ class DashController extends GetxController {
     }
   }
 
-  Future<void> fetchPendingLeads() async {
-    final response = await api.getLeads(
-      1,
-      status: 'pending',
-      search: searchCont.text,
-    );
-    if (response != null && response['response_status'] == 'success') {
-      final data = response['data'] ?? [];
-      final tableRecord = List<Map<String, dynamic>>.from(
-        dig(data, ['table_record'])?.map((e) => e).toList() ?? [],
-      );
+  // Future<void> fetchPendingLeads() async {
+  //   final response = await api.getLeads(
+  //     1,
+  //     status: 'pending',
+  //     search: searchCont.text,
+  //   );
+  //   if (response != null && response['response_status'] == 'success') {
+  //     final data = response['data'] ?? [];
+  //     final tableRecord = List<Map<String, dynamic>>.from(
+  //       dig(data, ['table_record'])?.map((e) => e).toList() ?? [],
+  //     );
 
-      pendingLeads.value = tableRecord;
-    }
-  }
+  //     pendingLeads.value = tableRecord;
+  //   }
+  // }
 
   Future<void> fetchUpcomingLeads() async {
     final response = await api.getUpcomingLeads(1, search: searchCont.text);

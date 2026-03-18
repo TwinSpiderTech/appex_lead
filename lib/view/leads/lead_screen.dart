@@ -3,10 +3,12 @@ import 'dart:developer';
 import 'package:appex_lead/component/custom_appbar.dart';
 import 'package:appex_lead/component/custom_button.dart';
 import 'package:appex_lead/component/custom_input_field.dart';
+import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
+import 'package:appex_lead/component/summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -24,9 +26,9 @@ class _LeadScreenState extends State<LeadScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cont = Get.find<LeadController>();
-      cont.getLeads(reset: true, status: 'pending');
-      cont.getLeads(reset: true, status: 'ongoing');
-      cont.getLeads(reset: true, status: 'closed');
+      cont.getLeads(reset: true, status: 'overdue');
+      cont.getLeads(reset: true, status: 'due_today');
+      cont.getLeads(reset: true, status: 'completed');
     });
   }
 
@@ -36,47 +38,51 @@ class _LeadScreenState extends State<LeadScreen> {
       init: LeadController(),
       builder: (cont) {
         return Scaffold(
-          appBar: CustomAppBar(
-            onNavigateBack: () {
-              cont.clearForm();
-              Get.back();
-            },
-            title: 'Leads',
-            bottom: TabBar(
-              controller: cont.tabController,
-              indicatorColor: colorManager.primaryColor,
-              labelColor: colorManager.primaryColor,
-              unselectedLabelColor: colorManager.textColor,
-              tabs: [
-                Tab(
-                  child: Text(
-                    "Ongoing",
-                    style: primaryTextStyle.copyWith(
-                      color: colorManager.whiteColor,
-                      fontSize: 16,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight + 48),
+            child: Obx(
+              () => CustomAppBar(
+                onNavigateBack: () {
+                  cont.clearForm();
+                  Get.back();
+                },
+                title: Get.find<DashController>().leadFormTitle.value + 's',
+                bottom: TabBar(
+                  controller: cont.tabController,
+                  indicatorColor: colorManager.primaryColor,
+                  labelColor: colorManager.primaryColor,
+                  unselectedLabelColor: colorManager.textColor,
+                  tabs: [
+                    Tab(
+                      child: Text(
+                        "Due Today",
+                        style: primaryTextStyle.copyWith(
+                          color: colorManager.whiteColor,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Tab(
-                  child: Text(
-                    "Pending",
-                    style: primaryTextStyle.copyWith(
-                      color: colorManager.whiteColor,
-                      fontSize: 16,
+                    Tab(
+                      child: Text(
+                        "Overdue",
+                        style: primaryTextStyle.copyWith(
+                          color: colorManager.whiteColor,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-
-                Tab(
-                  child: Text(
-                    "Closed",
-                    style: primaryTextStyle.copyWith(
-                      color: colorManager.whiteColor,
-                      fontSize: 16,
+                    Tab(
+                      child: Text(
+                        "Completed",
+                        style: primaryTextStyle.copyWith(
+                          color: colorManager.whiteColor,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           backgroundColor: colorManager.bgDark,
@@ -87,19 +93,19 @@ class _LeadScreenState extends State<LeadScreen> {
                 cont: cont,
                 history: cont.ongoingLeads,
                 isLoading: cont.ongoingLoading,
-                status: 'ongoing',
+                status: 'due_today',
               ),
               HistoryTab(
                 cont: cont,
                 history: cont.pendingLeads,
                 isLoading: cont.pendingLoading,
-                status: 'pending',
+                status: 'overdue',
               ),
               HistoryTab(
                 cont: cont,
                 history: cont.closedLeads,
                 isLoading: cont.closedLoading,
-                status: 'closed',
+                status: 'completed',
               ),
             ],
           ),
@@ -177,8 +183,6 @@ class _LeadScreenState extends State<LeadScreen> {
               ],
             ),
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
         );
       },
     );
@@ -207,7 +211,8 @@ class HistoryTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: CustomInputField(
             isRequired: false,
-            hint: "Search Leads...",
+            hint:
+                "Search ${Get.find<DashController>().leadFormTitle.value}s...",
             prefixIcon: Icon(Icons.search, color: colorManager.dynamicColor),
             controller: status == 'pending'
                 ? cont.pendingSearchCont
@@ -241,7 +246,7 @@ class HistoryTab extends StatelessWidget {
                             height: 500,
                             child: Center(
                               child: Text(
-                                'No lead found!',
+                                'No ${Get.find<DashController>().leadFormTitle.value.toLowerCase()} found!',
                                 style: primaryTextStyle.copyWith(
                                   color: colorManager.textColor,
                                 ),
@@ -250,57 +255,21 @@ class HistoryTab extends StatelessWidget {
                           )
                         else if (history != null)
                           ...history!.map((l) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: InkWell(
-                                onTap: () {
-                                  String url =
-                                      cont.leadEndPoint.value +
-                                      l['id'].toString();
-                                  log("${l}");
-                                  Get.to(
-                                    () => LeadDetailsLayout2(
-                                      url: url,
-                                      cont: cont,
-                                    ),
-                                  );
-                                },
-                                child: Card(
-                                  color: colorManager.accentColor.withValues(),
-                                  child: ListTile(
-                                    leading: HugeIcon(
-                                      icon: HugeIcons.strokeRoundedFolder01,
-                                      color: colorManager.whiteColor,
-                                    ),
-                                    title: Text(
-                                      l['business_name'] ?? '',
-                                      style: primaryTextStyle.copyWith(
-                                        color: colorManager.whiteColor,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      l['person_name'] ?? '',
-                                      style: primaryTextStyle.copyWith(
-                                        color: colorManager.whiteColor,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    trailing: HugeIcon(
-                                      icon: HugeIcons.strokeRoundedArrowRight01,
-                                    color: colorManager.whiteColor,
-                                      size: 24,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // child: Container(
-                              //   onTap: () {
-                              //     cont.loadComplaintDetails(h);
-                              //   },
-                              //   status: h.status,
-                              //   title: h.subject,
-                              //   subtitle: h.complaintCategory,
-                              // ),
+                            return SummaryCard(
+                              title: l['business_name'] ?? '',
+                              subtitle: l['person_name'] ?? '',
+                              nextFollowup: l['next_followup'] ?? '',
+                              icon: HugeIcons.strokeRoundedHospital02,
+                              onTap: () {
+                                String url =
+                                    cont.leadEndPoint.value +
+                                    l['id'].toString();
+                                log("${l}");
+                                Get.to(
+                                  () =>
+                                      LeadDetailsLayout2(url: url, cont: cont),
+                                );
+                              },
                             );
                           }),
                         const SizedBox(height: 120),

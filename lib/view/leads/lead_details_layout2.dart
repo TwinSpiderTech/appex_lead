@@ -28,7 +28,37 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   Map<String, dynamic>? lead;
 
   // Fields to hide from group cards (still accessible via controller.formValues)
-  final Set<String> _hiddenDetailFields = {'id', 'lead_status', 'whatsapp'};
+  final List<String> _hiddenDetailFields = [
+    'id',
+    'lead_status',
+    'whatsapp',
+    'business_name',
+    'person_name',
+  ];
+
+  bool _shouldHideField(String key, dynamic value) {
+    if (key.startsWith("_")) return true;
+    if (_hiddenDetailFields.contains(key)) return true;
+
+    // Hide empty/null values
+    if (value == null) return true;
+
+    if (value is String) {
+      final strVal = value.trim();
+      if (strVal.isEmpty || strVal.toLowerCase() == "null") return true;
+    }
+
+    if (value is Iterable && value.isEmpty) return true;
+    if (value is Map && value.isEmpty) return true;
+
+    // Alternative "null" string check for non-string types
+    if (value.toString().trim().toLowerCase() == "null") return true;
+    if (value.toString().trim() == "[]" || value.toString().trim() == "{}") {
+      return true;
+    }
+
+    return false;
+  }
 
   @override
   void initState() {
@@ -55,7 +85,26 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: colorManager.whiteColor,
+      backgroundColor: const Color(0xFFF8F9FA), // Off-white modern background
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        centerTitle: true,
+        title: const Text(
+          "LEAD DETAILS",
+          style: TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            letterSpacing: 1,
+          ),
+        ),
+      ),
       body: Obx(() {
         if (controller.isLoadingTemplates.value || lead == null) {
           return _buildShimmerLoading();
@@ -68,196 +117,158 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
             .toList();
         final businessName =
             controller.formValues['business_name'] ?? "Lead Details";
+        final personName = controller.formValues['person_name'] ?? "";
+        final status = toParameterize(
+          controller.formValues['lead_status'] ?? "",
+        );
 
-        return NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverAppBar(
-                expandedHeight: 100.0,
-                floating: false,
-                pinned: true,
-                elevation: 0,
-                backgroundColor: colorManager.accentColor,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Get.back(),
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  title: Padding(
-                    padding: const EdgeInsets.only(
-                      top: 32.0,
-                      left: 16.0,
-                      right: 16.0,
-                    ),
-                    child: Text(
-                      businessName.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.bold,
-                        height: 1,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          colorManager.accentColor,
-                          colorManager.accentColor,
-                        ],
-                      ),
-                    ),
-                    child:
-                        (controller.formValues['person_name'] != null &&
-                            controller.formValues['person_name']
-                                .toString()
-                                .trim()
-                                .isNotEmpty)
-                        ? Padding(
-                            padding: const EdgeInsets.only(
-                              top: 0,
-                              left: 52.0,
-                              right: 18,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        // radius: 20,
-                                        backgroundColor: Colors.white
-                                            .withOpacity(0.0),
-                                        child: const HugeIcon(
-                                          icon: HugeIcons.strokeRoundedUser,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-
-                                      if (controller
-                                                  .formValues['person_name'] !=
-                                              null &&
-                                          controller.formValues['person_name']
-                                              .toString()
-                                              .trim()
-                                              .isNotEmpty)
-                                        Expanded(
-                                          child: Text(
-                                            controller.formValues['person_name']
-                                                .toString()
-                                                .toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  child:
-                                      (controller.formValues['lead_status'] !=
-                                              null &&
-                                          controller.formValues['lead_status']
-                                              .toString()
-                                              .trim()
-                                              .isNotEmpty)
-                                      ? Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
-                                              0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            controller.formValues['lead_status']
-                                                .toString()
-                                                .toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        )
-                                      : SizedBox(),
-                                ),
-                              ],
-                            ),
-                          )
-                        : SizedBox(),
-                  ),
+        return Stack(
+          children: [
+            // 1. Vibrant Header Background
+            Container(
+              height: 220,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorManager.accentColor,
+                    colorManager.accentColor,
+                  ],
                 ),
               ),
-            ];
-          },
-          body: RefreshIndicator(
-            color: colorManager.primaryColor,
-            onRefresh: () async {
-              await initData();
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildQuickActions(_lead),
-                  const SizedBox(height: 24),
+            ),
 
-                  // Form Fields Grouped in Cards
-                  ...controller.formGroupsData.map((group) {
-                    return _buildGroupCard(group);
-                  }).toList(),
-
-                  _buildAdditionalInfoGroup(
-                    controller.currentLead.value ?? lead!,
-                  ),
-                  const SizedBox(height: 32),
-
-                  if (followups.isNotEmpty) ...[
-                    Text(
-                      "Follow up History",
-                      style: TextStyle(
-                        color: colorManager.primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+            // 2. Main Scrollable Content
+            SafeArea(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // Overlapping Profile Card
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              businessName.toString(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: colorManager.textColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            if (personName.toString().trim().isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                personName.toString(),
+                                style: TextStyle(
+                                  color: colorManager.textColor.withOpacity(
+                                    0.6,
+                                  ),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            if (status.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorManager.primaryColor.withOpacity(
+                                    0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Text(
+                                  status,
+                                  style: TextStyle(
+                                    color: colorManager.primaryColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            const Divider(height: 32),
+                            _buildQuickActions(_lead),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    ...followups.map((f) => _buildTimelineItem(f)).toList(),
-                  ],
-                  const SizedBox(height: 40),
+                  ),
+
+                  // Data Sections
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16.0),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        const SizedBox(height: 8),
+                        ...controller.formGroupsData.map((group) {
+                          return _buildGroupCard(group);
+                        }).toList(),
+                        _buildAdditionalInfoGroup(_lead),
+
+                        if (followups.isNotEmpty) ...[
+                          const SizedBox(height: 32),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 16),
+                            child: Text(
+                              "FOLLOW UP HISTORY",
+                              style: TextStyle(
+                                color: colorManager.textColor.withOpacity(0.5),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              children: followups
+                                  .map((f) => _buildTimelineItem(f))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 100),
+                      ]),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
+          ],
         );
       }),
       floatingActionButton: FloatingActionButton(
         backgroundColor: colorManager.primaryColor,
+        elevation: 8,
         onPressed: () {
           Get.to(
             () => InteractionForm(
@@ -268,15 +279,108 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
               title: 'Add Interaction',
             ),
           );
-          // Get.to(() => InteractionForm(leadId: "1"));
         },
         child: Icon(Icons.add, color: colorManager.whiteColor),
       ),
     );
   }
 
+  Widget _buildGroupCard(Map<String, dynamic> group) {
+    final fields = group['fields'] as List? ?? [];
+    final groupTitle = group['group_title'] ?? "Information";
+
+    final visibleFields = fields.where((fieldData) {
+      final fieldName = fieldData['field_name']?.toString() ?? "";
+      final value = controller.formValues[fieldName];
+      return !_shouldHideField(fieldName, value);
+    }).toList();
+
+    if (visibleFields.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12, top: 24),
+          child: Text(
+            groupTitle.toString().toUpperCase(),
+            style: TextStyle(
+              color: colorManager.textColor.withOpacity(0.5),
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.withOpacity(0.05)),
+          ),
+          child: Column(
+            children: visibleFields.map((fieldData) {
+              final isLast = visibleFields.last == fieldData;
+              final field = Map<String, dynamic>.from(fieldData);
+              return Column(
+                children: [
+                  GenericFormFieldWidget(
+                    fieldData: field,
+                    controller: controller,
+                    isReadOnly: true,
+                  ),
+                  if (!isLast)
+                    Divider(height: 24, color: Colors.grey.withOpacity(0.05)),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalInfoGroup(Map<String, dynamic> lead) {
+    final fieldsRecord = lead['fields_record'];
+    if (fieldsRecord == null) return const SizedBox.shrink();
+
+    // Collect keys already shown in groups
+    Set<String> renderedKeys = {};
+    for (var group in controller.formGroupsData) {
+      final fields = group['fields'] as List? ?? [];
+      for (var f in fields) {
+        if (f['field_name'] != null) {
+          renderedKeys.add(f['field_name'].toString());
+        }
+      }
+    }
+
+    final data = Map<String, dynamic>.from(fieldsRecord);
+    List<Map<String, dynamic>> extraFields = [];
+
+    data.forEach((key, value) {
+      if (!renderedKeys.contains(key) && !_shouldHideField(key, value)) {
+        String label = key.replaceAll('_', ' ').capitalizeFirstLetters();
+        extraFields.add({
+          'field_name': key,
+          'field_text': label,
+          'field_type': 'string',
+        });
+      }
+    });
+
+    if (extraFields.isEmpty) return const SizedBox.shrink();
+
+    return _buildGroupCard({
+      'group_title': 'Additional Information',
+      'fields': extraFields,
+    });
+  }
+
   Widget _buildQuickActions(Map<String, dynamic> lead) {
-    final phone =
+    final phoneNum =
         controller.formValues['phone_number'] ??
         controller.formValues['phone_no'];
     final mobileNO =
@@ -298,23 +402,23 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
         if (whatsapp != null && whatsapp.toString().trim().isNotEmpty)
           _actionButton(
             icon: HugeIcons.strokeRoundedWhatsapp,
-            label: "Whatsapp",
+            label: "WhatsApp",
             color: Colors.green,
-            onTap: () => _launchUrl(whatsapp),
+            onTap: () => _launchWhatsapp(whatsapp.toString()),
           ),
-        if (phone != null && phone.toString().trim().isNotEmpty)
+        if (phoneNum != null && phoneNum.toString().trim().isNotEmpty)
           _actionButton(
             icon: HugeIcons.strokeRoundedTelephone,
-            label: "Call",
-            color: colorManager.accentColor,
-            onTap: () => _launchUrl("tel:$phone"),
+            label: "Phone",
+            color: Colors.orange,
+            onTap: () => _launchUrl("tel:$phoneNum"),
           ),
         if (email != null && email.toString().trim().isNotEmpty)
           _actionButton(
             icon: HugeIcons.strokeRoundedMail01,
             label: "Email",
             color: Colors.blue,
-            onTap: () => _launchEmail(email),
+            onTap: () => _launchEmail(email.toString()),
           ),
       ],
     );
@@ -333,8 +437,8 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+              color: color.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: HugeIcon(icon: icon, color: color, size: 24),
           ),
@@ -344,151 +448,24 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
             style: TextStyle(
               color: colorManager.textColor,
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildGroupCard(Map<String, dynamic> group) {
-    final fields = group['fields'] as List? ?? [];
-    final groupTitle = group['group_title'] ?? "Information";
-
-    final visibleFields = fields.where((fieldData) {
-      final fieldName = fieldData['field_name'];
-      if (_hiddenDetailFields.contains(fieldName)) return false;
-      final value = controller.formValues[fieldName];
-      if (value == null) return false;
-      final strVal = value.toString().trim();
-      return strVal.isNotEmpty && strVal.toLowerCase() != "null";
-    }).toList();
-
-    if (visibleFields.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: colorManager.secondaryColor.withOpacity(0.1)),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-          collapsedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: colorManager.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedNotebook,
-              color: colorManager.primaryColor,
-              size: 20,
-            ),
-          ),
-          title: Text(
-            groupTitle.toString(),
-            style: TextStyle(
-              color: colorManager.textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          children: [
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-            ...visibleFields.map((fieldData) {
-              final field = Map<String, dynamic>.from(fieldData);
-              return controller.isHidden(field['field_visibility'])
-                  ? const SizedBox.shrink()
-                  : GenericFormFieldWidget(
-                      fieldData: field,
-                      controller: controller,
-                      isReadOnly: true,
-                    );
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAdditionalInfoGroup(Map<String, dynamic> lead) {
-    final fieldsRecord = lead['fields_record'];
-    if (fieldsRecord == null) return const SizedBox.shrink();
-
-    // Get all rendered keys from the template
-    Set<String> renderedKeys = {};
-    for (var group in controller.formGroupsData) {
-      final fields = group['fields'] as List? ?? [];
-      for (var f in fields) {
-        if (f['field_name'] != null) {
-          renderedKeys.add(f['field_name'].toString());
-        }
-      }
-    }
-
-    final data = Map<String, dynamic>.from(fieldsRecord);
-
-    List<Map<String, dynamic>> extraFields = [];
-    data.forEach((key, value) {
-      if (!renderedKeys.contains(key) &&
-          value != null &&
-          value.toString().trim().isNotEmpty &&
-          value.toString().toLowerCase() != "null") {
-        // Convert snake_case to Title Case for labels
-        String label = key
-            .replaceAll('_', ' ')
-            .split(' ')
-            .map((word) {
-              if (word.isEmpty) return word;
-              return word[0].toUpperCase() + word.substring(1);
-            })
-            .join(' ');
-
-        extraFields.add({
-          'field_name': key,
-          'field_text': label,
-          'field_type': 'string',
-        });
-      }
-    });
-
-    if (extraFields.isEmpty) return const SizedBox.shrink();
-
-    return _buildGroupCard({
-      'group_title': 'Additional Information',
-      'fields': extraFields,
-    });
   }
 
   Widget _buildTimelineItem(Followup followup) {
     return GestureDetector(
       onTap: () {
-        // Get.to(
-        //   () => InteractionDetailsLayout(
-        //     followup: followup,
-        //     leadTitle:
-        //         controller.formValues['business_name']?.toString() ?? "Lead",
-        //   ),
-        // );
+        Get.to(
+          () => InteractionDetailsLayout(
+            followup: followup,
+            leadTitle:
+                controller.formValues['business_name']?.toString() ?? "Lead",
+          ),
+        );
       },
       child: IntrinsicHeight(
         child: Row(
@@ -496,9 +473,12 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
           children: [
             Column(
               children: [
-                CircleAvatar(
-                  radius: 12,
-                  backgroundColor: colorManager.primaryColor.withOpacity(0.1),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: colorManager.primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedClock01,
                     color: colorManager.primaryColor,
@@ -508,36 +488,34 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withOpacity(0.1),
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
                           followup.title ?? "",
-                          style: primaryTextStyle.copyWith(
+                          style: TextStyle(
                             color: colorManager.textColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Text(
                         followup.time ?? "",
-                        style: primaryTextStyle.copyWith(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: colorManager.textColor.withOpacity(0.5),
+                          color: colorManager.textColor.withOpacity(0.4),
                         ),
                       ),
                     ],
@@ -545,22 +523,23 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                   const SizedBox(height: 4),
                   if (followup.type != null)
                     Text(
-                      followup.type != null
-                          ? toParameterize(followup.type!)
-                          : "",
-                      style: primaryTextStyle.copyWith(
+                      toParameterize(followup.type!),
+                      style: TextStyle(
                         fontSize: 12,
-                        color: colorManager.primaryColor.withOpacity(0.8),
+                        color: colorManager.primaryColor,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                  const SizedBox(height: 2),
                   Text(
                     followup.description ?? "",
-                    style: primaryTextStyle.copyWith(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: colorManager.textColor.withOpacity(0.8),
+                      color: colorManager.textColor.withOpacity(0.7),
+                      height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -575,8 +554,6 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        log("Could not launch $url");
       }
     } catch (e) {
       log("Error launching URL: $e");
@@ -584,90 +561,44 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
   }
 
   Future<void> _launchEmail(String email) async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: email,
-      queryParameters: {
-        'subject': 'Hello',
-        'body': 'I want to contact you about...',
-      },
-    );
-
+    final Uri emailUri = Uri(scheme: 'mailto', path: email);
     try {
-      bool launched = await launchUrl(
-        emailUri,
-        mode: LaunchMode.externalApplication,
-      );
-
-      if (!launched) {
-        // fallback: open Gmail web page in browser
-        final Uri gmailWeb = Uri.parse(
-          'https://mail.google.com/mail/?view=cm&to=$email',
-        );
-        await launchUrl(gmailWeb, mode: LaunchMode.externalApplication);
+      if (await canLaunchUrl(emailUri)) {
+        await launchUrl(emailUri, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
-      debugPrint('Could not launch email: $e');
+      log("Error launching email: $e");
     }
   }
 
-  Future<void> _launchWhatsappUrl(String phoneNumber) async {
+  Future<void> _launchWhatsapp(String phoneNumber) async {
     String number = phoneNumber.replaceAll(RegExp(r'\D'), '');
     if (number.startsWith("0")) {
       number = "92${number.substring(1)}";
     }
-    String url = "https://wa.me/$number";
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        log("Could not launch $url");
-      }
-    } catch (e) {
-      log("Error launching URL: $e");
-    }
+    await _launchUrl("https://wa.me/$number");
   }
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
-      child: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200.0,
-            backgroundColor: Colors.white,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(color: Colors.white),
-            ),
-          ),
-          SliverFillRemaining(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  //   children: [
-                  //     CircleAvatar(radius: 30, backgroundColor: Colors.white),
-                  //     CircleAvatar(radius: 30, backgroundColor: Colors.white),
-                  //   ],
-                  // ),
-                  const SizedBox(height: 24),
-                  ...List.generate(
-                    3,
-                    (index) => Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+      child: Column(
+        children: [
+          Container(height: 220, color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: List.generate(
+                3,
+                (index) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                ],
+                ),
               ),
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
+import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';
 import 'package:appex_lead/view/form/forms.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
@@ -45,248 +46,254 @@ class _CustomDrawerState extends State<CustomDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      width: MediaQuery.of(context).size.width * 0.6,
-      child: Container(
-        height: 400,
-        decoration: BoxDecoration(color: colorManager.bgDark),
-        child: SafeArea(
-          child: Padding(
-            // padding: const EdgeInsets.all(8.0),
-            padding: EdgeInsets.only(left: 4, right: 4),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Card(
-                  elevation: 0,
-                  color: colorManager.isDark
-                      ? colorManager.accentColor
-                      : colorManager.secondaryColor.withValues(alpha: .1),
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                    leading: Image.asset(
-                      colorManager.appLogo,
-                      width: MediaQuery.of(context).size.width * 0.1,
-                    ),
-                    title: Text(
-                      "Field Force",
-                      style: primaryTextStyle.copyWith(
-                        fontSize: 18,
-                        color: colorManager.textColor,
-                      ),
-                    ),
-                    subtitle: token.isNotEmpty
-                        ? Text(
-                            email,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: colorManager.textColor,
-                            ),
-                          )
-                        : null,
+      width: MediaQuery.of(context).size.width * 0.75,
+      backgroundColor: colorManager.bgDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        children: [
+          // 1. Elegant Header Section
+          _buildHeader(context),
+
+          // 2. Menu Items
+          Expanded(
+            child: Obx(() {
+              final dash = Get.find<DashController>();
+              return ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _buildSectionHeader("MAIN MENU"),
+                  // DrawerItem(
+                  //   title: "Dashboard",
+                  //   icon: HugeIcons.strokeRoundedDashboardCircle,
+                  //   onTap: () => Get.back(),
+                  // ),
+                  DrawerItem(
+                    title: "My ${dash.leadFormTitle.value}s",
+                    icon: HugeIcons.strokeRoundedFolder01,
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => const LeadScreen());
+                    },
                   ),
-                ),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      DrawerListTile(
-                        title: "All Leads",
-                        icon: Icons.list_alt_outlined,
-                        press: () {
+                  DrawerItem(
+                    title: "My ${dash.interactionFormTitle.value}s",
+                    icon: HugeIcons.strokeRoundedMessage01,
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => const InteractionScreen());
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSectionHeader("DRAFTS"),
+                  DrawerItem(
+                    title: "${dash.leadFormTitle.value} Drafts",
+                    icon: HugeIcons.strokeRoundedDocumentCode,
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => const DraftsScreen());
+                    },
+                  ),
+                  DrawerItem(
+                    title: "${dash.interactionFormTitle.value} Drafts",
+                    icon: HugeIcons.strokeRoundedMessageQuestion,
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => const InteractionDraftsScreen());
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (kDebugMode) ...[
+                    _buildSectionHeader("SYSTEM"),
+                    DrawerItem(
+                      title: "Shared Prefs",
+                      icon: HugeIcons.strokeRoundedDatabase01,
+                      onTap: () => Get.to(() => const SharePrefScreen()),
+                    ),
+                    DrawerItem(
+                      title: "Settings",
+                      icon: HugeIcons.strokeRoundedSettings03,
+                      onTap: () => Get.to(() => const AppSettings()),
+                    ),
+
+                    if (token.isNotEmpty)
+                      DrawerItem(
+                        title: "Form Templates",
+                        icon: HugeIcons.strokeRoundedNote01,
+                        onTap: () {
                           Get.back();
-                          Get.to(() => LeadScreen());
+                          Get.toNamed(AppPages.formsList);
                         },
                       ),
-                      ExpansionTile(
-                        childrenPadding: EdgeInsets.only(bottom: 4),
-                        tilePadding: EdgeInsets.only(right: 12),
-                        title: DrawerListTile(title: "Draft", icon: Icons.save),
-                        children: [
-                          DrawerListTile(
-                            title:
-                                Get.find<DashController>().leadFormTitle.value,
-                            icon: Icons.list_alt_outlined,
-                            press: () {
-                              Get.back();
-                              Get.to(() => DraftsScreen());
-                            },
-                          ),
-                          DrawerListTile(
-                            title: Get.find<DashController>()
-                                .interactionFormTitle
-                                .value,
-                            icon: Icons.chat_bubble,
-                            press: () {
-                              Get.back();
-                              Get.to(() => InteractionDraftsScreen());
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  ],
+                ],
+              );
+            }),
+          ),
+
+          // 3. Footer Section (Logout & Version)
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 32,
+        bottom: 32,
+        left: 24,
+        right: 24,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorManager.accentColor,
+            colorManager.accentColor,
+            // colorManager.accentColor.withOpacity(0.8),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-
-                // Spacer(),
-                Divider(color: Colors.grey.withValues(alpha: .3)),
-
-                // Padding(
-                //   padding: const EdgeInsets.only(left: 24.0),
-                //   child: Text(
-                //     'Preferences',
-                //     style: TextStyle(color: colorManager.textColor),
-                //   ),
-                // ),
-                // Divider(color: Colors.grey.withValues(alpha: .3)),
-                if (kDebugMode)
-                  DrawerListTile(
-                    title: "Shared Prefs",
-                    icon: Icons.storage,
-                    press: () {
-                      Get.to(() => SharePrefScreen());
-                    },
-                  ),
-                if (kDebugMode && token.isNotEmpty)
-                  DrawerListTile(
-                    title: "Settings",
-                    icon: Icons.settings,
-                    press: () {
-                      Get.to(() => AppSettings());
-                    },
-                  ),
-                if (token.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 0.0),
-                    child: DrawerListTile(
-                      title: "Logout",
-                      icon: Icons.logout,
-
-                      press: () {
-                        Get.back();
-                        AuthService.logout();
-                      },
-                    ),
-                  ),
-                // Padding(
-                //   padding: const EdgeInsets.only(bottom: 0.0),
-                //   child: DrawerListTile(
-                //     title: "Drafts",
-                //     icon: Icons.drafts_outlined,
-                //     press: () {
-                //       Get.back();
-                //       Get.to(() => DraftsScreen());
-                //     },
-                //   ),
-                // ),
-                if (kDebugMode && token.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 0.0),
-                    child: DrawerListTile(
-                      title: "Form",
-                      icon: Icons.list_alt_outlined,
-
-                      press: () {
-                        Get.back();
-                        Get.toNamed(AppPages.formsList);
-                      },
-                    ),
-                  ),
-                if (kDebugMode && token.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 0.0),
-                    child: DrawerListTile(
-                      title: "Drafts",
-                      icon: Icons.drafts_outlined,
-                      press: () {
-                        Get.back();
-                        Get.toNamed(AppPages.drafts);
-                      },
-                    ),
-                  ),
-                if (false && kDebugMode)
-                  Card(
-                    elevation: 0,
-                    color: colorManager.secondaryColor.withValues(alpha: .1),
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.dark_mode,
-                        color: colorManager.iconColor,
-                      ),
-                      title: Text(
-                        "Dark Mode",
-                        style: primaryTextStyle.copyWith(
-                          fontSize: 14,
-                          color: colorManager.textColor,
-                        ),
-                      ),
-                      trailing: CustomSwitch(
-                        width: 40,
-                        height: 25,
-                        value: colorManager.isDark,
-                        onChanged: (newValue) {
-                          colorManager.toggleTheme();
-                        },
-                        inactiveIcon: Icon(
-                          Icons.dark_mode_outlined,
-                          color: colorManager.primaryColor,
-                          size: 14,
-                        ),
-                        activeIcon: Icon(
-                          Icons.light_mode_outlined,
-                          color: colorManager.primaryColor,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                SizedBox(height: 10),
-                Center(child: tsWatermark()),
-                Center(
-                  child: Text(
-                    "Version ${AppInfo().version}",
-                    style: primaryTextStyle.copyWith(
-                      color: colorManager.textColor,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
               ],
             ),
+            child: Image.asset(colorManager.appLogo, width: 40, height: 40),
           ),
+          const SizedBox(height: 20),
+          Text(
+            "Field Force",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+          ),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              email,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, top: 16, bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: colorManager.textColor.withOpacity(0.3),
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.5,
         ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
+      ),
+      child: Column(
+        children: [
+          if (token.isNotEmpty)
+            DrawerItem(
+              title: "Logout",
+              icon: HugeIcons.strokeRoundedLogout01,
+              isDestructive: true,
+              onTap: () {
+                Get.back();
+                AuthService.logout();
+              },
+            ),
+          const SizedBox(height: 16),
+          tsWatermark(),
+          const SizedBox(height: 8),
+          Text(
+            "VERSION ${AppInfo().version}",
+            style: TextStyle(
+              color: colorManager.textColor.withOpacity(0.3),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class DrawerListTile extends StatelessWidget {
-  const DrawerListTile({
-    Key? key,
-    // For selecting those three line once press "Command+D"
-    required this.title,
-    this.press,
-    this.icon,
-  }) : super(key: key);
-  final IconData? icon;
+class DrawerItem extends StatelessWidget {
   final String title;
-  final VoidCallback? press;
+  final dynamic icon;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  const DrawerItem({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.onTap,
+    this.isDestructive = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minVerticalPadding: 0,
-      dense: true,
-      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-      onTap: press,
-
-      leading: Icon(icon, color: colorManager.iconColor),
-      title: Text(
-        title,
-
-        style: primaryTextStyle.copyWith(
-          fontSize: 14,
-          color: colorManager.textColor,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      child: ListTile(
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        leading: HugeIcon(
+          icon: icon,
+          color: isDestructive ? Colors.redAccent : colorManager.primaryColor,
+          size: 22,
+        ),
+        title: Text(
+          title,
+          style: primaryTextStyle.copyWith(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isDestructive
+                ? Colors.redAccent
+                : colorManager.textColor.withOpacity(0.8),
+          ),
         ),
       ),
     );

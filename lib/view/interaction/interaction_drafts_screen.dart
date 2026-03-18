@@ -19,31 +19,49 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
     InteractionFormController(),
   );
 
+  // Cached resolved display names per draft id
+  final Map<String, String> _resolvedNames = {};
+  List<Map<String, dynamic>> _drafts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDrafts();
+  }
+
+  Future<void> _loadDrafts() async {
+    setState(() => _isLoading = true);
+    final drafts = await controller.getSavedDrafts();
+
+    // Pre-resolve lead names for all drafts in parallel
+    final futures = drafts.map((draft) async {
+      final id = draft['id']?.toString() ?? '';
+      if (id.isEmpty) return;
+      // Try to get lead name from template options first
+      final leadName = await controller.getLeadNameForDraft(draft);
+      final displayName = leadName ?? _getDraftDisplayName(draft);
+      _resolvedNames[id] = displayName;
+    });
+    await Future.wait(futures);
+
+    if (mounted) {
+      setState(() {
+        _drafts = drafts;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: colorManager.bgDark,
       appBar: CustomAppBar(title: 'Interaction Drafts'),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: controller.getSavedDrafts(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                "Error loading drafts",
-                style: TextStyle(color: Colors.red),
-              ),
-            );
-          }
-
-          final drafts = snapshot.data ?? [];
-
-          if (drafts.isEmpty) {
-            return Center(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _drafts.isEmpty
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -61,108 +79,132 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
                   ),
                 ],
               ),
-            );
-          }
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _drafts.length,
+              itemBuilder: (context, index) {
+                final draft = _drafts[index];
+                final id = draft['id']?.toString() ?? '';
+                final DateTime updatedAt = DateTime.parse(
+                  draft['updated_at'] ?? DateTime.now().toIso8601String(),
+                );
+                final String formattedDate = previewableDateTimeFormat(
+                  updatedAt,
+                );
+                final String displayName =
+                    _resolvedNames[id] ?? _getDraftDisplayName(draft);
+                final String formTitle = draft['title'] ?? 'Interaction';
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: drafts.length,
-            itemBuilder: (context, index) {
-              final draft = drafts[index];
-              final DateTime updatedAt = DateTime.parse(
-                draft['updated_at'] ?? DateTime.now().toIso8601String(),
-              );
-              final String formattedDate = previewableDateTimeFormat(updatedAt);
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.history_outlined,
-                    color: colorManager.primaryColor,
-                  ),
-                  title: Text(
-                    () {
-                      final values =
-                          draft['values'] as Map<String, dynamic>? ?? {};
-                      // Try to find business name in values first
-                      String? bizName;
-                      for (var entry in values.entries) {
-                        if (entry.key.toLowerCase().contains('business_name')) {
-                          bizName = entry.value?.toString();
-                          break;
-                        }
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.history_outlined,
+                      color: colorManager.primaryColor,
+                    ),
+                    title: Text(
+                      displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colorManager.textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      "$formTitle · $formattedDate",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colorManager.textColor.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
+                          onPressed: () => _confirmDelete(
+                            context,
+                            controller,
+                            draft,
+                            displayName,
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: colorManager.iconColor,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                    onTap: () async {
+                      final String url = draft['template_url'] ?? "";
+                      if (url.isNotEmpty) {
+                        await Get.to(
+                          () => InteractionForm(
+                            url: url,
+                            draftData: draft,
+                            title: draft['title'] ?? 'Untitled Interaction',
+                          ),
+                        );
+                        _loadDrafts(); // Refresh list when coming back
+                      } else {
+                        Get.snackbar(
+                          "Error",
+                          "Template URL not found for this draft.",
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
                       }
-                      return bizName ??
-                          draft['title'] ??
-                          'Untitled Interaction';
-                    }(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: colorManager.textColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    },
                   ),
-                  subtitle: Text(
-                    "Last updated: $formattedDate",
-                    style: TextStyle(
-                      color: colorManager.textColor.withOpacity(0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                          size: 20,
-                        ),
-                        onPressed: () =>
-                            _confirmDelete(context, controller, draft),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: colorManager.iconColor,
-                        size: 16,
-                      ),
-                    ],
-                  ),
-                  onTap: () async {
-                    final String url = draft['template_url'] ?? "";
-                    if (url.isNotEmpty) {
-                      await Get.to(
-                        () => InteractionForm(
-                          url: url,
-                          draftData: draft,
-                          title: draft['title'] ?? 'Untitled Interaction',
-                        ),
-                      );
-                      setState(() {}); // Refresh list when coming back
-                    } else {
-                      Get.snackbar(
-                        "Error",
-                        "Template URL not found for this draft.",
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                    }
-                  },
-                ),
-              );
-            },
-          );
-        },
-      ),
+                );
+              },
+            ),
     );
+  }
+
+  /// Extracts the best display name from a draft's saved values.
+  /// Used as a fallback when the business_lead_id cannot be resolved.
+  String _getDraftDisplayName(Map<String, dynamic> draft) {
+    final values = draft['values'] as Map<String, dynamic>? ?? {};
+
+    // Priority order: business_name → person_name → any *name* field
+    for (final key in [
+      'business_name',
+      'person_name',
+      'name',
+      'customer_name',
+      'client_name',
+    ]) {
+      final val = values[key]?.toString();
+      if (val != null && val.isNotEmpty) return val;
+    }
+
+    // Fallback: search any key containing 'name'
+    for (final entry in values.entries) {
+      if (entry.key.toLowerCase().contains('name') &&
+          entry.value != null &&
+          entry.value.toString().isNotEmpty) {
+        return entry.value.toString();
+      }
+    }
+
+    return draft['title'] ?? 'Untitled Interaction';
   }
 
   void _confirmDelete(
     BuildContext context,
     InteractionFormController controller,
     Map<String, dynamic> draft,
+    String displayName,
   ) {
     Get.dialog(
       AlertDialog(
@@ -172,7 +214,7 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
           style: TextStyle(color: colorManager.textColor),
         ),
         content: Text(
-          "Are you sure you want to delete '${draft['title'] ?? 'this draft'}'?",
+          "Are you sure you want to delete '$displayName'?",
           style: TextStyle(color: colorManager.textColor.withOpacity(0.8)),
         ),
         actions: [
@@ -188,9 +230,12 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
               controller.currentDraftId.value = draft['id'] ?? "";
               await controller.deleteProgress();
               Get.back(); // Pop the dialog
-              setState(() {}); // Refresh the list
+              _loadDrafts(); // Refresh the list
             },
-            child: Text("Delete", style: TextStyle(color: Colors.redAccent)),
+            child: Text(
+              "Delete",
+              style: const TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),

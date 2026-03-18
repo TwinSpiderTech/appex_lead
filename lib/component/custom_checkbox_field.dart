@@ -9,6 +9,7 @@ class CustomCheckboxField extends StatefulWidget {
   final bool enabled;
   final ValueChanged<List<String>> onChange;
   final String label;
+  final String? hint;
   final double? borderRadius;
   final FocusNode? focusNode;
 
@@ -19,6 +20,7 @@ class CustomCheckboxField extends StatefulWidget {
     required this.enabled,
     required this.onChange,
     required this.label,
+    this.hint,
     this.borderRadius,
     this.focusNode,
   });
@@ -80,7 +82,7 @@ class _CustomCheckboxFieldState extends State<CustomCheckboxField> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Search & Add ${widget.label}",
+                      widget.hint ?? "Search & Add ${widget.label}",
                       style: TextStyle(
                         color: colorManager.bgDark,
                         fontWeight: FontWeight.bold,
@@ -196,7 +198,7 @@ class _CustomCheckboxFieldState extends State<CustomCheckboxField> {
             CustomInputField(
               focusNode: widget.focusNode,
               enable: widget.enabled,
-              hint: "Search & Add ${widget.label}...",
+              hint: widget.hint ?? "Search & Add ${widget.label}...",
               readOnly: true,
               borderRadius: widget.borderRadius ?? 12,
               isRequired: false,

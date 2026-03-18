@@ -1,14 +1,17 @@
 import 'package:appex_lead/component/custom_drawer.dart';
+import 'package:appex_lead/component/summary_card.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/helpers.dart';
+import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_form.dart';
+
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/form/form_details.dart';
-import 'package:appex_lead/view/form/drafts_screen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -51,25 +54,34 @@ class _DashboardState extends State<Dashboard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSearchBar(controller),
+                        SizedBox(
+                          height: 8,
+                        ), // _buildSectionHeader("Upcoming Follow-ups"),
+                        _buildTickcetGrid(controller),
+                        // Text("data"),
+                        // _buildSearchBar(controller),
                         const SizedBox(height: 24),
-                        _buildSectionHeader("Upcoming Follow-ups", () {
-                          Get.find<LeadController>().tabController.index = 0;
-                          Get.to(() => const LeadScreen());
-                        }),
-                        const SizedBox(height: 12),
+                        _buildSectionHeader(
+                          "Upcoming Follow-ups",
+                          onTap: () {
+                            Get.find<LeadController>().tabController.index = 0;
+                            Get.to(() => const LeadScreen());
+                          },
+                        ),
+                        // const SizedBox(height: 12),
                         _buildUpcomingList(controller),
-                        const SizedBox(height: 24),
-                        _buildSectionHeader("Drafts", () {
-                          Get.to(() => const DraftsScreen());
-                        }),
-                        const SizedBox(height: 12),
-                        _buildDraftsList(controller),
-                        _buildSectionHeader("Pending Leads", () {
-                          Get.find<LeadController>().tabController.index = 1;
-                          Get.to(() => const LeadScreen());
-                        }),
-                        _buildPendingList(controller),
+                        // _buildUpcomingList(controller),
+                        // const SizedBox(height: 24),
+                        // _buildSectionHeader("Drafts", () {
+                        //   Get.to(() => const DraftsScreen());
+                        // }),
+                        // const SizedBox(height: 12),
+                        // _buildDraftsList(controller),
+                        // _buildSectionHeader("Pending Leads", () {
+                        //   Get.find<LeadController>().tabController.index = 1;
+                        //   Get.to(() => const LeadScreen());
+                        // }),
+                        // _buildPendingList(controller),
                         // const SizedBox(height: 12),
                       ],
                     ),
@@ -96,32 +108,32 @@ class _DashboardState extends State<Dashboard> {
                   },
                 ),
                 const SizedBox(height: 12),
-                _buildFabOption(
-                  icon: HugeIcons.strokeRoundedPlusSignSquare,
-                  label: "Add " + controller.interactionFormTitle.value,
-                  onTap: () {
-                    _toggleFab();
+                // _buildFabOption(
+                //   icon: HugeIcons.strokeRoundedPlusSignSquare,
+                //   label: "Add " + controller.interactionFormTitle.value,
+                //   onTap: () {
+                //     _toggleFab();
 
-                    Get.to(
-                      () => InteractionForm(
-                        url: "/api/v1/business/interactions/get_form_template",
-                        title: "Add " + controller.interactionFormTitle.value,
-                      ),
-                    );
+                //     Get.to(
+                //       () => InteractionForm(
+                //         url: "/api/v1/business/interactions/get_form_template",
+                //         title: "Add " + controller.interactionFormTitle.value,
+                //       ),
+                //     );
 
-                    // Get.to(() => const InteractionForm());
-                  },
-                ),
-                const SizedBox(height: 12),
+                //     // Get.to(() => const InteractionForm());
+                //   },
+                // ),
+                // const SizedBox(height: 12),
               ],
-              FloatingActionButton(
-                backgroundColor: colorManager.primaryColor,
-                onPressed: _toggleFab,
-                child: Icon(
-                  _isFabExpanded ? Icons.close : Icons.add,
-                  color: Colors.white,
-                ),
-              ),
+              // FloatingActionButton(
+              //   backgroundColor: colorManager.primaryColor,
+              //   onPressed: _toggleFab,
+              //   child: Icon(
+              //     _isFabExpanded ? Icons.close : Icons.add,
+              //     color: Colors.white,
+              //   ),
+              // ),
             ],
           ),
         );
@@ -135,7 +147,7 @@ class _DashboardState extends State<Dashboard> {
       pinned: true,
       snap: true,
       floating: true,
-      expandedHeight: 150,
+      expandedHeight: 120,
       toolbarHeight: 80,
       collapsedHeight: 80,
       leadingWidth: 0,
@@ -166,42 +178,43 @@ class _DashboardState extends State<Dashboard> {
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Padding(
-          padding: const EdgeInsets.only(top: 110.0, bottom: 20),
+          padding: const EdgeInsets.only(top: 100.0, bottom: 0),
           child: Row(
             children: [
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 18.0),
-                  child: Obx(() {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          controller.isLoading.value
-                              ? "******"
-                              : controller.headerTitle,
-                          style: primaryTextStyle.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            color: colorManager.primaryColor,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          controller.isLoading.value
-                              ? "******"
-                              : controller.headerSubTitle,
-                          style: primaryTextStyle.copyWith(
-                            fontSize: 12,
-                            color: colorManager.whiteColor,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    );
-                  }),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FutureBuilder(
+                        future: getUserName(),
+                        builder: (context, snapshot) {
+                          return Text(
+                            "Welcome back ${snapshot.data ?? ""}!",
+                            style: primaryTextStyle.copyWith(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: colorManager.primaryColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
+                      ),
+                      // Text(
+                      //   controller.isLoading.value
+                      //       ? "******"
+                      //       : controller.headerSubTitle,
+                      //   style: primaryTextStyle.copyWith(
+                      //     fontSize: 12,
+                      //     color: colorManager.whiteColor,
+                      //   ),
+                      //   overflow: TextOverflow.ellipsis,
+                      // ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -217,39 +230,70 @@ class _DashboardState extends State<Dashboard> {
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: TextField(
-        controller: controller.searchCont,
-        onChanged: controller.onSearchChanged,
-        decoration: InputDecoration(
-          hintText: "Search your leads...",
-          hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+      child: Obx(
+        () => TextField(
+          controller: controller.searchCont,
+          onChanged: controller.onSearchChanged,
+          decoration: InputDecoration(
+            hintText:
+                "Search ${controller.leadFormTitle.value.toLowerCase()}s...",
+            hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+            prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, VoidCallback onTap) {
+  Widget _buildSectionHeader(String title, {VoidCallback? onTap}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: primaryTextStyle.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: colorManager.primaryColor,
-          ),
-        ),
-        TextButton(
-          onPressed: onTap,
-          child: Text(
-            "View All",
-            style: TextStyle(color: colorManager.primaryColor),
-          ),
-        ),
+        () {
+          final dash = Get.find<DashController>();
+          if (title == "Upcoming Follow-ups") {
+            return Obx(
+              () => Text(
+                "Upcoming ${dash.interactionFormTitle.value}s",
+                style: primaryTextStyle.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorManager.primaryColor,
+                ),
+              ),
+            );
+          } else if (title == "Pending Leads") {
+            return Obx(
+              () => Text(
+                "Pending ${dash.leadFormTitle.value}s",
+                style: primaryTextStyle.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorManager.primaryColor,
+                ),
+              ),
+            );
+          }
+          return Text(
+            title,
+            style: primaryTextStyle.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colorManager.primaryColor,
+            ),
+          );
+        }(),
+        onTap != null
+            ? TextButton(
+                onPressed: onTap,
+                child: Text(
+                  "View All",
+                  style: TextStyle(color: colorManager.primaryColor),
+                ),
+              )
+            : const SizedBox(),
       ],
     );
   }
@@ -265,24 +309,24 @@ class _DashboardState extends State<Dashboard> {
       if (controller.upcomingLeads.isEmpty) {
         return _buildEmptyState("No upcoming leads");
       }
-      return SizedBox(
-        height: 160,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: controller.upcomingLeads.length,
-          itemBuilder: (context, index) {
-            final lead = controller.upcomingLeads[index];
-            return _buildUpcomingCard(controller, lead);
-          },
-        ),
+      return ListView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: controller.upcomingLeads.length,
+        itemBuilder: (context, index) {
+          final lead = controller.upcomingLeads[index];
+          return _buildUpcomingFollowUpCard(controller, lead);
+        },
       );
     });
   }
 
   Widget _buildUpcomingCard(
     DashController controller,
-    Map<String, dynamic> lead,
-  ) {
+    Map<String, dynamic> lead, {
+    bool isGrid = false,
+  }) {
     return GestureDetector(
       onTap: () => Get.to(
         () => LeadDetailsLayout2(
@@ -291,8 +335,8 @@ class _DashboardState extends State<Dashboard> {
         ),
       ),
       child: Container(
-        width: 200,
-        margin: const EdgeInsets.only(right: 12),
+        width: isGrid ? null : 200,
+        margin: isGrid ? EdgeInsets.zero : const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colorManager.primaryColor.withOpacity(0.4),
@@ -416,6 +460,24 @@ class _DashboardState extends State<Dashboard> {
             ? Text(lead['person_name'] ?? '')
             : null,
         trailing: Icon(Icons.arrow_forward_ios, size: 14),
+      ),
+    );
+  }
+
+  Widget _buildUpcomingFollowUpCard(
+    DashController controller,
+    Map<String, dynamic> lead,
+  ) {
+    return SummaryCard(
+      title: lead['business_name'] ?? 'Undefined Business',
+      subtitle: lead['person_name'] ?? '',
+      nextFollowup: lead['next_followup'] ?? '',
+      icon: HugeIcons.strokeRoundedClock01,
+      onTap: () => Get.to(
+        () => LeadDetailsLayout2(
+          url: controller.getLeadDetailUrl(lead),
+          cont: Get.find<LeadController>(),
+        ),
       ),
     );
   }
@@ -564,5 +626,107 @@ class _DashboardState extends State<Dashboard> {
         ),
       ],
     );
+  }
+
+  _buildTickcetGrid(DashController controller) {
+    return Obx(() {
+      final List<Map<String, dynamic>> gridItems = [
+        {
+          "title": "Add ${controller.leadFormTitle.value}",
+          "subtitle": "",
+          "icon": HugeIcons.strokeRoundedHospital02,
+          "screen": FormDetails(
+            url: "/api/v1/business/leads/get_form_template",
+            title: 'Add new ${controller.leadFormTitle.value}',
+          ),
+        },
+        {
+          "title": "Add ${controller.interactionFormTitle.value}",
+          "subtitle": "",
+          "icon": HugeIcons.strokeRoundedMessage01,
+          "screen": InteractionForm(
+            url: "/api/v1/business/interactions/get_form_template",
+            title: 'Add new ${controller.interactionFormTitle.value}',
+          ),
+        },
+        // {
+        //   "title": "My ${controller.leadFormTitle.value}s",
+        //   "subtitle": "",
+        //   "icon": Icons.map,
+        //   "screen": LeadScreen(),
+        // },
+        // {
+        //   "title": "My ${controller.interactionFormTitle.value}s",
+        //   "subtitle": "",
+        //   "icon": Icons.drafts,
+        //   "screen": InteractionScreen(),
+        // },
+      ];
+      return GridView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.2,
+        ),
+        itemCount: gridItems.length,
+        itemBuilder: (context, index) {
+          final item = gridItems[index];
+          return GestureDetector(
+            onTap: () {
+              Get.to(item["screen"]);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorManager.primaryColor.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: colorManager.primaryColor.withOpacity(0.5),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.white,
+                    child: HugeIcon(
+                      icon: item["icon"],
+                      color: colorManager.primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    item["title"],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: primaryTextStyle.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item["subtitle"],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: primaryTextStyle.copyWith(
+                      color: colorManager.textColor,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    });
   }
 }

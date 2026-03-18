@@ -95,6 +95,51 @@ class ApiServices {
     }
   }
 
+  Future<Map<String, dynamic>?> getInteractions(
+    String url, {
+    int pageNo = 1,
+    String? search,
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      String finalUrl = url;
+      if (!url.contains('?')) {
+        finalUrl += "?page=$pageNo";
+      } else {
+        finalUrl += "&page=$pageNo";
+      }
+      if (search != null && search.isNotEmpty) {
+        finalUrl += "&search=$search";
+      }
+      if (startDate != null && startDate.isNotEmpty) {
+        finalUrl += "&start_date=$startDate";
+      }
+      if (endDate != null && endDate.isNotEmpty) {
+        finalUrl += "&end_date=$endDate";
+      }
+
+      if (!finalUrl.startsWith('http')) {
+        finalUrl =
+            "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.base}${finalUrl.startsWith('/') ? '' : '/'}$finalUrl";
+      }
+
+      print("Fetching Interactions: $finalUrl");
+      final response = await _dio.get(finalUrl);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        await logoutUser(toastMessage: "Session Expired!");
+        return null;
+      }
+      log('Dio error: ${e.message}');
+      return null;
+    } catch (e) {
+      log('Error occurred: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> getLeads(
     int pageNo, {
     String? status,

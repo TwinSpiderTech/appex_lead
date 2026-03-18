@@ -49,11 +49,21 @@ class InteractionFormController extends GetxController {
   // Store FocusNodes for each field to enable "scroll to error"
   final Map<String, FocusNode> fieldFocusNodes = {};
 
+  // Store GlobalKeys for each field wrapper for reliable scroll-to-error context
+  final Map<String, GlobalKey> fieldGlobalKeys = {};
+
   FocusNode getOrCreateFocusNode(String fieldName) {
     if (!fieldFocusNodes.containsKey(fieldName)) {
       fieldFocusNodes[fieldName] = FocusNode();
     }
     return fieldFocusNodes[fieldName]!;
+  }
+
+  GlobalKey getOrCreateGlobalKey(String fieldName) {
+    if (!fieldGlobalKeys.containsKey(fieldName)) {
+      fieldGlobalKeys[fieldName] = GlobalKey();
+    }
+    return fieldGlobalKeys[fieldName]!;
   }
 
   @override
@@ -68,6 +78,7 @@ class InteractionFormController extends GetxController {
       node.dispose();
     }
     fieldFocusNodes.clear();
+    fieldGlobalKeys.clear();
     super.onClose();
   }
 
@@ -116,12 +127,12 @@ class InteractionFormController extends GetxController {
     }
   }
 
-  void _applyTemplate(Map<String, dynamic> data) {
-    // prettyPrint(data);
+  void _applyTemplate(Map<String, dynamic> data) async {
+    prettyPrint(data);
     try {
       formModel = FormModel.fromJson(data);
       currentFormTitle.value = formModel?.title ?? "";
-      updateInteractionFormTitle(formModel?.title ?? "");
+      await updateInteractionFormTitle(formModel?.title ?? "");
       debugPrint("Applied Template: ${currentFormTitle.value}");
       currentSubmissionUrl.value = formModel?.submissionUrl ?? '';
       // Build groupList and flatFieldList while preserving order
@@ -234,7 +245,7 @@ class InteractionFormController extends GetxController {
       // Parse stringified GPS if present
       record.forEach((key, value) {
         if (value is String &&
-            value.contains('latitutde') &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
             value.contains('{')) {
           record[key] = _parseGpsString(value);
         }
@@ -279,7 +290,7 @@ class InteractionFormController extends GetxController {
       // Parse stringified GPS if present
       record.forEach((key, value) {
         if (value is String &&
-            value.contains('latitutde') &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
             value.contains('{')) {
           record[key] = _parseGpsString(value);
         }
@@ -295,7 +306,24 @@ class InteractionFormController extends GetxController {
 
       record.forEach((key, value) {
         if (value is String &&
-            value.contains('latitutde') &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
+            value.contains('{')) {
+          record[key] = _parseGpsString(value);
+        }
+      });
+      formValues.assignAll(record);
+    } else {
+      // Fallback: Handle flat data structure
+      Map<String, dynamic> record = Map<String, dynamic>.from(draftData);
+      // Remove known structural keys to keep only "values"
+      record.remove('groups');
+      record.remove('template_url');
+      record.remove('response_status');
+      record.remove('message');
+
+      record.forEach((key, value) {
+        if (value is String &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
             value.contains('{')) {
           record[key] = _parseGpsString(value);
         }
@@ -343,18 +371,20 @@ class InteractionFormController extends GetxController {
   // Helper to parse messy stringified GPS data from API
   Map<String, dynamic>? _parseGpsString(String gpsStr) {
     try {
-      // Basic extraction of lat/long/location from string like "{latitutde: 1212.23, longitude: 121.32, location: \"...\"}"
+      // Basic extraction of lat/long/location from string like "{latitude: 1212.23, longitude: 121.32, location: \"...\"}"
       double? lat;
       double? lng;
       String? loc;
 
-      final latMatch = RegExp(r'latit?utde:\s*([0-9.-]+)').firstMatch(gpsStr);
+      final latMatch = RegExp(r'latit?utde:\s*([0-9.-]+)|latitude:\s*([0-9.-]+)').firstMatch(gpsStr);
       final lngMatch = RegExp(r'longitude:\s*([0-9.-]+)').firstMatch(gpsStr);
       final locMatch = RegExp(
         r'location:\s*\\?"([^"]+)\\?"',
       ).firstMatch(gpsStr);
 
-      if (latMatch != null) lat = double.tryParse(latMatch.group(1)!);
+      if (latMatch != null) {
+        lat = double.tryParse(latMatch.group(1) ?? latMatch.group(2) ?? "");
+      }
       if (lngMatch != null) lng = double.tryParse(lngMatch.group(1)!);
       if (locMatch != null) loc = locMatch.group(1);
 
@@ -734,7 +764,7 @@ class InteractionFormController extends GetxController {
         Map<String, dynamic> config = Map<String, dynamic>.from(
           field['field_config'] ?? {},
         );
-        String regex = config['regax'] ?? ''; // Typo 'regax' from original code
+        String regex = config['regex'] ?? config['regax'] ?? '';
         if (regex.isNotEmpty) {
           if (value != null &&
               value.toString().isNotEmpty &&
@@ -829,19 +859,19 @@ class InteractionFormController extends GetxController {
               debugPrint("Error refreshing DashController: $e");
             }
             await callbackFunction?.call();
-            try {
-              if (Get.isRegistered<LeadController>()) {
-                Get.find<LeadController>().getLeads(
-                  status: 'pending',
-                  reset: true,
-                );
-              }
-            } catch (e) {
-              showToast(
-                message: "Failed to refresh lead list: ${e.toString()}",
-              );
-              debugPrint("Error refreshing LeadController: $e");
-            }
+            // try {
+            //   if (Get.isRegistered<LeadController>()) {
+            //     Get.find<LeadController>().getLeads(
+            //       status: 'pending',
+            //       reset: true,
+            //     );
+            //   }
+            // } catch (e) {
+            //   showToast(
+            //     message: "Failed to refresh lead list: ${e.toString()}",
+            //   );
+            //   debugPrint("Error refreshing LeadController: $e");
+            // }
           }
           Get.back();
           showSuccessMessage(message: "Interaction submitted successfully!");
@@ -968,6 +998,141 @@ class InteractionFormController extends GetxController {
       debugPrint("Error retrieving saved forms: $e");
     }
     return [];
+  }
+
+  /// Resolves the `business_lead_id` stored in a draft's values
+  /// to a human-readable business name by looking it up in the
+  /// field options stored in the draft itself (saves re-fetching the template).
+  Future<String?> getLeadNameForDraft(Map<String, dynamic> draft) async {
+    try {
+      final values = draft['values'] as Map<String, dynamic>? ?? {};
+      final leadId = values['business_lead_id'];
+      if (leadId == null) return null;
+      final leadIdStr = leadId.toString();
+
+      // Strategy 1: look in the draft's own saved 'fields' list
+      final savedFields = draft['fields'] as List?;
+      if (savedFields != null) {
+        for (final f in savedFields) {
+          if (f is Map && f['field_name']?.toString() == 'business_lead_id') {
+            final options = f['field_options'] ?? f['options'] ?? f['choices'];
+            final result = _resolveIdFromOptions(options, leadIdStr, leadId);
+            if (result != null) return result;
+          }
+        }
+      }
+
+      // Strategy 2: look in groups → fields inside the draft
+      final savedGroups = draft['groups'] as List?;
+      if (savedGroups != null) {
+        for (final group in savedGroups) {
+          if (group is Map) {
+            final mapGroup = Map<dynamic, dynamic>.from(group);
+            final fields = mapGroup['fields'] as List? ?? [];
+            for (final f in fields) {
+              if (f is Map &&
+                  f['field_name']?.toString() == 'business_lead_id') {
+                final options =
+                    f['field_options'] ?? f['options'] ?? f['choices'];
+                final result = _resolveIdFromOptions(
+                  options,
+                  leadIdStr,
+                  leadId,
+                );
+                if (result != null) return result;
+              }
+            }
+          }
+        }
+      }
+
+      // Strategy 3: fall back to the cached template JSON
+      final templateUrl = draft['template_url']?.toString() ?? '';
+      if (templateUrl.isNotEmpty) {
+        final options = await _fetchLeadOptionsFromCachedTemplate(templateUrl);
+        if (options != null) {
+          return _resolveIdFromOptions(options, leadIdStr, leadId);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error resolving lead name for draft: $e");
+    }
+    return null;
+  }
+
+  /// Resolves an ID against an options map or list.
+  String? _resolveIdFromOptions(
+    dynamic options,
+    String leadIdStr,
+    dynamic leadId,
+  ) {
+    if (options is Map) {
+      final mapOpts = Map<dynamic, dynamic>.from(options);
+      if (mapOpts.containsKey(leadIdStr)) return mapOpts[leadIdStr]?.toString();
+      final parsedInt = int.tryParse(leadIdStr);
+      if (parsedInt != null && mapOpts.containsKey(parsedInt)) {
+        return mapOpts[parsedInt]?.toString();
+      }
+      if (mapOpts.containsKey(leadId)) return mapOpts[leadId]?.toString();
+      // Reverse: label → id map
+      for (final entry in mapOpts.entries) {
+        if (entry.value?.toString() == leadIdStr) return entry.key.toString();
+      }
+    } else if (options is List) {
+      final listOpts = List<dynamic>.from(options);
+      for (final item in listOpts) {
+        if (item is Map) {
+          final mapItem = Map<dynamic, dynamic>.from(item);
+          final id = mapItem['id'] ?? mapItem['value'] ?? mapItem['key'];
+          final name = mapItem['name'] ?? mapItem['label'] ?? mapItem['text'];
+          if (id?.toString() == leadIdStr && name != null) {
+            return name.toString();
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Fetches the cached template JSON and extracts the `business_lead_id`
+  /// field's options. Returns null if not found.
+  Future<dynamic> _fetchLeadOptionsFromCachedTemplate(
+    String templateUrl,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final url = Urls.base + validateURL(templateUrl);
+      final cacheKey = 'interaction_template_cache_${url.replaceAll("/", "_")}';
+      final cached = prefs.getString(cacheKey);
+      if (cached == null) return null;
+
+      final data = jsonDecode(cached) as Map<String, dynamic>;
+      final elements = data['form_elements'] as List? ?? [];
+      // Walk all groups and flat fields
+      for (final element in elements) {
+        if (element is Map) {
+          // It could be a group with fields
+          final fields = element['fields'] as List?;
+          if (fields != null) {
+            for (final f in fields) {
+              if (f is Map &&
+                  f['field_name']?.toString() == 'business_lead_id') {
+                return f['field_options'] ?? f['options'] ?? f['choices'];
+              }
+            }
+          }
+          // Or a flat field
+          if (element['field_name']?.toString() == 'business_lead_id') {
+            return element['field_options'] ??
+                element['options'] ??
+                element['choices'];
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching lead options from cached template: $e");
+    }
+    return null;
   }
 
   Future<Map<String, dynamic>?> getFormData() async {

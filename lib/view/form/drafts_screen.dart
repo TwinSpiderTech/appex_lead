@@ -2,7 +2,8 @@ import 'package:appex_lead/component/custom_appbar.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:appex_lead/component/summary_card.dart';
 import '../../controller/form/generic_form_controller.dart';
 import '../../main.dart';
 import 'form_details.dart';
@@ -72,69 +73,40 @@ class _DraftsScreenState extends State<DraftsScreen> {
               );
               final String formattedDate = previewableDateTimeFormat(updatedAt);
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.description_outlined,
-                    color: colorManager.primaryColor,
-                  ),
-                  title: Text(
-                    draft['title'] ?? 'Untitled Draft',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: colorManager.textColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
-                    "Last updated: $formattedDate",
-                    style: TextStyle(
-                      color: colorManager.textColor.withOpacity(0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                          size: 20,
-                        ),
-                        onPressed: () =>
-                            _confirmDelete(context, controller, draft),
+              return SummaryCard(
+                title: draft['title'] ?? 'Untitled Draft',
+                subtitle: "Last updated: $formattedDate",
+                icon: HugeIcons.strokeRoundedDocumentCode,
+                onTap: () async {
+                  final String url = draft['template_url'] ?? "";
+                  if (url.isNotEmpty) {
+                    await Get.to(
+                      () => FormDetails(
+                        url: url,
+                        draftData: draft,
+                        title: draft['title'] ?? 'Untitled Draft',
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: colorManager.iconColor,
-                        size: 16,
-                      ),
-                    ],
+                    );
+                    setState(() {}); // Refresh list when coming back
+                  } else {
+                    Get.snackbar(
+                      "Error",
+                      "Template URL not found for this draft.",
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                    );
+                  }
+                },
+                extraActions: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                    onPressed: () => _confirmDelete(context, controller, draft),
                   ),
-                  onTap: () async {
-                    final String url = draft['template_url'] ?? "";
-                    if (url.isNotEmpty) {
-                      await Get.to(
-                        () => FormDetails(
-                          url: url,
-                          draftData: draft,
-                          title: draft['title'] ?? 'Untitled Draft',
-                        ),
-                      );
-                      setState(() {}); // Refresh list when coming back
-                    } else {
-                      Get.snackbar(
-                        "Error",
-                        "Template URL not found for this draft.",
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                      );
-                    }
-                  },
-                ),
+                ],
               );
             },
           );

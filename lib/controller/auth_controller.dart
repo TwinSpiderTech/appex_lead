@@ -30,6 +30,8 @@ class AuthController extends GetxController {
           var data = res['data'];
           String email = data['email'] ?? '';
           String token = data['token'] ?? '';
+          String name = data['name'] ?? '';
+          await updateUserName(name);
           if (token.isEmpty) {
             log('Token not found!');
             return;

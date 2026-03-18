@@ -50,11 +50,21 @@ class GenericFormController extends GetxController {
   // Store FocusNodes for each field to enable "scroll to error"
   final Map<String, FocusNode> fieldFocusNodes = {};
 
+  // Store GlobalKeys for each field wrapper for reliable scroll-to-error context
+  final Map<String, GlobalKey> fieldGlobalKeys = {};
+
   FocusNode getOrCreateFocusNode(String fieldName) {
     if (!fieldFocusNodes.containsKey(fieldName)) {
       fieldFocusNodes[fieldName] = FocusNode();
     }
     return fieldFocusNodes[fieldName]!;
+  }
+
+  GlobalKey getOrCreateGlobalKey(String fieldName) {
+    if (!fieldGlobalKeys.containsKey(fieldName)) {
+      fieldGlobalKeys[fieldName] = GlobalKey();
+    }
+    return fieldGlobalKeys[fieldName]!;
   }
 
   @override
@@ -69,6 +79,7 @@ class GenericFormController extends GetxController {
       node.dispose();
     }
     fieldFocusNodes.clear();
+    fieldGlobalKeys.clear();
     super.onClose();
   }
 
@@ -117,12 +128,12 @@ class GenericFormController extends GetxController {
     }
   }
 
-  void _applyTemplate(Map<String, dynamic> data) {
+  Future<void> _applyTemplate(Map<String, dynamic> data) async {
     prettyPrint(data);
     try {
       formModel = FormModel.fromJson(data);
       currentFormTitle.value = formModel?.title ?? "";
-      updateLeadFormTitle(formModel?.title ?? "");
+      await updateLeadFormTitle(formModel?.title ?? "");
       debugPrint("Applied Template: ${currentFormTitle.value}");
       currentSubmissionUrl.value = formModel?.submissionUrl ?? '';
       // Build groupList and flatFieldList while preserving order
@@ -215,6 +226,7 @@ class GenericFormController extends GetxController {
     // Don't dispose here, onClose will handle it,
     // or we might want to reuse nodes if the controller stays alive
     fieldFocusNodes.clear();
+    fieldGlobalKeys.clear();
     manuallyEditedFields.clear();
     debugPrint("Form session cleared.");
   }
@@ -235,7 +247,7 @@ class GenericFormController extends GetxController {
       // Parse stringified GPS if present
       record.forEach((key, value) {
         if (value is String &&
-            value.contains('latitutde') &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
             value.contains('{')) {
           record[key] = _parseGpsString(value);
         }
@@ -280,7 +292,7 @@ class GenericFormController extends GetxController {
       // Parse stringified GPS if present
       record.forEach((key, value) {
         if (value is String &&
-            value.contains('latitutde') &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
             value.contains('{')) {
           record[key] = _parseGpsString(value);
         }
@@ -296,7 +308,7 @@ class GenericFormController extends GetxController {
 
       record.forEach((key, value) {
         if (value is String &&
-            value.contains('latitutde') &&
+            (value.contains('latitude') || value.contains('latitutde')) &&
             value.contains('{')) {
           record[key] = _parseGpsString(value);
         }
@@ -344,18 +356,22 @@ class GenericFormController extends GetxController {
   // Helper to parse messy stringified GPS data from API
   Map<String, dynamic>? _parseGpsString(String gpsStr) {
     try {
-      // Basic extraction of lat/long/location from string like "{latitutde: 1212.23, longitude: 121.32, location: \"...\"}"
+      // Basic extraction of lat/long/location from string like "{latitude: 1212.23, longitude: 121.32, location: \"...\"}"
       double? lat;
       double? lng;
       String? loc;
 
-      final latMatch = RegExp(r'latit?utde:\s*([0-9.-]+)').firstMatch(gpsStr);
+      final latMatch = RegExp(
+        r'latit?utde:\s*([0-9.-]+)|latitude:\s*([0-9.-]+)',
+      ).firstMatch(gpsStr);
       final lngMatch = RegExp(r'longitude:\s*([0-9.-]+)').firstMatch(gpsStr);
       final locMatch = RegExp(
         r'location:\s*\\?"([^"]+)\\?"',
       ).firstMatch(gpsStr);
 
-      if (latMatch != null) lat = double.tryParse(latMatch.group(1)!);
+      if (latMatch != null) {
+        lat = double.tryParse(latMatch.group(1) ?? latMatch.group(2) ?? "");
+      }
       if (lngMatch != null) lng = double.tryParse(lngMatch.group(1)!);
       if (locMatch != null) loc = locMatch.group(1);
 
@@ -697,7 +713,7 @@ class GenericFormController extends GetxController {
         Map<String, dynamic> config = Map<String, dynamic>.from(
           field['field_config'] ?? {},
         );
-        String regex = config['regax'] ?? ''; // Typo 'regax' from original code
+        String regex = config['regex'] ?? config['regax'] ?? '';
         if (regex.isNotEmpty) {
           if (value != null &&
               value.toString().isNotEmpty &&
@@ -724,28 +740,40 @@ class GenericFormController extends GetxController {
       }
 
       if (firstErrorField != null) {
-        FocusNode? node = fieldFocusNodes[firstErrorField];
-        // showToast(message: message)
+        final fieldKey = fieldGlobalKeys[firstErrorField];
         debugPrint(
-          "Attempting to scroll to first error field: $firstErrorField. Node found: ${node != null}. Context: ${node?.context != null}",
+          "Attempting to scroll to first error field: $firstErrorField. GlobalKey found: ${fieldKey != null}. Context: ${fieldKey?.currentContext != null}",
         );
 
-        // Use a small delay to let error messages expand and layout settle
+        // Longer delay to let error messages expand and layout fully settle
         WidgetsBinding.instance.addPostFrameCallback((_) async {
-          await Future.delayed(const Duration(milliseconds: 100));
-          if (node != null && node.context != null && node.context!.mounted) {
-            // node.requestFocus(); // Optional, sometimes focus can interrupt scroll
+          await Future.delayed(const Duration(milliseconds: 350));
+          final context = fieldKey?.currentContext;
+          if (context != null && context.mounted) {
             Scrollable.ensureVisible(
-              node.context!,
-              duration: const Duration(milliseconds: 400),
+              context,
+              duration: const Duration(milliseconds: 450),
               curve: Curves.easeInOut,
-              alignment: 0.5, // Center the field in the viewport
+              alignment: 0.2, // Show field near the top of the visible area
             );
             debugPrint("Scrolled to field: $firstErrorField");
           } else {
-            debugPrint(
-              "Context NOT available for scrolling to $firstErrorField after delay.",
-            );
+            // Fallback: try FocusNode context if GlobalKey context is unavailable
+            final node = fieldFocusNodes[firstErrorField];
+            final focusCtx = node?.context;
+            if (focusCtx != null && focusCtx.mounted) {
+              Scrollable.ensureVisible(
+                focusCtx,
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeInOut,
+                alignment: 0.2,
+              );
+              debugPrint("Scrolled to field via FocusNode: $firstErrorField");
+            } else {
+              debugPrint(
+                "Context NOT available for scrolling to $firstErrorField after delay.",
+              );
+            }
           }
         });
       }
@@ -792,19 +820,19 @@ class GenericFormController extends GetxController {
               debugPrint("Error refreshing DashController: $e");
             }
 
-            try {
-              if (Get.isRegistered<LeadController>()) {
-                Get.find<LeadController>().getLeads(
-                  status: 'pending',
-                  reset: true,
-                );
-              }
-            } catch (e) {
-              showToast(
-                message: "Failed to refresh lead list: ${e.toString()}",
-              );
-              debugPrint("Error refreshing LeadController: $e");
-            }
+            // try {
+            //   if (Get.isRegistered<LeadController>()) {
+            //     Get.find<LeadController>().getLeads(
+            //       status: 'pending',
+            //       reset: true,
+            //     );
+            //   }
+            // } catch (e) {
+            //   showToast(
+            //     message: "Failed to refresh lead list: ${e.toString()}",
+            //   );
+            //   debugPrint("Error refreshing LeadController: $e");
+            // }
           }
           Get.back();
           showSuccessMessage(message: "Lead submitted successfully!");
