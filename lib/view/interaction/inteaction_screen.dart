@@ -216,7 +216,7 @@ class _InteractionScreenState extends State<InteractionScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                "No interactions found",
+                "No ${Get.find<DashController>().interactionFormTitle.value} found",
                 style: TextStyle(color: Colors.grey.shade500),
               ),
             ],

@@ -315,7 +315,9 @@ class _DashboardState extends State<Dashboard> {
         );
       }
       if (controller.upcomingLeads.isEmpty) {
-        return _buildEmptyState("No upcoming leads");
+        return _buildEmptyState(
+          "No upcoming ${controller.leadFormTitle.value.toLowerCase()}s",
+        );
       }
       return ListView.builder(
         padding: EdgeInsets.zero,
