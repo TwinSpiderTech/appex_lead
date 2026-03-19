@@ -53,6 +53,9 @@ class LeadController extends GetxController
     pageLoading = false;
     isLoaded = false;
     complaintNO = '';
+    pendingSearchCont.clear();
+    ongoingSearchCont.clear();
+    closedSearchCont.clear();
     update();
   }
 
@@ -81,17 +84,17 @@ class LeadController extends GetxController
   Future<void> getLeads({bool reset = false, String? status}) async {
     int currentPage;
     String? searchQuery;
-    if (status == 'overdue') {
+    if (status == overDueKey) {
       if (reset) pendingPage = 1;
       currentPage = pendingPage;
       searchQuery = pendingSearchCont.text;
       pendingLoading.value = true;
-    } else if (status == 'due_today') {
+    } else if (status == dueTodayKey) {
       if (reset) ongoingPage = 1;
       currentPage = ongoingPage;
       searchQuery = ongoingSearchCont.text;
       ongoingLoading.value = true;
-    } else if (status == 'completed') {
+    } else if (status == completedKey) {
       if (reset) closedPage = 1;
       currentPage = closedPage;
       searchQuery = closedSearchCont.text;
@@ -122,27 +125,27 @@ class LeadController extends GetxController
 
       List<Map<String, dynamic>> fetchedHistory =
           List<Map<String, dynamic>>.from(
-            dig(data, ['table_record'])?.map((e) => e).toList(),
+            dig(data, ['table_record'])?.map((e) => e).toList() ?? [],
           );
 
-      if (status == 'overdue') {
+      if (status == overDueKey) {
         pendingLeads = fetchedHistory;
         pendingHasNext = hasNext;
-      } else if (status == 'due_today') {
+      } else if (status == dueTodayKey) {
         ongoingLeads = fetchedHistory;
         ongoingHasNext = hasNext;
-      } else if (status == 'completed') {
+      } else if (status == completedKey) {
         closedLeads = fetchedHistory;
         closedHasNext = hasNext;
       }
     } else {
-      if (status == 'overdue') {
+      if (status == overDueKey) {
         pendingLeads = [];
         pendingHasNext = false;
-      } else if (status == 'due_today') {
+      } else if (status == dueTodayKey) {
         ongoingLeads = [];
         ongoingHasNext = false;
-      } else if (status == 'completed') {
+      } else if (status == completedKey) {
         closedLeads = [];
         closedHasNext = false;
       }
@@ -160,15 +163,15 @@ class LeadController extends GetxController
     if (tabController.index == 0) {
       if (!ongoingHasNext) return;
       ongoingPage++;
-      status = 'due_today';
+      status = dueTodayKey;
     } else if (tabController.index == 1) {
       if (!pendingHasNext) return;
       pendingPage++;
-      status = 'overdue';
+      status = overDueKey;
     } else if (tabController.index == 2) {
       if (!closedHasNext) return;
       closedPage++;
-      status = 'completed';
+      status = completedKey;
     }
 
     if (status != null) await getLeads(status: status);
@@ -179,15 +182,15 @@ class LeadController extends GetxController
     if (tabController.index == 0) {
       if (ongoingPage <= 1) return;
       ongoingPage--;
-      status = 'due_today';
+      status = dueTodayKey;
     } else if (tabController.index == 1) {
       if (pendingPage <= 1) return;
       pendingPage--;
-      status = 'overdue';
+      status = overDueKey;
     } else if (tabController.index == 2) {
       if (closedPage <= 1) return;
       closedPage--;
-      status = 'completed';
+      status = completedKey;
     }
 
     if (status != null) await getLeads(status: status);

@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/form/generic_form_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
@@ -95,8 +96,9 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
           onPressed: () => Get.back(),
         ),
         centerTitle: true,
-        title: const Text(
-          "LEAD DETAILS",
+        title: Text(
+          toParameterize(Get.find<DashController>().leadFormTitle.value) +
+              " Details",
           style: TextStyle(
             color: Colors.white70,
             fontWeight: FontWeight.w600,
@@ -132,10 +134,7 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    colorManager.accentColor,
-                    colorManager.accentColor,
-                  ],
+                  colors: [colorManager.accentColor, colorManager.accentColor],
                 ),
               ),
             ),
@@ -276,7 +275,8 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
               fromLead: true,
               leadDetails: lead,
               url: 'api/v1/business/interactions/get_form_template',
-              title: 'Add Interaction',
+              title:
+                  'Add ${Get.find<DashController>().interactionFormTitle.value}',
             ),
           );
         },

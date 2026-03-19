@@ -94,7 +94,7 @@ class SummaryCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: primaryTextStyle.copyWith(
-                                color: colorManager.textColor.withOpacity(0.6),
+                                color: colorManager.primaryColor.withOpacity(1),
                                 fontSize: 13,
                               ),
                             ),

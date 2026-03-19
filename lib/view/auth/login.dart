@@ -34,25 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
         return Scaffold(
           key: cont.scaffoldKey,
           backgroundColor: colorManager.bgDark,
-          drawer: CustomDrawer(),
           appBar: CustomAppBar(
+            canNavigate: false,
             bgColor: colorManager.bgDark,
-            // drawer button
-            leading: Padding(
-              padding: EdgeInsetsGeometry.only(left: 16, right: 10),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    toggleDrawer(cont.scaffoldKey);
-                  });
-                },
-                child: Icon(
-                  Icons.menu,
-                  size: 32,
-                  color: colorManager.iconColor,
-                ),
-              ),
-            ),
             title: "Login",
           ),
           body: SingleChildScrollView(

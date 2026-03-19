@@ -116,7 +116,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
             icon: HugeIcons.strokeRoundedArrowLeft01,
             color: colorManager.iconColor,
           ),
-          onPressed: () => Get.offAll(Dashboard()),
+          onPressed: () =>
+              Get.offAll(Dashboard(), transition: Transition.leftToRight),
         ),
         title: Text(
           "Notifications",

@@ -26,9 +26,9 @@ class _LeadScreenState extends State<LeadScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cont = Get.find<LeadController>();
-      cont.getLeads(reset: true, status: 'overdue');
-      cont.getLeads(reset: true, status: 'due_today');
-      cont.getLeads(reset: true, status: 'completed');
+      cont.getLeads(reset: true, status: overDueKey);
+      cont.getLeads(reset: true, status: dueTodayKey);
+      cont.getLeads(reset: true, status: completedKey);
     });
   }
 
@@ -93,19 +93,19 @@ class _LeadScreenState extends State<LeadScreen> {
                 cont: cont,
                 history: cont.ongoingLeads,
                 isLoading: cont.ongoingLoading,
-                status: 'due_today',
+                status: dueTodayKey,
               ),
               HistoryTab(
                 cont: cont,
                 history: cont.pendingLeads,
                 isLoading: cont.pendingLoading,
-                status: 'overdue',
+                status: overDueKey,
               ),
               HistoryTab(
                 cont: cont,
                 history: cont.closedLeads,
                 isLoading: cont.closedLoading,
-                status: 'completed',
+                status: completedKey,
               ),
             ],
           ),
@@ -214,9 +214,9 @@ class HistoryTab extends StatelessWidget {
             hint:
                 "Search ${Get.find<DashController>().leadFormTitle.value}s...",
             prefixIcon: Icon(Icons.search, color: colorManager.dynamicColor),
-            controller: status == 'pending'
+            controller: status == overDueKey
                 ? cont.pendingSearchCont
-                : status == 'ongoing'
+                : status == dueTodayKey
                 ? cont.ongoingSearchCont
                 : cont.closedSearchCont,
             onChanged: (val) {
@@ -257,7 +257,9 @@ class HistoryTab extends StatelessWidget {
                           ...history!.map((l) {
                             return SummaryCard(
                               title: l['business_name'] ?? '',
-                              subtitle: l['person_name'] ?? '',
+                              subtitle: toParameterize(
+                                l['primary_next_action'] ?? '',
+                              ),
                               nextFollowup: l['next_followup'] ?? '',
                               icon: HugeIcons.strokeRoundedHospital02,
                               onTap: () {

@@ -461,7 +461,7 @@ class GenericFormController extends GetxController {
         if (isTrue(field['field_auto_generated']) ||
             isHidden(field['field_visibility'])) {
           if (field['field_type'] == 'datetime') {
-            formValues[name] = formatDateTimeToString(DateTime.now());
+            formValues[name] = previewableDateTimeFormat(DateTime.now());
           } else if (field['field_type'] == 'gps') {
             if (cameraPresent) {
               formValues[name] = "Capture photo to update GPS";
@@ -651,7 +651,7 @@ class GenericFormController extends GetxController {
 
   /// Updates `captured_at` form field with the current datetime.
   void updateAllTimestampFields() {
-    final now = formatDateTimeToString(DateTime.now());
+    final now = previewableDateFormat(DateTime.now());
 
     // Always update captured_at directly in form values
     formValues['captured_at'] = now;

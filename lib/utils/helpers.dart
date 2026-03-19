@@ -24,10 +24,8 @@ copyToClipboard({String? text}) async {
 }
 
 //
-final TextStyle primaryTextStyle = TextStyle(
-  color: colorManager.textColor,
-  fontFamily: 'SF Pro',
-);
+TextStyle get primaryTextStyle =>
+    TextStyle(color: colorManager.textColor, fontFamily: 'SF Pro');
 //
 toggleDrawer(GlobalKey<ScaffoldState> key) {
   key.currentState!.isDrawerOpen
@@ -379,9 +377,9 @@ String previewableDateTimeFormat(DateTime dateTime) {
   return DateFormat('dd MMM, yyyy - hh:mm a').format(dateTime);
 }
 
-String formatDateTimeToString(DateTime dateTime) {
-  return DateFormat('yyyy-MM-dd hh:mm:ss a').format(dateTime);
-}
+// String formatDateTimeToString(DateTime dateTime) {
+//   return DateFormat('yyyy-MM-dd hh:mm:ss a').format(dateTime);
+// }
 
 String formatDateToString(DateTime dateTime) {
   return DateFormat('yyyy-MM-dd').format(dateTime);
@@ -531,6 +529,22 @@ Future<TimeOfDay?> showCustomTimePicker({
 String leadformTitleKey = 'leadform_title';
 String inteactionformTitleKey = 'interactionform_title';
 
+// Home Screen Titles
+String headerTitleKey = 'header_title';
+String headerSubTitleKey = 'header_subtitle';
+String leadTicketTitleKey = 'lead_ticket_title';
+String interactionTicketTitleKey = 'interaction_ticket_title';
+String upcomingInteractionTitleKey = 'upcoming_interaction_title';
+String upcomingInteractionSubTitleKey = 'upcoming_interaction_subtitle';
+
+// Sidebar Titles
+String mainMenuTitleKey = 'main_menu_title';
+String leadsTitleKey = 'leads_title';
+String interactionsTitleKey = 'interactions_title';
+String draftMenuTitleKey = 'draft_menu_title';
+String draftLeadTitleKey = 'draft_lead_title';
+String draftInteractionTitleKey = 'draft_interaction_title';
+
 Future<String> getleadFormTitle() async {
   return await getData(key: leadformTitleKey, type: 'string') ?? 'Lead';
 }
@@ -552,6 +566,86 @@ updateInteractionFormTitle(String title) async {
   );
 }
 
+// Home Screen Title Getters/Setters
+Future<String> getHeaderTitle() async =>
+    await getData(key: headerTitleKey, type: 'string') ?? "Welcome back!";
+updateHeaderTitle(String title) async =>
+    await setDataToPrefs(key: headerTitleKey, value: title, type: 'string');
+
+Future<String> getHeaderSubTitle() async =>
+    await getData(key: headerSubTitleKey, type: 'string') ??
+    "Here's the latest update on your leads.";
+updateHeaderSubTitle(String title) async =>
+    await setDataToPrefs(key: headerSubTitleKey, value: title, type: 'string');
+
+Future<String> getLeadTicketTitle() async =>
+    await getData(key: leadTicketTitleKey, type: 'string') ?? "Add Setup";
+updateLeadTicketTitle(String title) async =>
+    await setDataToPrefs(key: leadTicketTitleKey, value: title, type: 'string');
+
+Future<String> getInteractionTicketTitle() async =>
+    await getData(key: interactionTicketTitleKey, type: 'string') ??
+    "Add Visit";
+updateInteractionTicketTitle(String title) async => await setDataToPrefs(
+  key: interactionTicketTitleKey,
+  value: title,
+  type: 'string',
+);
+
+Future<String> getUpcomingInteractionTitle() async =>
+    await getData(key: upcomingInteractionTitleKey, type: 'string') ??
+    "Upcoming Follow-ups";
+updateUpcomingInteractionTitle(String title) async => await setDataToPrefs(
+  key: upcomingInteractionTitleKey,
+  value: title,
+  type: 'string',
+);
+
+Future<String> getUpcomingInteractionSubTitle() async =>
+    await getData(key: upcomingInteractionSubTitleKey, type: 'string') ?? "";
+updateUpcomingInteractionSubTitle(String title) async => await setDataToPrefs(
+  key: upcomingInteractionSubTitleKey,
+  value: title,
+  type: 'string',
+);
+
+// Sidebar Title Getters/Setters
+Future<String> getMainMenuTitle() async =>
+    await getData(key: mainMenuTitleKey, type: 'string') ?? "Main Menu";
+updateMainMenuTitle(String title) async =>
+    await setDataToPrefs(key: mainMenuTitleKey, value: title, type: 'string');
+
+Future<String> getLeadsTitle() async =>
+    await getData(key: leadsTitleKey, type: 'string') ?? "My Setups";
+updateLeadsTitle(String title) async =>
+    await setDataToPrefs(key: leadsTitleKey, value: title, type: 'string');
+
+Future<String> getInteractionsTitle() async =>
+    await getData(key: interactionsTitleKey, type: 'string') ?? "My Visits";
+updateInteractionsTitle(String title) async => await setDataToPrefs(
+  key: interactionsTitleKey,
+  value: title,
+  type: 'string',
+);
+
+Future<String> getDraftMenuTitle() async =>
+    await getData(key: draftMenuTitleKey, type: 'string') ?? "Drafts";
+updateDraftMenuTitle(String title) async =>
+    await setDataToPrefs(key: draftMenuTitleKey, value: title, type: 'string');
+
+Future<String> getDraftLeadTitle() async =>
+    await getData(key: draftLeadTitleKey, type: 'string') ?? "Setups";
+updateDraftLeadTitle(String title) async =>
+    await setDataToPrefs(key: draftLeadTitleKey, value: title, type: 'string');
+
+Future<String> getDraftInteractionTitle() async =>
+    await getData(key: draftInteractionTitleKey, type: 'string') ?? "Visits";
+updateDraftInteractionTitle(String title) async => await setDataToPrefs(
+  key: draftInteractionTitleKey,
+  value: title,
+  type: 'string',
+);
+
 String userNameKey = 'user_name';
 
 Future<String> getUserName() async {
@@ -561,3 +655,8 @@ Future<String> getUserName() async {
 updateUserName(String name) async {
   await setDataToPrefs(key: userNameKey, value: name, type: 'string');
 }
+
+// lead status
+String overDueKey = 'overdue';
+String dueTodayKey = 'due_today';
+String completedKey = 'completed';

@@ -1,4 +1,5 @@
 import 'package:appex_lead/component/custom_appbar.dart';
+import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,7 +23,9 @@ class _DraftsScreenState extends State<DraftsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: colorManager.bgDark,
-      appBar: CustomAppBar(title: 'Saved Leads'),
+      appBar: CustomAppBar(
+        title: 'Saved ${Get.find<DashController>().leadFormTitle.value}',
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: controller.getSavedDrafts(),
         builder: (context, snapshot) {
@@ -33,7 +36,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
           if (snapshot.hasError) {
             return Center(
               child: Text(
-                "Error loading draft leads",
+                "Error loading draft ${Get.find<DashController>().leadFormTitle.value}",
                 style: TextStyle(color: Colors.red),
               ),
             );
@@ -53,7 +56,7 @@ class _DraftsScreenState extends State<DraftsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No draft leads found",
+                    "No ${Get.find<DashController>().leadFormTitle.value} found",
                     style: TextStyle(
                       color: colorManager.textColor.withOpacity(0.7),
                     ),

@@ -1,4 +1,5 @@
 import 'package:appex_lead/component/custom_appbar.dart';
+import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -57,7 +58,9 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: colorManager.bgDark,
-      appBar: CustomAppBar(title: 'Interaction Drafts'),
+      appBar: CustomAppBar(
+        title: 'Saved ${Get.find<DashController>().interactionFormTitle.value}',
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _drafts.isEmpty
@@ -72,7 +75,7 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No interaction drafts found",
+                    "No ${Get.find<DashController>().interactionFormTitle.value} found",
                     style: TextStyle(
                       color: colorManager.textColor.withOpacity(0.7),
                     ),
@@ -94,7 +97,9 @@ class _InteractionDraftsScreenState extends State<InteractionDraftsScreen> {
                 );
                 final String displayName =
                     _resolvedNames[id] ?? _getDraftDisplayName(draft);
-                final String formTitle = draft['title'] ?? 'Interaction';
+                final String formTitle =
+                    draft['title'] ??
+                    Get.find<DashController>().interactionFormTitle.value;
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),

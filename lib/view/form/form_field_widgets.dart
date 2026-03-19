@@ -427,7 +427,7 @@ class GenericFormFieldWidget extends StatelessWidget {
                   if (isDateOnly) {
                     controller.updateFieldValue(
                       fieldName,
-                      formatDateToString(pickedDate),
+                      previewableDateFormat(pickedDate),
                     );
                   } else {
                     if (!context.mounted) return;

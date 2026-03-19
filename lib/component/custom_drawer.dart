@@ -67,14 +67,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _buildSectionHeader("MAIN MENU"),
-                  // DrawerItem(
-                  //   title: "Dashboard",
-                  //   icon: HugeIcons.strokeRoundedDashboardCircle,
-                  //   onTap: () => Get.back(),
-                  // ),
+                  _buildSectionHeader(dash.mainMenuTitle.value),
                   DrawerItem(
-                    title: "My ${dash.leadFormTitle.value}s",
+                    title: dash.leadsTitle.value,
                     icon: HugeIcons.strokeRoundedFolder01,
                     onTap: () {
                       Get.back();
@@ -82,7 +77,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     },
                   ),
                   DrawerItem(
-                    title: "My ${dash.interactionFormTitle.value}s",
+                    title: dash.interactionsTitle.value,
                     icon: HugeIcons.strokeRoundedMessage01,
                     onTap: () {
                       Get.back();
@@ -90,9 +85,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  _buildSectionHeader("DRAFTS"),
+                  _buildSectionHeader(dash.draftMenuTitle.value),
                   DrawerItem(
-                    title: "${dash.leadFormTitle.value} Drafts",
+                    title: dash.draftLeadTitle.value,
                     icon: HugeIcons.strokeRoundedDocumentCode,
                     onTap: () {
                       Get.back();
@@ -100,7 +95,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     },
                   ),
                   DrawerItem(
-                    title: "${dash.interactionFormTitle.value} Drafts",
+                    title: dash.draftInteractionTitle.value,
                     icon: HugeIcons.strokeRoundedMessageQuestion,
                     onTap: () {
                       Get.back();
@@ -182,22 +177,27 @@ class _CustomDrawerState extends State<CustomDrawer> {
             child: Image.asset(colorManager.appLogo, width: 40, height: 40),
           ),
           const SizedBox(height: 20),
-          Text(
-            "Field Force",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-            ),
+          FutureBuilder(
+            future: getUserName(),
+            builder: (context, snapshot) {
+              return Text(
+                snapshot.data ?? "Field Force",
+                style: primaryTextStyle.copyWith(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              );
+            },
           ),
           if (email.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               email,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 13,
+              style: primaryTextStyle.copyWith(
+                color: colorManager.primaryColor,
+                fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),
             ),

@@ -4,7 +4,9 @@ import 'dart:developer';
 
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
+import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/utils/helpers.dart';
+import 'package:appex_lead/utils/urls.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,9 +17,6 @@ class DashController extends GetxController {
   RxList<Map<String, dynamic>> pendingLeads = <Map<String, dynamic>>[].obs;
   RxList<Map<String, dynamic>> drafts = <Map<String, dynamic>>[].obs;
 
-  String headerTitle = "Welcome back!";
-  String headerSubTitle = "Here's the latest update on your leads.";
-
   final TextEditingController searchCont = TextEditingController();
   Timer? _searchTimer;
 
@@ -26,16 +25,29 @@ class DashController extends GetxController {
     super.onInit();
     // Ensure LeadController is initialized as it's needed for navigation and data mapping
     Get.put(LeadController());
-    loadTitles();
+    loadStoredTitles();
     refreshDashboard();
   }
 
   RxString leadFormTitle = "Lead".obs;
   RxString interactionFormTitle = "Interaction".obs;
 
-  Future<void> loadTitles() async {
+  Future<void> loadStoredTitles() async {
     leadFormTitle.value = await getleadFormTitle();
     interactionFormTitle.value = await getinteractionFormTitle();
+
+    headerTitle.value = await getHeaderTitle();
+    headerSubTitle.value = await getHeaderSubTitle();
+    leadTicketTitle.value = await getLeadTicketTitle();
+    interactionTicketTitle.value = await getInteractionTicketTitle();
+    upcomingInteractionTitle.value = await getUpcomingInteractionTitle();
+
+    mainMenuTitle.value = await getMainMenuTitle();
+    leadsTitle.value = await getLeadsTitle();
+    interactionsTitle.value = await getInteractionsTitle();
+    draftMenuTitle.value = await getDraftMenuTitle();
+    draftLeadTitle.value = await getDraftLeadTitle();
+    draftInteractionTitle.value = await getDraftInteractionTitle();
   }
 
   Future<void> refreshDashboard() async {
@@ -46,9 +58,10 @@ class DashController extends GetxController {
       await Future.wait([
         // fetchPendingLeads(),
         fetchUpcomingLeads(),
+        loadDashboard(),
         // fetchDrafts(),
       ]);
-      await loadTitles();
+      await loadStoredTitles();
     } catch (e) {
       log("Error refreshing dashboard: $e");
     } finally {
@@ -86,22 +99,6 @@ class DashController extends GetxController {
     }
   }
 
-  // Future<void> fetchPendingLeads() async {
-  //   final response = await api.getLeads(
-  //     1,
-  //     status: 'pending',
-  //     search: searchCont.text,
-  //   );
-  //   if (response != null && response['response_status'] == 'success') {
-  //     final data = response['data'] ?? [];
-  //     final tableRecord = List<Map<String, dynamic>>.from(
-  //       dig(data, ['table_record'])?.map((e) => e).toList() ?? [],
-  //     );
-
-  //     pendingLeads.value = tableRecord;
-  //   }
-  // }
-
   Future<void> fetchUpcomingLeads() async {
     final response = await api.getUpcomingLeads(1, search: searchCont.text);
     if (response != null && response['response_status'] == 'success') {
@@ -125,5 +122,119 @@ class DashController extends GetxController {
 
   String getLeadDetailUrl(Map<String, dynamic> lead) {
     return "/api/v1/business/leads/${lead['id']}";
+  }
+
+  // ////////////////
+
+  // Titles
+
+  RxString leadTicketTitle = "Add Setup".obs;
+  RxString interactionTicketTitle = "Add Visit".obs;
+  RxString upcomingInteractionTitle = "Upcoming Follow-ups".obs;
+  RxString upcomingInteractionSubTitle = "".obs;
+  RxString headerTitle = "Welcome back!".obs;
+  RxString headerSubTitle = "Here's the latest update on your leads.".obs;
+
+  // Sidebar Titles
+
+  RxString mainMenuTitle = "Main Menu".obs;
+  RxString leadsTitle = "My Setups".obs;
+  RxString interactionsTitle = "My Visits".obs;
+  RxString draftMenuTitle = "Drafts".obs;
+  RxString draftLeadTitle = "Setups".obs;
+  RxString draftInteractionTitle = "Visits".obs;
+
+  RxMap<String, dynamic> tickets = <String, dynamic>{}.obs;
+
+  // load dashboard
+  Future<void> loadDashboard() async {
+    String token = await AuthService.getSessionToken() ?? '';
+    try {
+      final response = await api.getData(token, Urls.loadDashboardUrl);
+      if (response != null && response['response_status'] == 'success') {
+        final data = response['data'] ?? {};
+        prettyPrint(data);
+        // Home Screen Data
+        final home = data['homescreen'] ?? {};
+        final welcome = home['welcome'] ?? {};
+        final _tickets = home['tickets'] ?? {};
+        final listItems = home['list_items'] ?? {};
+
+        if (welcome['title'] != null) {
+          headerTitle.value = welcome['title'];
+          updateHeaderTitle(headerTitle.value);
+        }
+
+        if (welcome['subtitle'] != null) {
+          headerSubTitle.value = welcome['subtitle'];
+          updateHeaderSubTitle(headerSubTitle.value);
+        }
+        tickets.value = _tickets;
+        print(tickets.value);
+        // if (tickets['add_lead'] != null) {
+        //   leadTicketTitle.value = tickets['add_lead'];
+        //   updateLeadTicketTitle(leadTicketTitle.value);
+        // }
+
+        // if (tickets['add_interaction'] != null) {
+        //   interactionTicketTitle.value = tickets['add_interaction'];
+        //   updateInteractionTicketTitle(interactionTicketTitle.value);
+        // }
+
+        if (listItems['upcoming_interactions'] != null) {
+          upcomingInteractionTitle.value = dig(listItems, [
+            'upcoming_interactions',
+            'title',
+          ]);
+          updateUpcomingInteractionTitle(upcomingInteractionTitle.value);
+
+          upcomingInteractionSubTitle.value = dig(listItems, [
+            'upcoming_interactions',
+            'subtitle',
+          ]);
+          updateUpcomingInteractionSubTitle(upcomingInteractionSubTitle.value);
+        }
+
+        // // Sidebar data
+        final sidebar = data['sidebar'] ?? {};
+        final mainMenu = sidebar['main_menu'] ?? {};
+        final draftsData = sidebar['draft_menu'] ?? {};
+
+        if (mainMenu['title'] != null) {
+          mainMenuTitle.value = mainMenu['title'];
+          updateMainMenuTitle(mainMenuTitle.value);
+        }
+
+        final mainItems = mainMenu['items'] ?? {};
+        if (mainItems['my_leads'] != null) {
+          leadsTitle.value = mainItems['my_leads'];
+          updateLeadsTitle(leadsTitle.value);
+        }
+
+        if (mainItems['my_interactions'] != null) {
+          interactionsTitle.value = mainItems['my_interactions'];
+          updateInteractionsTitle(interactionsTitle.value);
+        }
+
+        if (draftsData['title'] != null) {
+          draftMenuTitle.value = draftsData['title'];
+          updateDraftMenuTitle(draftMenuTitle.value);
+        }
+
+        final draftItems = draftsData['items'] ?? {};
+        if (draftItems['draft_leads'] != null) {
+          draftLeadTitle.value = draftItems['draft_leads'];
+          updateDraftLeadTitle(draftLeadTitle.value);
+        }
+
+        if (draftItems['draft_interactions'] != null) {
+          draftInteractionTitle.value = draftItems['draft_interactions'];
+          updateDraftInteractionTitle(draftInteractionTitle.value);
+        }
+      }
+      update();
+    } catch (e) {
+      log("Error loading dashboard: $e");
+    }
   }
 }

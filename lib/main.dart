@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/notification_controller.dart';
 import 'package:appex_lead/service/app_infor_service.dart';
 import 'package:appex_lead/service/notificaion_services.dart';
@@ -33,7 +34,7 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
       : message.data["body"] ?? '';
   await services.flutterLocalNotification.show(
     DateTime.now().millisecondsSinceEpoch,
-    title, 
+    title,
     body,
     details,
     payload: jsonEncode({
@@ -48,7 +49,8 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp();
   await services.initLocalNotificationOnStart();
   FirebaseMessaging.instance.getInitialMessage().then((message) {
@@ -58,11 +60,13 @@ void main() async {
   });
 
   // Listen for notification taps when app is in background
-  FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    services.handleNavigation(message);
-  });
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+  // Initialize Core Services & Controllers
+  Get.put(ColorManager());
+  Get.put(NotificationController());
+  Get.put(DashController(), permanent: true);
 
   // await services.forgroundMessage();
   await SystemChrome.setPreferredOrientations([
@@ -75,11 +79,9 @@ void main() async {
   runApp(const MyApp());
 }
 
-final ColorManager colorManager = Get.put(ColorManager());
-
-NotificationService services = NotificationService();
-final notificationController = Get.put(NotificationController());
 final ApiServices api = ApiServices();
+ColorManager colorManager = ColorManager();
+NotificationService services = NotificationService();
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -135,7 +137,10 @@ class _MyAppState extends State<MyApp> {
       getPages: AppPages.routes,
       // home: SplashScreen(),
       initialRoute: '/',
-      builder: EasyLoading.init(),
+      builder: (context, child) {
+        // Ensure colorManager is updated if needed, though Get.find is preferred
+        return EasyLoading.init()(context, child);
+      },
     );
   }
 }
@@ -143,7 +148,7 @@ class _MyAppState extends State<MyApp> {
 Future<void> _initializeNonCriticalServices() async {
   debugPrint("Initializing Firebase Notifications...");
   await services.requestNotification();
-  await notificationController.setupDeviceToken();
+  await Get.find<NotificationController>().setupDeviceToken();
   await services.firebaseInit();
   await services.setupInteractMessage();
   String token = await services.getDeviceToken();
