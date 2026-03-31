@@ -819,20 +819,6 @@ class GenericFormController extends GetxController {
             } catch (e) {
               debugPrint("Error refreshing DashController: $e");
             }
-
-            // try {
-            //   if (Get.isRegistered<LeadController>()) {
-            //     Get.find<LeadController>().getLeads(
-            //       status: 'pending',
-            //       reset: true,
-            //     );
-            //   }
-            // } catch (e) {
-            //   showToast(
-            //     message: "Failed to refresh lead list: ${e.toString()}",
-            //   );
-            //   debugPrint("Error refreshing LeadController: $e");
-            // }
           }
           Get.back();
           showSuccessMessage(message: "Lead submitted successfully!");
@@ -845,18 +831,6 @@ class GenericFormController extends GetxController {
       } finally {
         isSubmitting.value = false;
       }
-
-      // Get.snackbar(
-      //   "Success",
-      //   "Form Validated Successfully!",
-      //   backgroundColor: Colors.green,
-      //   colorText: Colors.white,
-      //   snackPosition: SnackPosition.BOTTOM,
-      // );
-
-      // When successfully validated/submitted, delete it from local storage
-
-      // Return the key-value pair of the form data
     }
     return null;
   }

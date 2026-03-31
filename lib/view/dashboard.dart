@@ -4,6 +4,7 @@ import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/app_routes.dart';
+import 'package:appex_lead/utils/device_id_helper.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
 import 'package:appex_lead/view/interaction/inteaction_screen.dart';
@@ -28,6 +29,14 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isFabExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<DashController>().refreshDashboard();
+    });
+  }
 
   void _toggleFab() {
     setState(() {
@@ -173,6 +182,15 @@ class _DashboardState extends State<Dashboard> {
             onPressed: () => Get.toNamed(AppPages.notificationScreen),
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedNotification01,
+              color: colorManager.primaryColor,
+            ),
+          ),
+          IconButton(
+            onPressed: () async {
+              print(await DeviceIdHelper.getDeviceId());
+            },
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUser,
               color: colorManager.primaryColor,
             ),
           ),

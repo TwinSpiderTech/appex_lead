@@ -61,7 +61,7 @@ class CustomCameraController extends GetxController {
         cameraController = CameraController(
           cameras[0],
           // ResolutionPreset.high gives us a good quality image without taking up too much memory.
-          ResolutionPreset.ultraHigh,
+          ResolutionPreset.high,
           // We disable audio because we are only taking pictures, not recording video.
           enableAudio: false,
         );
@@ -201,9 +201,25 @@ class CustomCameraController extends GetxController {
       }
 
       // Fetch the highly-accurate current GPS coordinates (lat, lng).
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      // We add a 5-second timeout to prevent it from hanging indefinitely on iOS if GPS signal is weak.
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 5),
+          ),
+        );
+      } catch (e) {
+        debugPrint("Current position fetch failed or timed out: $e. Falling back to last known position.");
+        // If current position fails, try to get the last known location for a faster response.
+        position = await Geolocator.getLastKnownPosition();
+      }
+
+      if (position == null) {
+        readableAddress.value = "Location unavailable";
+        return "";
+      }
 
       // Save coordinates to our observables
       latitude.value = position.latitude;

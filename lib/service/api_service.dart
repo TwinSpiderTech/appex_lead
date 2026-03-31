@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:appex_lead/utils/device_id_helper.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:dio/dio.dart';
 import 'package:appex_lead/utils/auth_service.dart';
@@ -17,6 +18,10 @@ class ApiServices {
           // if (options.extra["appTypeRef"] != null) {
           options.headers["App-Type-Ref"] = 'field_force_app';
           // }
+
+          // Add Device-Id to headers
+          final deviceId = await DeviceIdHelper.getDeviceId();
+          options.headers['Device-Id'] = deviceId;
 
           final requiresToken = options.extra[isTokenRequired] != false;
 

@@ -9,6 +9,7 @@ import 'package:appex_lead/utils/app_routes.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -63,15 +64,29 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
+  // Request App Tracking Transparency authorization
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try {
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        // Wait for a moment to ensure the app is fully resumed
+        await Future.delayed(const Duration(milliseconds: 1000));
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+    } catch (e) {
+      debugPrint("ATT Error: $e");
+    }
+  });
+
   // Initialize Core Services & Controllers
   Get.put(ColorManager());
   Get.put(NotificationController());
-  Get.put(DashController(), permanent: true);
+  Get.lazyPut(() => DashController(), fenix: true);
 
   // await services.forgroundMessage();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
+    DeviceOrientation.portraitDown, 
   ]);
   colorManager.loadThemeFromPreferences();
   AppInfo.init();

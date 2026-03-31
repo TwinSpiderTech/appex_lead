@@ -9,6 +9,7 @@ import 'package:appex_lead/utils/custom_toast_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:appex_lead/main.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -660,3 +661,26 @@ updateUserName(String name) async {
 String overDueKey = 'overdue';
 String dueTodayKey = 'due_today';
 String completedKey = 'completed';
+
+Future<bool> handleLocationAccess() async {
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    return false;
+  }
+
+  LocationPermission permission = await Geolocator.checkPermission();
+
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+
+    if (permission == LocationPermission.denied) {
+      return false;
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    return false;
+  }
+
+  return true; // Access granted
+}

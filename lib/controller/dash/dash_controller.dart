@@ -8,6 +8,7 @@ import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/utils/urls.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,7 +27,6 @@ class DashController extends GetxController {
     // Ensure LeadController is initialized as it's needed for navigation and data mapping
     Get.put(LeadController());
     loadStoredTitles();
-    refreshDashboard();
   }
 
   RxString leadFormTitle = "Lead".obs;
@@ -122,6 +122,14 @@ class DashController extends GetxController {
 
   String getLeadDetailUrl(Map<String, dynamic> lead) {
     return "/api/v1/business/leads/${lead['id']}";
+  }
+
+  // ask for location permission
+  Future<void> askForLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
   }
 
   // ////////////////
