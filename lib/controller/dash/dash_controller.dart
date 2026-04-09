@@ -178,16 +178,8 @@ class DashController extends GetxController {
           updateHeaderSubTitle(headerSubTitle.value);
         }
         tickets.value = _tickets;
+        await setDataToPrefsEncoded(key: 'dashboard_tickets', value: _tickets);
         print(tickets.value);
-        // if (tickets['add_lead'] != null) {
-        //   leadTicketTitle.value = tickets['add_lead'];
-        //   updateLeadTicketTitle(leadTicketTitle.value);
-        // }
-
-        // if (tickets['add_interaction'] != null) {
-        //   interactionTicketTitle.value = tickets['add_interaction'];
-        //   updateInteractionTicketTitle(interactionTicketTitle.value);
-        // }
 
         if (listItems['upcoming_interactions'] != null) {
           upcomingInteractionTitle.value = dig(listItems, [
@@ -239,10 +231,20 @@ class DashController extends GetxController {
           draftInteractionTitle.value = draftItems['draft_interactions'];
           updateDraftInteractionTitle(draftInteractionTitle.value);
         }
+      } else {
+        await _loadTicketsFromLocal();
       }
       update();
     } catch (e) {
       log("Error loading dashboard: $e");
+      await _loadTicketsFromLocal();
+    }
+  }
+
+  Future<void> _loadTicketsFromLocal() async {
+    final localTickets = await getDataFromPrefsDecoded(key: "dashboard_tickets");
+    if (localTickets != null && localTickets is Map) {
+      tickets.value = Map<String, dynamic>.from(localTickets);
     }
   }
 }

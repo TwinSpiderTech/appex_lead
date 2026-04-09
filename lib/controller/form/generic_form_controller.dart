@@ -128,7 +128,7 @@ class GenericFormController extends GetxController {
     }
   }
 
-  Future<void> _applyTemplate(Map<String, dynamic> data) async {
+Future<void> _applyTemplate(Map<String, dynamic> data) async {
     prettyPrint(data);
     try {
       formModel = FormModel.fromJson(data);
@@ -183,7 +183,8 @@ class GenericFormController extends GetxController {
         }
         flushBuffer(); // Final flush
       }
-
+      prettyPrint(groupList);
+      
       fieldsData.assignAll(flatFieldList);
       formGroupsData.assignAll(groupList);
       // prettyPrint(formGroupsData);

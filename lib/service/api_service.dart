@@ -74,7 +74,7 @@ class ApiServices {
         return null;
       }
     } catch (e) {
-      showToast(message: 'Failed to fetch app version!');
+      // showToast(message: 'Failed to fetch app version!');
       log('Error on fetching app version: $e');
       return null;
     }
