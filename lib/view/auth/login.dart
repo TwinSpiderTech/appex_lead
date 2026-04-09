@@ -17,6 +17,7 @@ import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/dashboard.dart';
+import 'package:appex_lead/view/auth/register_screen.dart' as appex_register;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -117,6 +118,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         );
                       }),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account?",
+                          style: primaryTextStyle.copyWith(fontSize: 14),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Get.to(() => const appex_register.RegisterScreen());
+                          },
+                          child: Text(
+                            "Register",
+                            style: primaryTextStyle.copyWith(
+                              fontSize: 14,
+                              color: colorManager.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

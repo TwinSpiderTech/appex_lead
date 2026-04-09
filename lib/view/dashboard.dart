@@ -185,15 +185,6 @@ class _DashboardState extends State<Dashboard> {
               color: colorManager.primaryColor,
             ),
           ),
-          IconButton(
-            onPressed: () async {
-              print(await DeviceIdHelper.getDeviceId());
-            },
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: colorManager.primaryColor,
-            ),
-          ),
         ],
       ),
       flexibleSpace: FlexibleSpaceBar(

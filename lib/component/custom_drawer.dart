@@ -16,6 +16,8 @@ import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/view/app_settings.dart';
 import 'package:appex_lead/view/shared_prefs_screen.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
+import 'package:appex_lead/service/api_service.dart';
+import 'package:appex_lead/view/auth/login.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -41,6 +43,47 @@ class _CustomDrawerState extends State<CustomDrawer> {
   void initState() {
     _init();
     super.initState();
+  }
+
+  void _deleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: colorManager.bgDark,
+        title: Text(
+          "Delete Account",
+          style: primaryTextStyle.copyWith(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          "Are you sure you want to delete your account? This action cannot be undone.",
+          style: primaryTextStyle,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text("Cancel", style: primaryTextStyle),
+          ),
+          TextButton(
+            onPressed: () async {
+              Get.back(); // close dialog
+              final api = ApiServices();
+              final response = await api.deleteAccount();
+              if (response != null && response['status'] == 200) {
+                await logoutUser(toastMessage: 'Account deleted.');
+                Get.offAll(() => const LoginScreen());
+              }
+            },
+            child: Text(
+              "Delete",
+              style: primaryTextStyle.copyWith(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -230,7 +273,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
       ),
       child: Column(
         children: [
-          if (token.isNotEmpty)
+          if (token.isNotEmpty) ...[
+            DrawerItem(
+              title: "Delete Account",
+              icon: HugeIcons.strokeRoundedDelete02,
+              isDestructive: true,
+              onTap: () {
+                Get.back();
+                _deleteAccount(context);
+              },
+            ),
             DrawerItem(
               title: "Logout",
               icon: HugeIcons.strokeRoundedLogout01,
@@ -240,6 +292,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 AuthService.logout();
               },
             ),
+          ],
           const SizedBox(height: 16),
           tsWatermark(),
           const SizedBox(height: 8),

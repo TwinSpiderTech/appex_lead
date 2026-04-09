@@ -287,6 +287,38 @@ class ApiServices {
     }
   }
 
+  Future<Map<String, dynamic>?> signup(
+    String email,
+    String password,
+    String name,
+  ) async {
+    try {
+      String url =
+          "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.signupURL}";
+      log(url);
+      var data = {'email': email, 'password': password, 'name': name};
+      var formattedData = {'user': data};
+      prettyPrint(formattedData);
+      final response = await _dio.post(
+        url,
+        data: formattedData,
+        options: Options(extra: {isTokenRequired: false}),
+      );
+      if (response.data?['status'] == 200) {
+        return response.data;
+      } else {
+        var err = response.data?['messages']?[0];
+        showToast(message: err.toString());
+        log('Error: $err');
+        return null;
+      }
+    } catch (e) {
+      showToast(message: 'Failed to register!');
+      log('Error on registering: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> loadDashboard() async {
     try {
       String url =
@@ -331,6 +363,30 @@ class ApiServices {
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         await logoutUser(toastMessage: "Session Expired!");
+        return null;
+      }
+      log('Dio error: ${e.message}');
+      return null;
+    } catch (e) {
+      log('Error occurred: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> deleteAccount() async {
+    // log(appVerionUrl);
+    try {
+      String url =
+          "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.deleteAccountURL}";
+      print(url);
+      final response = await _dio.patch(url);
+      // if (response.statusCode == 200) {
+      print(response.data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        await logoutUser(toastMessage: "Session Expired!");
+
         return null;
       }
       log('Dio error: ${e.message}');

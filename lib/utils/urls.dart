@@ -18,6 +18,8 @@ class Urls {
   static const String appVersionURL =
       '$baseUrl/app_config/get_app_version?app_name=';
   static const String authenticationURL = '$baseUrl/authenticate?';
+  static const String signupURL = '$baseUrl/authentication/signup';
+  static const String deleteAccountURL = '$baseUrl/authentication/disable_user';
   static const String loadDashboardUrl = '$baseUrl/business/dashboard';
   static const String leadsURL = '$baseUrl/business/leads';
   static const String upcomingLeadsURL =
