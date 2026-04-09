@@ -1,5 +1,6 @@
 import 'package:appex_lead/component/custom_switch.dart';
 import 'package:appex_lead/service/app_infor_service.dart';
+import 'package:appex_lead/service/firebase_service.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
@@ -274,14 +275,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
       child: Column(
         children: [
           if (token.isNotEmpty) ...[
-            DrawerItem(
-              title: "Delete Account",
-              icon: HugeIcons.strokeRoundedDelete02,
-              isDestructive: true,
-              onTap: () {
-                Get.back();
-                _deleteAccount(context);
-              },
+
+            FirebaseHelper.DeleteManager(
+              child: DrawerItem(
+                title: "Delete Account",
+                icon: HugeIcons.strokeRoundedDelete02,
+                isDestructive: true,
+                onTap: () {
+                  Get.back();
+                  _deleteAccount(context);
+                },
+              ),
             ),
             DrawerItem(
               title: "Logout",

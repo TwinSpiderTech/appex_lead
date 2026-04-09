@@ -1,7 +1,9 @@
 import 'dart:developer';
 
 import 'package:appex_lead/controller/theme/theme_controller.dart';
+import 'package:appex_lead/service/firebase_service.dart';
 import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -119,27 +121,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       }),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account?",
-                          style: primaryTextStyle.copyWith(fontSize: 14),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Get.to(() => const appex_register.RegisterScreen());
-                          },
-                          child: Text(
-                            "Register",
-                            style: primaryTextStyle.copyWith(
-                              fontSize: 14,
-                              color: colorManager.primaryColor,
-                              fontWeight: FontWeight.bold,
+
+                    FirebaseHelper.RegisterManager(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account?",
+                            style: primaryTextStyle.copyWith(fontSize: 14),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Get.to(
+                                () => const appex_register.RegisterScreen(),
+                              );
+                            },
+                            child: Text(
+                              "Register",
+                              style: primaryTextStyle.copyWith(
+                                fontSize: 14,
+                                color: colorManager.primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
