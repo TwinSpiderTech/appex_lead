@@ -61,7 +61,7 @@ class CustomCameraController extends GetxController {
         cameraController = CameraController(
           cameras[0],
           // ResolutionPreset.high gives us a good quality image without taking up too much memory.
-          ResolutionPreset.high,
+          ResolutionPreset.medium,
           // We disable audio because we are only taking pictures, not recording video.
           enableAudio: false,
         );
@@ -211,7 +211,9 @@ class CustomCameraController extends GetxController {
           ),
         );
       } catch (e) {
-        debugPrint("Current position fetch failed or timed out: $e. Falling back to last known position.");
+        debugPrint(
+          "Current position fetch failed or timed out: $e. Falling back to last known position.",
+        );
         // If current position fails, try to get the last known location for a faster response.
         position = await Geolocator.getLastKnownPosition();
       }
@@ -322,7 +324,7 @@ class CustomCameraController extends GetxController {
 
       // 6. Calculate sizes for the dark transparent card we will draw at the bottom.
       final double cardHeight =
-          targetHeight * 0.16; // Card takes up 16% of image height
+          targetHeight * 0.19; // Card takes up 19% of image height
       final double padding =
           targetHeight * 0.02; // Small padding from the edges
 
@@ -346,60 +348,78 @@ class CustomCameraController extends GetxController {
       );
 
       // Set the font size relative to the card size so it scales nicely on all phones.
-      final double fontSize = cardHeight * 0.14;
+      // Set the font size relative to the card size so it scales nicely on all phones.
+      final double regularFontSize = cardHeight * 0.10;
+      final double addressFontSize = cardHeight * 0.13;
 
       // TextPainter is used to measure and format text before drawing it.
       final textPainter = TextPainter(textDirection: ui.TextDirection.ltr);
 
-      // 8. Draw the Street Address Text.
+      // 8. Draw the Street Address Text (First Line - Bigger)
       textPainter.text = TextSpan(
         text: readableAddress.value.isEmpty
             ? "Location unknown"
             : readableAddress.value,
         style: TextStyle(
           color: Colors.white,
-          fontSize: fontSize,
+          fontSize: addressFontSize,
           fontWeight: FontWeight.bold,
         ),
       );
-      textPainter.layout(
-        maxWidth: cardRect.width - (padding * 2),
-      ); // Limit width so text wraps if too long
+      textPainter.layout(maxWidth: cardRect.width - (padding * 2));
       textPainter.paint(
         canvas,
         Offset(cardRect.left + padding, cardRect.top + padding),
-      ); // Paint it
+      );
 
-      // Track our vertical drawing position (Y-axis) so we can place the next text underneath.
+      // Track vertical position
       double currentY =
-          cardRect.top + padding + textPainter.height + (padding * 0.6);
+          cardRect.top + padding + textPainter.height + (padding * 0.4);
 
-      // 9. Draw the Latitude and Longitude Text.
+      // 9. Draw the Latitude/Longitude (Second Line - Left) and Timestamp (Second Line - Right)
+
+      // A. Lat/Long (Left)
       textPainter.text = TextSpan(
         text:
             "Lat: ${latitude.value.toStringAsFixed(6)}, Long: ${longitude.value.toStringAsFixed(6)}",
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: fontSize * 0.8,
-        ), // Slightly smaller font
+        style: TextStyle(color: Colors.white, fontSize: regularFontSize),
       );
-      textPainter.layout(maxWidth: cardRect.width - (padding * 2));
+      textPainter.layout(maxWidth: (cardRect.width - (padding * 2)) * 0.6);
       textPainter.paint(canvas, Offset(cardRect.left + padding, currentY));
 
-      // Move Y-axis down again.
-      currentY += textPainter.height + (padding * 0.6);
-
-      // 10. Draw the Timestamp Text.
+      // B. Timestamp (Right)
       final timeStr = captureTime.value != null
           ? previewableDateTimeFormat(captureTime.value!)
           : "";
+      final timestampPainter = TextPainter(
+        text: TextSpan(
+          text: timeStr,
+          style: TextStyle(
+            color: Colors.yellow,
+            fontSize: regularFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: ui.TextDirection.ltr,
+      )..layout(maxWidth: (cardRect.width - (padding * 2)) * 0.4);
+
+      timestampPainter.paint(
+        canvas,
+        Offset(cardRect.right - padding - timestampPainter.width, currentY),
+      );
+
+      // Move Y-axis down
+      currentY += textPainter.height + (padding * 0.4);
+
+      // 10. Draw Captured By Text (Third Line)
+      final String name = await getUserName();
       textPainter.text = TextSpan(
-        text: timeStr,
+        text: "Captured By: $name",
         style: TextStyle(
-          color: Colors.yellow,
-          fontSize: fontSize * 0.8,
+          color: Colors.white,
+          fontSize: regularFontSize,
           fontWeight: FontWeight.bold,
-        ), // Yellow to stand out
+        ),
       );
       textPainter.layout(maxWidth: cardRect.width - (padding * 2));
       textPainter.paint(canvas, Offset(cardRect.left + padding, currentY));

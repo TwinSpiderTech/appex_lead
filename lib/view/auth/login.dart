@@ -19,7 +19,7 @@ import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/dashboard.dart';
-import 'package:appex_lead/view/auth/register_screen.dart' as appex_register;
+import 'package:appex_lead/view/auth/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -132,9 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Get.to(
-                                () => const appex_register.RegisterScreen(),
-                              );
+                              Get.to(() => const RegisterScreen());
                             },
                             child: Text(
                               "Register",

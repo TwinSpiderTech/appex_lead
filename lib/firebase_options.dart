@@ -59,11 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDLM65c7K36Ik86flcYWJUA1Xz1bT80A9A',
-    appId: '1:494118862427:ios:7f7d888725475d304f097e',
+    appId: '1:494118862427:ios:e3fbec029ccb718a4f097e',
     messagingSenderId: '494118862427',
     projectId: 'appex-trading',
     storageBucket: 'appex-trading.firebasestorage.app',
-    iosBundleId: 'com.twinspider.orderTakerSpiderErp',
+    iosBundleId: 'com.twinspider.appexFieldForce',
   );
 
 }

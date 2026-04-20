@@ -46,47 +46,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
     super.initState();
   }
 
-  void _deleteAccount(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: colorManager.bgDark,
-        title: Text(
-          "Delete Account",
-          style: primaryTextStyle.copyWith(
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          "Are you sure you want to delete your account? This action cannot be undone.",
-          style: primaryTextStyle,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text("Cancel", style: primaryTextStyle),
-          ),
-          TextButton(
-            onPressed: () async {
-              Get.back(); // close dialog
-              final api = ApiServices();
-              final response = await api.deleteAccount();
-              if (response != null && response['status'] == 200) {
-                await logoutUser(toastMessage: 'Account deleted.');
-                Get.offAll(() => const LoginScreen());
-              }
-            },
-            child: Text(
-              "Delete",
-              style: primaryTextStyle.copyWith(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -275,7 +234,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
       child: Column(
         children: [
           if (token.isNotEmpty) ...[
-
             FirebaseHelper.DeleteManager(
               child: DrawerItem(
                 title: "Delete Account",
@@ -283,7 +241,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 isDestructive: true,
                 onTap: () {
                   Get.back();
-                  _deleteAccount(context);
+                  deleteAccountPopup(context);
                 },
               ),
             ),
