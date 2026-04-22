@@ -109,6 +109,8 @@ class _LeadScreenState extends State<LeadScreen> {
               ),
             ],
           ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
           floatingActionButton: Padding(
             padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 32),
             child: Column(

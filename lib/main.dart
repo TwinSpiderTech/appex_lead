@@ -22,7 +22,7 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
   // Initialize Firebase if needed
   await Firebase.initializeApp();
 
-  log("Background message received: ${message.notification?.title}");
+  log("Background message recei ved: ${message.notification?.title}");
 
   await services.saveNotificationToLocal(message);
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:appex_lead/utils/constants.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +61,9 @@ class CustomCameraController extends GetxController {
         // 3. Initialize the camera controller using the first camera (usually the back camera).
         cameraController = CameraController(
           cameras[0],
+
           // ResolutionPreset.high gives us a good quality image without taking up too much memory.
+          // handleResolutionDynamicaaly
           ResolutionPreset.medium,
           // We disable audio because we are only taking pictures, not recording video.
           enableAudio: false,
@@ -129,7 +132,9 @@ class CustomCameraController extends GetxController {
 
       // If drawing was successful, update the path to point to our newly modified image instead of the raw one.
       if (processedPath != null) {
-        capturedImagePath.value = processedPath;
+        // Compress the final processed image to 1MB
+        final finalCompressedFile = await compressTo1MB(File(processedPath));
+        capturedImagePath.value = finalCompressedFile?.path ?? processedPath;
       }
 
       // Close the loading dialog if it is still open.
@@ -160,9 +165,13 @@ class CustomCameraController extends GetxController {
       final processedPath = await _generateProcessedImage();
 
       if (processedPath != null) {
-        capturedImagePath.value = processedPath;
+        // Compress the final processed image to 1MB
+        final finalCompressedFile = await compressTo1MB(File(processedPath));
+        final finalPath = finalCompressedFile?.path ?? processedPath;
+
+        capturedImagePath.value = finalPath;
         if (onProcessed != null) {
-          onProcessed!(processedPath);
+          onProcessed!(finalPath);
         }
       }
     } catch (e) {
@@ -286,7 +295,7 @@ class CustomCameraController extends GetxController {
       // to prevent the final image from being too massive in file size when uploading.
       double targetWidth = image.width.toDouble();
       double targetHeight = image.height.toDouble();
-      const double maxResolution = 4000.0;
+      const double maxResolution = 1920.0;
 
       if (targetWidth > maxResolution) {
         targetHeight =
@@ -381,8 +390,12 @@ class CustomCameraController extends GetxController {
       // A. Lat/Long (Left)
       textPainter.text = TextSpan(
         text:
-            "Lat: ${latitude.value.toStringAsFixed(6)}, Long: ${longitude.value.toStringAsFixed(6)}",
-        style: TextStyle(color: Colors.white, fontSize: regularFontSize),
+            "Lat: ${latitude.value.toStringAsFixed(3)}, Long: ${longitude.value.toStringAsFixed(3)}",
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: regularFontSize,
+          fontWeight: FontWeight.bold,
+        ),
       );
       textPainter.layout(maxWidth: (cardRect.width - (padding * 2)) * 0.6);
       textPainter.paint(canvas, Offset(cardRect.left + padding, currentY));

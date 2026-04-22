@@ -1,8 +1,14 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:image/image.dart' as img;
+
 import 'package:appex_lead/component/custom_button.dart';
 import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/auth/login.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -251,4 +257,87 @@ void deleteAccountPopup(BuildContext context) {
       ],
     ),
   );
+}
+
+// enum Resolution { low, medium, high }
+
+// handleResolutionDynamicaaly(String resolution) {
+//   switch (resolution) {
+//     case "low":
+//       return ResolutionPreset.low;
+//     case "medium":
+//       return ResolutionPreset.medium;
+//     case "high":
+//       return ResolutionPreset.high;
+//     default:
+//       return ResolutionPreset.low;
+//   }
+// }
+
+Future<File?> compressTo1MB(File file) async {
+  const int targetSize = 1024 * 1024; // 1MB
+
+  int quality = 70;
+  int minWidth = 1920;
+  int minHeight = 1080;
+
+  // If it's a PNG file (like our processed image), use the robust Dart image package 
+  // to avoid native platform limitations in FlutterImageCompress.
+  if (file.path.toLowerCase().endsWith('.png')) {
+    final bytes = await file.readAsBytes();
+    img.Image? decodedImage = img.decodeImage(bytes);
+    if (decodedImage == null) return null;
+
+    int currentQuality = 80;
+    List<int> jpgBytes = img.encodeJpg(decodedImage, quality: currentQuality);
+
+    // Loop until we reach <1MB
+    while (jpgBytes.length > targetSize && currentQuality > 10) {
+      currentQuality -= 10;
+      
+      // If quality is getting too low, downscale the resolution
+      if (currentQuality < 40) {
+        currentQuality = 80;
+        final newWidth = (decodedImage!.width * 0.8).toInt();
+        decodedImage = img.copyResize(decodedImage, width: newWidth);
+      }
+      
+      jpgBytes = img.encodeJpg(decodedImage!, quality: currentQuality);
+    }
+
+    final compressedFile = File('${file.path}_compressed.jpg');
+    await compressedFile.writeAsBytes(jpgBytes);
+    return compressedFile;
+  }
+
+  // If it's a regular camera JPG, use FlutterImageCompress for speed.
+  Uint8List? result;
+  do {
+    result = await FlutterImageCompress.compressWithFile(
+      file.absolute.path,
+      quality: quality,
+      minWidth: minWidth,
+      minHeight: minHeight,
+      format: CompressFormat.jpeg,
+    );
+
+    if (result == null) return null;
+
+    if (result.lengthInBytes <= targetSize) break;
+
+    // Reduce quality first
+    quality -= 10;
+
+    // If quality too low, reduce resolution
+    if (quality < 40) {
+      quality = 80;
+      minWidth = (minWidth * 0.8).toInt();
+      minHeight = (minHeight * 0.8).toInt();
+    }
+  } while (result.lengthInBytes > targetSize);
+
+  final compressedFile = File('${file.path}_compressed.jpg');
+  await compressedFile.writeAsBytes(result);
+
+  return compressedFile;
 }
