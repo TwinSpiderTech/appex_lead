@@ -9,6 +9,7 @@ import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';
 import 'package:appex_lead/view/form/forms.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
+import 'package:appex_lead/view/leads/pending_visits_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -85,6 +86,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     onTap: () {
                       Get.back();
                       Get.to(() => const InteractionScreen());
+                    },
+                  ),
+                  DrawerItem(
+                    title: dash.pendingVisitsTitle.value,
+                    icon: HugeIcons.strokeRoundedCalendar01,
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => const PendingVisitsScreen());
                     },
                   ),
                   const SizedBox(height: 16),

@@ -148,6 +148,7 @@ class DashController extends GetxController {
   RxString mainMenuTitle = "Main Menu".obs;
   RxString leadsTitle = "My Setups".obs;
   RxString interactionsTitle = "My Visits".obs;
+  RxString pendingVisitsTitle = "Pending Visit".obs;
   RxString draftMenuTitle = "Drafts".obs;
   RxString draftLeadTitle = "Setups".obs;
   RxString draftInteractionTitle = "Visits".obs;
@@ -215,6 +216,10 @@ class DashController extends GetxController {
           interactionsTitle.value = mainItems['my_interactions'];
           updateInteractionsTitle(interactionsTitle.value);
         }
+        if (mainItems['pending_visits'] != null) {
+          pendingVisitsTitle.value = mainItems['pending_visits'];
+          updatePendingVisitsTitle(pendingVisitsTitle.value);
+        }
 
         if (draftsData['title'] != null) {
           draftMenuTitle.value = draftsData['title'];
@@ -242,7 +247,9 @@ class DashController extends GetxController {
   }
 
   Future<void> _loadTicketsFromLocal() async {
-    final localTickets = await getDataFromPrefsDecoded(key: "dashboard_tickets");
+    final localTickets = await getDataFromPrefsDecoded(
+      key: "dashboard_tickets",
+    );
     if (localTickets != null && localTickets is Map) {
       tickets.value = Map<String, dynamic>.from(localTickets);
     }

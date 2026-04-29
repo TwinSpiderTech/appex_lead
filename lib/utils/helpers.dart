@@ -542,6 +542,7 @@ String upcomingInteractionSubTitleKey = 'upcoming_interaction_subtitle';
 String mainMenuTitleKey = 'main_menu_title';
 String leadsTitleKey = 'leads_title';
 String interactionsTitleKey = 'interactions_title';
+String pendingVisitsTitleKey = 'pending_visits_title';
 String draftMenuTitleKey = 'draft_menu_title';
 String draftLeadTitleKey = 'draft_lead_title';
 String draftInteractionTitleKey = 'draft_interaction_title';
@@ -625,6 +626,15 @@ Future<String> getInteractionsTitle() async =>
     await getData(key: interactionsTitleKey, type: 'string') ?? "My Visits";
 updateInteractionsTitle(String title) async => await setDataToPrefs(
   key: interactionsTitleKey,
+  value: title,
+  type: 'string',
+);
+
+Future<String> getPendingVisitsTitle() async =>
+    await getData(key: pendingVisitsTitleKey, type: 'string') ??
+    "Pending Visits";
+updatePendingVisitsTitle(String title) async => await setDataToPrefs(
+  key: pendingVisitsTitleKey,
   value: title,
   type: 'string',
 );

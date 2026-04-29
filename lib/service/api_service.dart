@@ -149,6 +149,7 @@ class ApiServices {
     int pageNo, {
     String? status,
     String? search,
+    Map<String, dynamic>? extraParams,
   }) async {
     try {
       String url =
@@ -158,6 +159,11 @@ class ApiServices {
       }
       if (search != null && search.isNotEmpty) {
         url += "&search=$search";
+      }
+      if (extraParams != null && extraParams.isNotEmpty) {
+        extraParams.forEach((key, value) {
+          url += "&$key=$value";
+        });
       }
       print(url);
       final response = await _dio.get(url);

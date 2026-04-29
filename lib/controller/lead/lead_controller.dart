@@ -22,12 +22,19 @@ class LeadController extends GetxController
   RxString leadEndPoint = "".obs;
   late TabController tabController;
   // Tab-based states
-  List<Map<String, dynamic>>? pendingLeads, ongoingLeads, closedLeads;
-  int pendingPage = 1, ongoingPage = 1, closedPage = 1;
-  bool pendingHasNext = false, ongoingHasNext = false, closedHasNext = false;
+  List<Map<String, dynamic>>? pendingLeads,
+      ongoingLeads,
+      closedLeads,
+      physicalVerificationPendingLeads;
+  int pendingPage = 1, ongoingPage = 1, closedPage = 1, pvpPage = 1;
+  bool pendingHasNext = false,
+      ongoingHasNext = false,
+      closedHasNext = false,
+      pvpHasNext = false;
   RxBool pendingLoading = false.obs,
       ongoingLoading = false.obs,
-      closedLoading = false.obs;
+      closedLoading = false.obs,
+      physicalVerificationPendingLoading = false.obs;
 
   bool isLoaded = false;
   String complaintNO = '';
@@ -81,7 +88,11 @@ class LeadController extends GetxController
     }
   }
 
-  Future<void> getLeads({bool reset = false, String? status}) async {
+  Future<void> getLeads({
+    bool reset = false,
+    String? status,
+    Map<String, dynamic>? extraParams,
+  }) async {
     int currentPage;
     String? searchQuery;
     if (status == overDueKey) {
@@ -99,6 +110,12 @@ class LeadController extends GetxController
       currentPage = closedPage;
       searchQuery = closedSearchCont.text;
       closedLoading.value = true;
+    } else if (extraParams != null &&
+        extraParams['ownership_status'] == 'physical_verification_pending') {
+      if (reset) pvpPage = 1;
+      currentPage = pvpPage;
+      searchQuery = pendingSearchCont.text;
+      physicalVerificationPendingLoading.value = true;
     } else {
       loading.value = true;
       return;
@@ -107,12 +124,13 @@ class LeadController extends GetxController
     update();
 
     log(
-      "Fetching Leads for status: $status, page: $currentPage, search: $searchQuery",
+      "Fetching Leads for status: $status, page: $currentPage, search: $searchQuery, extraParams: $extraParams",
     );
     final response = await api.getLeads(
       currentPage,
       status: status,
       search: searchQuery,
+      extraParams: extraParams,
     );
     log("Leads Response for $status: $response");
 
@@ -137,6 +155,10 @@ class LeadController extends GetxController
       } else if (status == completedKey) {
         closedLeads = fetchedHistory;
         closedHasNext = hasNext;
+      } else if (extraParams != null &&
+          extraParams['ownership_status'] == 'physical_verification_pending') {
+        physicalVerificationPendingLeads = fetchedHistory;
+        pvpHasNext = hasNext;
       }
     } else {
       if (status == overDueKey) {
@@ -155,6 +177,7 @@ class LeadController extends GetxController
     pendingLoading.value = false;
     ongoingLoading.value = false;
     closedLoading.value = false;
+    physicalVerificationPendingLoading.value = false;
     update();
   }
 
@@ -198,11 +221,15 @@ class LeadController extends GetxController
 
   List<Map<String, dynamic>> complaintsCategories = [];
 
-  void onSearchChanged(String value, String status) {
+  void onSearchChanged(
+    String value,
+    String? status, {
+    Map<String, dynamic>? extraParams,
+  }) {
     _searchTimer?.cancel();
     _searchTimer = Timer(const Duration(milliseconds: 500), () {
       if (value.length >= 3 || value.isEmpty) {
-        getLeads(reset: true, status: status);
+        getLeads(reset: true, status: status, extraParams: extraParams);
       }
     });
   }
