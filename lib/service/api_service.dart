@@ -402,4 +402,16 @@ class ApiServices {
       return null;
     }
   }
+
+  Future<Map<String, dynamic>?> syncRoute(
+    Map<String, dynamic> routeData,
+  ) async {
+    try {
+      final response = await postData(Urls.syncRouteURL, data: routeData);
+      return response;
+    } catch (e) {
+      log('Error syncing route: $e');
+      return null;
+    }
+  }
 }

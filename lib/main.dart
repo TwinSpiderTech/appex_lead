@@ -16,6 +16,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:appex_lead/controller/theme/theme_controller.dart';
 import 'package:appex_lead/service/api_service.dart';
+import 'package:appex_lead/service/background_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -54,6 +55,9 @@ void main() async {
 
   await Firebase.initializeApp();
   await services.initLocalNotificationOnStart();
+  
+  // Initialize Route Tracking Service
+  await TrackingService.initializeService();
   FirebaseMessaging.instance.getInitialMessage().then((message) {
     if (message != null) {
       services.handleNavigation(message);
@@ -64,19 +68,7 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
-  // Request App Tracking Transparency authorization
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    try {
-      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      if (status == TrackingStatus.notDetermined) {
-        // Wait for a moment to ensure the app is fully resumed
-        await Future.delayed(const Duration(milliseconds: 1000));
-        await AppTrackingTransparency.requestTrackingAuthorization();
-      }
-    } catch (e) {
-      debugPrint("ATT Error: $e");
-    }
-  });
+  // ATT request moved to SplashScreen for better lifecycle management
 
   // Initialize Core Services & Controllers
   Get.put(ColorManager());

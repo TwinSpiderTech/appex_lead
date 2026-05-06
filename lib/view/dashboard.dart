@@ -14,6 +14,7 @@ import 'package:appex_lead/view/interaction/interaction_form.dart';
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/form/form_details.dart';
+import 'package:appex_lead/view/tracking/route_history.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -692,6 +693,12 @@ class _DashboardState extends State<Dashboard> {
           "subtitle": "",
           "icon": HugeIcons.strokeRoundedFile02,
           "screen": InteractionDraftsScreen(),
+        },
+        'route_tracking': {
+          "title": "Route Tracking",
+          "subtitle": "Track your movement",
+          "icon": HugeIcons.strokeRoundedLocation01,
+          "screen": const RouteHistoryScreen(),
         },
       };
       final ticketKeys = controller.tickets.keys.toList();
