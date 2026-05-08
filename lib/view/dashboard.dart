@@ -6,6 +6,7 @@ import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/device_id_helper.dart';
 import 'package:appex_lead/utils/helpers.dart';
+import 'package:appex_lead/view/app_settings.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
 import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';

@@ -115,6 +115,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  _buildSectionHeader("SETTINGS"),
+                  DrawerItem(
+                    title: "Settings",
+                    icon: HugeIcons.strokeRoundedSettings03,
+                    onTap: () => Get.to(() => const AppSettings()),
+                  ),
                   if (kDebugMode) ...[
                     _buildSectionHeader("SYSTEM"),
                     DrawerItem(
@@ -122,12 +128,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       icon: HugeIcons.strokeRoundedDatabase01,
                       onTap: () => Get.to(() => const SharePrefScreen()),
                     ),
-                    DrawerItem(
-                      title: "Settings",
-                      icon: HugeIcons.strokeRoundedSettings03,
-                      onTap: () => Get.to(() => const AppSettings()),
-                    ),
-
                     if (token.isNotEmpty)
                       DrawerItem(
                         title: "Form Templates",

@@ -90,6 +90,12 @@ class DbHelper {
     return await db.query('routes', orderBy: 'start_time DESC');
   }
 
+  Future<Map<String, dynamic>?> getRouteById(int routeId) async {
+    final db = await database;
+    final results = await db.query('routes', where: 'id = ?', whereArgs: [routeId]);
+    return results.isNotEmpty ? results.first : null;
+  }
+
   Future<List<Map<String, dynamic>>> getPointsForRoute(int routeId) async {
     final db = await database;
     return await db.query('route_points',

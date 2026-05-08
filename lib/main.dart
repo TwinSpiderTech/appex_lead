@@ -16,7 +16,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:appex_lead/controller/theme/theme_controller.dart';
 import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/service/background_service.dart';
+import 'package:appex_lead/controller/tracking/route_controller.dart';
+// import 'package:appex_lead/service/background_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -57,7 +58,8 @@ void main() async {
   await services.initLocalNotificationOnStart();
   
   // Initialize Route Tracking Service
-  await TrackingService.initializeService();
+  // Initialize Route Tracking Service
+  await RouteController.initializeService();
   FirebaseMessaging.instance.getInitialMessage().then((message) {
     if (message != null) {
       services.handleNavigation(message);
@@ -73,6 +75,7 @@ void main() async {
   // Initialize Core Services & Controllers
   Get.put(ColorManager());
   Get.put(NotificationController());
+  Get.put(RouteController());
   Get.lazyPut(() => DashController(), fenix: true);
 
   // await services.forgroundMessage();

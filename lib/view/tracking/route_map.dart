@@ -101,7 +101,7 @@ class _RouteMapScreenState extends State<RouteMapScreen> {
                     TileLayer(
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.appex.lead',
+                      userAgentPackageName: 'com.twinspider.appex_lead',
                     ),
                     PolylineLayer(
                       polylines: [
@@ -141,7 +141,7 @@ class _RouteMapScreenState extends State<RouteMapScreen> {
                     ),
                   ],
                 ),
-                _buildStatsOverlay(),
+                // _buildStatsOverlay(),
               ],
             ),
     );
