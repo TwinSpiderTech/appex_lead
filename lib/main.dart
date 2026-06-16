@@ -56,7 +56,7 @@ void main() async {
 
   await Firebase.initializeApp();
   await services.initLocalNotificationOnStart();
-  
+
   // Initialize Route Tracking Service
   // Initialize Route Tracking Service
   await RouteController.initializeService();
@@ -81,7 +81,7 @@ void main() async {
   // await services.forgroundMessage();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown, 
+    DeviceOrientation.portraitDown,
   ]);
   colorManager.loadThemeFromPreferences();
   AppInfo.init();

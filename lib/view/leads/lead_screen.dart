@@ -9,6 +9,7 @@ import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:appex_lead/component/summary_card.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -34,6 +35,7 @@ class _LeadScreenState extends State<LeadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return GetBuilder<LeadController>(
       init: LeadController(),
       builder: (cont) {
@@ -110,81 +112,88 @@ class _LeadScreenState extends State<LeadScreen> {
             ],
           ),
           floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
-          floatingActionButton: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 32),
-            child: Column(
-              spacing: 4,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  height: 50,
-                  child: GetBuilder<LeadController>(
-                    builder: (c) {
-                      int currentPage = 1;
-                      bool hasNext = false;
-                      bool isLoading = false;
+              FloatingActionButtonLocation.miniCenterDocked,
+          floatingActionButton: keyboardVisible
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 32,
+                  ),
+                  child: Column(
+                    spacing: 4,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        height: 50,
+                        child: GetBuilder<LeadController>(
+                          builder: (c) {
+                            int currentPage = 1;
+                            bool hasNext = false;
+                            bool isLoading = false;
 
-                      if (c.tabController.index == 0) {
-                        currentPage = c.ongoingPage;
-                        hasNext = c.ongoingHasNext;
-                        isLoading = c.ongoingLoading.value;
-                      } else if (c.tabController.index == 1) {
-                        currentPage = c.pendingPage;
-                        hasNext = c.pendingHasNext;
-                        isLoading = c.pendingLoading.value;
-                      } else if (c.tabController.index == 2) {
-                        currentPage = c.closedPage;
-                        hasNext = c.closedHasNext;
-                        isLoading = c.closedLoading.value;
-                      }
+                            if (c.tabController.index == 0) {
+                              currentPage = c.ongoingPage;
+                              hasNext = c.ongoingHasNext;
+                              isLoading = c.ongoingLoading.value;
+                            } else if (c.tabController.index == 1) {
+                              currentPage = c.pendingPage;
+                              hasNext = c.pendingHasNext;
+                              isLoading = c.pendingLoading.value;
+                            } else if (c.tabController.index == 2) {
+                              currentPage = c.closedPage;
+                              hasNext = c.closedHasNext;
+                              isLoading = c.closedLoading.value;
+                            }
 
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(
-                            width: 100,
-                            child: isLoading
-                                ? const SizedBox()
-                                : currentPage > 1
-                                ? CustomButton(
-                                    disabled: currentPage <= 1,
-                                    label: "Previous",
-                                    onTap: () => {
-                                      currentPage > 1 ? c.previousPage() : null,
-                                    },
-                                  )
-                                : null,
-                          ),
-                          if (currentPage.toString() != '1')
-                            Text(
-                              "Page $currentPage",
-                              style: primaryTextStyle.copyWith(
-                                color: colorManager.textColor,
-                              ),
-                            ),
-                          SizedBox(
-                            width: 100,
-                            child: isLoading
-                                ? const SizedBox()
-                                : hasNext
-                                ? CustomButton(
-                                    disabled: !hasNext,
-                                    label: "Next",
-                                    onTap: () => {
-                                      hasNext ? c.nextPage() : null,
-                                    },
-                                  )
-                                : null,
-                          ),
-                        ],
-                      );
-                    },
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width: 100,
+                                  child: isLoading
+                                      ? const SizedBox()
+                                      : (kDebugMode || currentPage > 1)
+                                      ? CustomButton(
+                                          disabled: currentPage <= 1,
+                                          label: "Previous",
+                                          onTap: () => {
+                                            currentPage > 1
+                                                ? c.previousPage()
+                                                : null,
+                                          },
+                                        )
+                                      : null,
+                                ),
+                                if (kDebugMode || currentPage.toString() != '1')
+                                  Text(
+                                    "Page $currentPage",
+                                    style: primaryTextStyle.copyWith(
+                                      color: colorManager.textColor,
+                                    ),
+                                  ),
+                                SizedBox(
+                                  width: 100,
+                                  child: isLoading
+                                      ? const SizedBox()
+                                      : (kDebugMode || hasNext)
+                                      ? CustomButton(
+                                          disabled: !hasNext,
+                                          label: "Next",
+                                          onTap: () => {
+                                            hasNext ? c.nextPage() : null,
+                                          },
+                                        )
+                                      : null,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
         );
       },
     );

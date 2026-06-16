@@ -32,8 +32,8 @@ android {
         applicationId = "com.twinspider.appex_lead"
         minSdk = 24
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.3"
+        versionCode = 8
+        versionName = "1.0.4"
     }
 
     signingConfigs {

@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:appex_lead/component/quick_actions_card.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/interaction/interaction_form_controller.dart';
 import 'package:appex_lead/main.dart';
@@ -242,7 +243,7 @@ class _InteractionDetailsLayoutState extends State<InteractionDetailsLayout> {
                                 ),
                               ),
                             const Divider(height: 32),
-                            _buildQuickActions(data!),
+                            QuickActionsCard(data :data!, controller: controller,),
                           ],
                         ),
                       ),
@@ -431,95 +432,95 @@ class _InteractionDetailsLayoutState extends State<InteractionDetailsLayout> {
     );
   }
 
-  Widget _buildQuickActions(Map<String, dynamic> interaction) {
-    final phone =
-        controller.formValues['mobile_no'] ??
-        controller.formValues['phone_no'] ??
-        interaction['mobile_no'];
-    final gps =
-        controller.formValues['gps_points'] ?? interaction['gps_points'];
-    final String? lat = gps is Map ? gps['latitude']?.toString() : null;
-    final String? lng = gps is Map ? gps['longitude']?.toString() : null;
+  // Widget buildQuickActions(Map<String, dynamic> interaction) {
+  //   final phone =
+  //       controller.formValues['mobile_no'] ??
+  //       controller.formValues['phone_no'] ??
+  //       interaction['mobile_no'];
+  //   final gps =
+  //       controller.formValues['gps_points'] ?? interaction['gps_points'];
+  //   final String? lat = gps is Map ? gps['latitude']?.toString() : null;
+  //   final String? lng = gps is Map ? gps['longitude']?.toString() : null;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        if (phone != null && phone.toString().trim().isNotEmpty)
-          _actionButton(
-            icon: HugeIcons.strokeRoundedCall,
-            label: "Call",
-            color: colorManager.primaryColor,
-            onTap: () => _launchUrl("tel:$phone"),
-          ),
-        _actionButton(
-          icon: HugeIcons.strokeRoundedWhatsapp,
-          label: "WhatsApp",
-          color: Colors.green,
-          onTap: () => _launchWhatsapp(phone?.toString() ?? ""),
-        ),
-        if (lat != null && lng != null)
-          _actionButton(
-            icon: HugeIcons.strokeRoundedLocation01,
-            label: "Location",
-            color: Colors.blue,
-            onTap: () => _launchUrl(
-              "https://www.google.com/maps/search/?api=1&query=$lat,$lng",
-            ),
-          ),
-      ],
-    );
-  }
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //     children: [
+  //       if (phone != null && phone.toString().trim().isNotEmpty)
+  //         _actionButton(
+  //           icon: HugeIcons.strokeRoundedCall,
+  //           label: "Call",
+  //           color: colorManager.primaryColor,
+  //           onTap: () => _launchUrl("tel:$phone"),
+  //         ),
+  //       _actionButton(
+  //         icon: HugeIcons.strokeRoundedWhatsapp,
+  //         label: "WhatsApp",
+  //         color: Colors.green,
+  //         onTap: () => _launchWhatsapp(phone?.toString() ?? ""),
+  //       ),
+  //       if (lat != null && lng != null)
+  //         _actionButton(
+  //           icon: HugeIcons.strokeRoundedLocation01,
+  //           label: "Location",
+  //           color: Colors.blue,
+  //           onTap: () => _launchUrl(
+  //             "https://www.google.com/maps/search/?api=1&query=$lat,$lng",
+  //           ),
+  //         ),
+  //     ],
+  //   );
+  // }
 
-  Widget _actionButton({
-    required icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: HugeIcon(icon: icon, color: color, size: 26),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: colorManager.textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _actionButton({
+  //   required icon,
+  //   required String label,
+  //   required Color color,
+  //   required VoidCallback onTap,
+  // }) {
+  //   return InkWell(
+  //     onTap: onTap,
+  //     child: Column(
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(14),
+  //           decoration: BoxDecoration(
+  //             color: color.withOpacity(0.08),
+  //             borderRadius: BorderRadius.circular(16),
+  //           ),
+  //           child: HugeIcon(icon: icon, color: color, size: 26),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           label,
+  //           style: TextStyle(
+  //             color: colorManager.textColor,
+  //             fontSize: 12,
+  //             fontWeight: FontWeight.w600,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      log("Error launching URL: $e");
-    }
-  }
+  // Future<void> _launchUrl(String url) async {
+  //   final uri = Uri.parse(url);
+  //   try {
+  //     if (await canLaunchUrl(uri)) {
+  //       await launchUrl(uri, mode: LaunchMode.externalApplication);
+  //     }
+  //   } catch (e) {
+  //     log("Error launching URL: $e");
+  //   }
+  // }
 
-  Future<void> _launchWhatsapp(String phoneNumber) async {
-    String number = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    if (number.startsWith("0")) {
-      number = "92${number.substring(1)}";
-    }
-    await _launchUrl("https://wa.me/$number");
-  }
+  // Future<void> _launchWhatsapp(String phoneNumber) async {
+  //   String number = phoneNumber.replaceAll(RegExp(r'\D'), '');
+  //   if (number.startsWith("0")) {
+  //     number = "92${number.substring(1)}";
+  //   }
+  //   await _launchUrl("https://wa.me/$number");
+  // }
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
