@@ -2,9 +2,9 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
 // import 'dart:math';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/utils/urls.dart';
+import 'package:field_force/utils/custom_toast_messages.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/utils/urls.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
@@ -128,7 +128,7 @@ class GenericFormController extends GetxController {
     }
   }
 
-Future<void> _applyTemplate(Map<String, dynamic> data) async {
+  Future<void> _applyTemplate(Map<String, dynamic> data) async {
     prettyPrint(data);
     try {
       formModel = FormModel.fromJson(data);
@@ -184,7 +184,7 @@ Future<void> _applyTemplate(Map<String, dynamic> data) async {
         flushBuffer(); // Final flush
       }
       prettyPrint(groupList);
-      
+
       fieldsData.assignAll(flatFieldList);
       formGroupsData.assignAll(groupList);
       // prettyPrint(formGroupsData);

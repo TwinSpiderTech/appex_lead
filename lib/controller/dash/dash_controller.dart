@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:appex_lead/controller/lead/lead_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/utils/urls.dart';
+import 'package:field_force/controller/lead/lead_controller.dart';
+import 'package:field_force/main.dart';
+import 'package:field_force/utils/auth_service.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/utils/urls.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -184,7 +184,10 @@ class DashController extends GetxController {
           'title': 'Route Tracking',
           'subtitle': 'Track movement',
         };
-        await setDataToPrefsEncoded(key: 'dashboard_tickets', value: tickets.value);
+        await setDataToPrefsEncoded(
+          key: 'dashboard_tickets',
+          value: tickets.value,
+        );
         print(tickets.value);
 
         if (listItems['upcoming_interactions'] != null) {

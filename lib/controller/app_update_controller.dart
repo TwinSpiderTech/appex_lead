@@ -1,8 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:field_force/service/api_service.dart';
+import 'package:field_force/utils/helpers.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:appex_lead/service/db_helper.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:field_force/service/db_helper.dart';
+import 'package:field_force/utils/custom_toast_messages.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -25,7 +25,7 @@ class RouteController extends GetxController {
 
   void _setupServiceListeners() {
     final service = FlutterBackgroundService();
-    
+
     service.on('started').listen((event) async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_tracking_manual_enabled', true);
@@ -42,9 +42,10 @@ class RouteController extends GetxController {
   Future<void> _checkServiceStatus() async {
     final service = FlutterBackgroundService();
     final prefs = await SharedPreferences.getInstance();
-    bool shouldBeTracking = prefs.getBool('is_tracking_manual_enabled') ?? false;
+    bool shouldBeTracking =
+        prefs.getBool('is_tracking_manual_enabled') ?? false;
     bool running = await service.isRunning();
-    
+
     if (shouldBeTracking && !running) {
       // User wants tracking, but service is not running (likely app was killed or device restarted)
       print("RouteController: Auto-restarting tracking service...");
@@ -113,7 +114,7 @@ class RouteController extends GetxController {
   static void onServiceStart(ServiceInstance service) async {
     WidgetsFlutterBinding.ensureInitialized();
     DartPluginRegistrant.ensureInitialized();
-    
+
     final db = DbHelper();
     int? routeId;
     StreamSubscription<Position>? positionStream;
@@ -129,7 +130,7 @@ class RouteController extends GetxController {
     // Start tracking logic
     try {
       print("Background Service: Initializing tracking...");
-      
+
       // Check if there is an existing active route to resume
       final activeRoutes = await db.getActiveRoutes();
       if (activeRoutes.isNotEmpty) {
@@ -139,46 +140,49 @@ class RouteController extends GetxController {
         routeId = await db.startNewRoute();
         print("Background Service: Started new route #$routeId");
       }
-      
+
       service.invoke('started', {"route_id": routeId});
 
       // Optimized settings for background
-      positionStream = Geolocator.getPositionStream(
-        locationSettings: AndroidSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-          forceLocationManager: true, // More stable in background for some devices
-          intervalDuration: const Duration(seconds: 5),
-          foregroundNotificationConfig: const ForegroundNotificationConfig(
-            notificationText: "Route tracking is running in background",
-            notificationTitle: "Appex Tracking",
-            enableWakeLock: true,
-          ),
-        ),
-      ).listen(
-        (Position position) async {
-          await db.insertPoint({
-            'route_id': routeId,
-            'latitude': position.latitude,
-            'longitude': position.longitude,
-            'timestamp': DateTime.now().toIso8601String(),
-            'speed': position.speed,
-            'accuracy': position.accuracy,
-          });
+      positionStream =
+          Geolocator.getPositionStream(
+            locationSettings: AndroidSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 10,
+              forceLocationManager:
+                  true, // More stable in background for some devices
+              intervalDuration: const Duration(seconds: 5),
+              foregroundNotificationConfig: const ForegroundNotificationConfig(
+                notificationText: "Route tracking is running in background",
+                notificationTitle: "Appex Tracking",
+                enableWakeLock: true,
+              ),
+            ),
+          ).listen(
+            (Position position) async {
+              await db.insertPoint({
+                'route_id': routeId,
+                'latitude': position.latitude,
+                'longitude': position.longitude,
+                'timestamp': DateTime.now().toIso8601String(),
+                'speed': position.speed,
+                'accuracy': position.accuracy,
+              });
 
-          if (service is AndroidServiceInstance) {
-            if (await service.isForegroundService()) {
-              service.setForegroundNotificationInfo(
-                title: "Route Tracking Active",
-                content: "Recorded: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}",
-              );
-            }
-          }
-        },
-        onError: (e) {
-          print("Background Service: Stream Error: $e");
-        },
-      );
+              if (service is AndroidServiceInstance) {
+                if (await service.isForegroundService()) {
+                  service.setForegroundNotificationInfo(
+                    title: "Route Tracking Active",
+                    content:
+                        "Recorded: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}",
+                  );
+                }
+              }
+            },
+            onError: (e) {
+              print("Background Service: Stream Error: $e");
+            },
+          );
     } catch (e) {
       print("Background Service: Fatal Error: $e");
       service.stopSelf();
@@ -204,7 +208,7 @@ class RouteController extends GetxController {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
-      
+
       bool started = await service.startService();
       if (started) {
         await prefs.setBool('is_tracking_manual_enabled', true);

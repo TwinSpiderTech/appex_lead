@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/dashboard.dart';
+import 'package:field_force/main.dart';
+import 'package:field_force/utils/auth_service.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/view/dashboard.dart';
 
 class AuthController extends GetxController {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -55,6 +55,7 @@ class AuthController extends GetxController {
       log(e.toString());
     }
   }
+
   register({String? email, String? password, String? name}) async {
     try {
       if (registerFormKey.currentState!.validate() || kDebugMode) {

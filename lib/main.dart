@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/notification_controller.dart';
-import 'package:appex_lead/service/app_infor_service.dart';
-import 'package:appex_lead/service/notificaion_services.dart';
-import 'package:appex_lead/utils/app_routes.dart';
+import 'package:field_force/controller/dash/dash_controller.dart';
+import 'package:field_force/controller/notification_controller.dart';
+import 'package:field_force/service/app_infor_service.dart';
+import 'package:field_force/service/notificaion_services.dart';
+import 'package:field_force/utils/app_routes.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,10 +14,10 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:appex_lead/controller/theme/theme_controller.dart';
-import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/controller/tracking/route_controller.dart';
-// import 'package:appex_lead/service/background_service.dart';
+import 'package:field_force/controller/theme/theme_controller.dart';
+import 'package:field_force/service/api_service.dart';
+import 'package:field_force/controller/tracking/route_controller.dart';
+// import 'package:field_force/service/background_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -125,7 +125,7 @@ class _MyAppState extends State<MyApp> {
       opaqueRoute: true,
       popGesture: true,
       debugShowCheckedModeBanner: false,
-      title: 'Appex Field Force',
+      title: 'Field Force',
       theme: ThemeData(
         dialogBackgroundColor: colorManager.bgDark,
         fontFamily: 'SF Pro',

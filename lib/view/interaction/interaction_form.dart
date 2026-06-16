@@ -1,10 +1,10 @@
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/controller/interaction/interaction_form_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/constants.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/form/form_field_widgets.dart';
+import 'package:field_force/component/custom_appbar.dart';
+import 'package:field_force/component/custom_button.dart';
+import 'package:field_force/controller/interaction/interaction_form_controller.dart';
+import 'package:field_force/main.dart';
+import 'package:field_force/utils/constants.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/view/form/form_field_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart' as Geolocator;

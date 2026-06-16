@@ -1,12 +1,12 @@
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/utils/constants.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/splash_screen.dart';
+import 'package:field_force/component/custom_button.dart';
+import 'package:field_force/component/custom_input_field.dart';
+import 'package:field_force/utils/constants.dart';
+import 'package:field_force/utils/custom_toast_messages.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/view/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/main.dart';
+import 'package:field_force/component/custom_appbar.dart';
+import 'package:field_force/main.dart';
 import 'package:get/get.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';

@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDVsLVEFY88EMSyBbIfb2AG4_AxBFnY5Kk',
-    appId: '1:494118862427:android:62f960cab637a32f4f097e',
+    appId: '1:494118862427:android:27e87c6574c960f04f097e',
     messagingSenderId: '494118862427',
     projectId: 'appex-trading',
     storageBucket: 'appex-trading.firebasestorage.app',

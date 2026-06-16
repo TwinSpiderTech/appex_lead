@@ -1,13 +1,13 @@
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/controller/auth_controller.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:field_force/component/custom_appbar.dart';
+import 'package:field_force/component/custom_button.dart';
+import 'package:field_force/component/custom_input_field.dart';
+import 'package:field_force/controller/auth_controller.dart';
+import 'package:field_force/utils/custom_toast_messages.dart';
+import 'package:field_force/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:appex_lead/main.dart'; // Ensure error is avoided
+import 'package:field_force/main.dart'; // Ensure error is avoided
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

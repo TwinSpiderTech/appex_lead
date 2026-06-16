@@ -1,25 +1,25 @@
 import 'dart:developer';
 
-import 'package:appex_lead/controller/theme/theme_controller.dart';
-import 'package:appex_lead/service/firebase_service.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:field_force/controller/theme/theme_controller.dart';
+import 'package:field_force/service/firebase_service.dart';
+import 'package:field_force/utils/custom_toast_messages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/component/custom_drawer.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/controller/auth_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/constants.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/dashboard.dart';
-import 'package:appex_lead/view/auth/register_screen.dart';
+import 'package:field_force/component/custom_appbar.dart';
+import 'package:field_force/component/custom_button.dart';
+import 'package:field_force/component/custom_drawer.dart';
+import 'package:field_force/component/custom_input_field.dart';
+import 'package:field_force/controller/auth_controller.dart';
+import 'package:field_force/main.dart';
+import 'package:field_force/service/api_service.dart';
+import 'package:field_force/utils/auth_service.dart';
+import 'package:field_force/utils/constants.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/view/dashboard.dart';
+import 'package:field_force/view/auth/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

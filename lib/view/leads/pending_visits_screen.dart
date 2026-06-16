@@ -1,14 +1,14 @@
 import 'dart:developer';
 
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/lead/lead_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/leads/lead_details_layout2.dart';
-import 'package:appex_lead/component/summary_card.dart';
+import 'package:field_force/component/custom_appbar.dart';
+import 'package:field_force/component/custom_button.dart';
+import 'package:field_force/component/custom_input_field.dart';
+import 'package:field_force/controller/dash/dash_controller.dart';
+import 'package:field_force/controller/lead/lead_controller.dart';
+import 'package:field_force/main.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/view/leads/lead_details_layout2.dart';
+import 'package:field_force/component/summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -56,11 +56,17 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
           body: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: CustomInputField(
                   isRequired: false,
                   hint: "Search Pending Visits...",
-                  prefixIcon: Icon(Icons.search, color: colorManager.dynamicColor),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: colorManager.dynamicColor,
+                  ),
                   controller: cont.pendingSearchCont,
                   onChanged: (val) {
                     cont.onSearchChanged(val, null, extraParams: extraParams);
@@ -78,14 +84,20 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
                       : RefreshIndicator(
                           color: colorManager.dynamicColor,
                           onRefresh: () async {
-                            await cont.getLeads(reset: true, extraParams: extraParams);
+                            await cont.getLeads(
+                              reset: true,
+                              extraParams: extraParams,
+                            );
                           },
                           child: ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             children: [
-                              if (cont.physicalVerificationPendingLeads != null &&
-                                  cont.physicalVerificationPendingLeads!.isEmpty)
+                              if (cont.physicalVerificationPendingLeads !=
+                                      null &&
+                                  cont
+                                      .physicalVerificationPendingLeads!
+                                      .isEmpty)
                                 SizedBox(
                                   height: 500,
                                   child: Center(
@@ -97,8 +109,11 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
                                     ),
                                   ),
                                 )
-                              else if (cont.physicalVerificationPendingLeads != null)
-                                ...cont.physicalVerificationPendingLeads!.map((l) {
+                              else if (cont.physicalVerificationPendingLeads !=
+                                  null)
+                                ...cont.physicalVerificationPendingLeads!.map((
+                                  l,
+                                ) {
                                   return SummaryCard(
                                     title: l['business_name'] ?? '',
                                     subtitle: toParameterize(
@@ -112,8 +127,10 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
                                           l['id'].toString();
                                       log("${l}");
                                       Get.to(
-                                        () =>
-                                            LeadDetailsLayout2(url: url, cont: cont),
+                                        () => LeadDetailsLayout2(
+                                          url: url,
+                                          cont: cont,
+                                        ),
                                       );
                                     },
                                   );
@@ -140,7 +157,8 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
                     builder: (c) {
                       int currentPage = c.pvpPage;
                       bool hasNext = c.pvpHasNext;
-                      bool isLoading = c.physicalVerificationPendingLoading.value;
+                      bool isLoading =
+                          c.physicalVerificationPendingLoading.value;
 
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -154,10 +172,11 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
                                     disabled: currentPage <= 1,
                                     label: "Previous",
                                     onTap: () => {
-                                      if (currentPage > 1) {
-                                         c.pvpPage--,
-                                         c.getLeads(extraParams: extraParams)
-                                      }
+                                      if (currentPage > 1)
+                                        {
+                                          c.pvpPage--,
+                                          c.getLeads(extraParams: extraParams),
+                                        },
                                     },
                                   )
                                 : null,
@@ -178,10 +197,11 @@ class _PendingVisitsScreenState extends State<PendingVisitsScreen> {
                                     disabled: !hasNext,
                                     label: "Next",
                                     onTap: () => {
-                                      if (hasNext) {
-                                         c.pvpPage++,
-                                         c.getLeads(extraParams: extraParams)
-                                      }
+                                      if (hasNext)
+                                        {
+                                          c.pvpPage++,
+                                          c.getLeads(extraParams: extraParams),
+                                        },
                                     },
                                   )
                                 : null,

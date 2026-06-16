@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:appex_lead/main.dart';
+import 'package:field_force/main.dart';
 
 class CustomSwitch extends StatefulWidget {
   final bool value;

@@ -1,11 +1,11 @@
 import 'dart:developer';
 
-import 'package:appex_lead/utils/device_id_helper.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:field_force/utils/device_id_helper.dart';
+import 'package:field_force/utils/helpers.dart';
 import 'package:dio/dio.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
-import 'package:appex_lead/utils/urls.dart';
+import 'package:field_force/utils/auth_service.dart';
+import 'package:field_force/utils/custom_toast_messages.dart';
+import 'package:field_force/utils/urls.dart';
 
 class ApiServices {
   final _dio = Dio();

@@ -1,10 +1,10 @@
-import 'package:appex_lead/controller/tracking/route_controller.dart';
-import 'package:appex_lead/service/db_helper.dart';
-import 'package:appex_lead/view/tracking/route_map.dart';
+import 'package:field_force/controller/tracking/route_controller.dart';
+import 'package:field_force/service/db_helper.dart';
+import 'package:field_force/view/tracking/route_map.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:appex_lead/main.dart';
+import 'package:field_force/main.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RouteHistoryScreen extends StatefulWidget {
@@ -109,11 +109,18 @@ class _RouteHistoryScreenState extends State<RouteHistoryScreen> {
               if (routeController.isTracking.value) {
                 return Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   color: Colors.green.withOpacity(0.1),
                   child: Row(
                     children: [
-                      const Icon(Icons.radio_button_checked, color: Colors.green, size: 16),
+                      const Icon(
+                        Icons.radio_button_checked,
+                        color: Colors.green,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         "Tracking in progress...",
@@ -133,23 +140,27 @@ class _RouteHistoryScreenState extends State<RouteHistoryScreen> {
               child: _isLoading && _routes.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _routes.where((r) => r['status'] == 'completed').isEmpty
-                      ? ListView(
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.2,
-                            ),
-                            _buildEmptyState(),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _routes.where((r) => r['status'] == 'completed').length,
-                          itemBuilder: (context, index) {
-                            final completedRoutes = _routes.where((r) => r['status'] == 'completed').toList();
-                            final route = completedRoutes[index];
-                            return _buildRouteCard(route);
-                          },
+                  ? ListView(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.2,
                         ),
+                        _buildEmptyState(),
+                      ],
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _routes
+                          .where((r) => r['status'] == 'completed')
+                          .length,
+                      itemBuilder: (context, index) {
+                        final completedRoutes = _routes
+                            .where((r) => r['status'] == 'completed')
+                            .toList();
+                        final route = completedRoutes[index];
+                        return _buildRouteCard(route);
+                      },
+                    ),
             ),
           ],
         ),

@@ -1,11 +1,11 @@
 import 'dart:developer';
-import 'package:appex_lead/component/quick_actions_card.dart';
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/interaction/interaction_form_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/form/form_field_widgets.dart';
+import 'package:field_force/component/quick_actions_card.dart';
+import 'package:field_force/controller/dash/dash_controller.dart';
+import 'package:field_force/controller/interaction/interaction_form_controller.dart';
+import 'package:field_force/main.dart';
+import 'package:field_force/model/lead_model.dart';
+import 'package:field_force/utils/helpers.dart';
+import 'package:field_force/view/form/form_field_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -243,7 +243,10 @@ class _InteractionDetailsLayoutState extends State<InteractionDetailsLayout> {
                                 ),
                               ),
                             const Divider(height: 32),
-                            QuickActionsCard(data :data!, controller: controller,),
+                            QuickActionsCard(
+                              data: data!,
+                              controller: controller,
+                            ),
                           ],
                         ),
                       ),
