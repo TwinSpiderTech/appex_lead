@@ -30,6 +30,7 @@ class _LeadScreenState extends State<LeadScreen> {
       cont.getLeads(reset: true, status: overDueKey);
       cont.getLeads(reset: true, status: dueTodayKey);
       cont.getLeads(reset: true, status: completedKey);
+      cont.getLeads(reset: true, status: allLeadsKey);
     });
   }
 
@@ -60,7 +61,16 @@ class _LeadScreenState extends State<LeadScreen> {
                         "Due Today",
                         style: primaryTextStyle.copyWith(
                           color: colorManager.whiteColor,
-                          fontSize: 16,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        "Upcoming",
+                        style: primaryTextStyle.copyWith(
+                          color: colorManager.whiteColor,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -69,7 +79,7 @@ class _LeadScreenState extends State<LeadScreen> {
                         "Overdue",
                         style: primaryTextStyle.copyWith(
                           color: colorManager.whiteColor,
-                          fontSize: 16,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -78,7 +88,7 @@ class _LeadScreenState extends State<LeadScreen> {
                         "Completed",
                         style: primaryTextStyle.copyWith(
                           color: colorManager.whiteColor,
-                          fontSize: 16,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -96,6 +106,12 @@ class _LeadScreenState extends State<LeadScreen> {
                 history: cont.ongoingLeads,
                 isLoading: cont.ongoingLoading,
                 status: dueTodayKey,
+              ),
+              HistoryTab(
+                cont: cont,
+                history: cont.allLeads,
+                isLoading: cont.allLeadsLoading,
+                status: allLeadsKey,
               ),
               HistoryTab(
                 cont: cont,
@@ -133,14 +149,19 @@ class _LeadScreenState extends State<LeadScreen> {
                             bool isLoading = false;
 
                             if (c.tabController.index == 0) {
+                              currentPage = c.pvpPage;
+                              hasNext = c.pvpHasNext;
+                              isLoading =
+                                  c.physicalVerificationPendingLoading.value;
+                            } else if (c.tabController.index == 1) {
                               currentPage = c.ongoingPage;
                               hasNext = c.ongoingHasNext;
                               isLoading = c.ongoingLoading.value;
-                            } else if (c.tabController.index == 1) {
+                            } else if (c.tabController.index == 2) {
                               currentPage = c.pendingPage;
                               hasNext = c.pendingHasNext;
                               isLoading = c.pendingLoading.value;
-                            } else if (c.tabController.index == 2) {
+                            } else if (c.tabController.index == 3) {
                               currentPage = c.closedPage;
                               hasNext = c.closedHasNext;
                               isLoading = c.closedLoading.value;

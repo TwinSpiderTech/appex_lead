@@ -671,6 +671,7 @@ updateUserName(String name) async {
 String overDueKey = 'overdue';
 String dueTodayKey = 'due_today';
 String completedKey = 'completed';
+String allLeadsKey = 'all';
 
 Future<bool> handleLocationAccess() async {
   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

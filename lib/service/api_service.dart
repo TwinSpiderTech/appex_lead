@@ -155,7 +155,9 @@ class ApiServices {
       String url =
           "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.leadsURL}?page=$pageNo";
       if (status != null && status.isNotEmpty) {
-        url += "&lead_status=$status";
+        if (status != allLeadsKey) {
+          url += "&lead_status=$status";
+        }
       }
       if (search != null && search.isNotEmpty) {
         url += "&search=$search";
@@ -165,7 +167,7 @@ class ApiServices {
           url += "&$key=$value";
         });
       }
-      print(url);
+      print("Lead URL => $url");
       final response = await _dio.get(url);
       return response.data;
     } on DioException catch (e) {
