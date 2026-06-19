@@ -50,7 +50,7 @@ class LeadController extends GetxController
   @override
   void onInit() async {
     super.onInit();
-    tabController = TabController(length: 4, vsync: this);
+    tabController = TabController(length: 3, vsync: this);
     tabController.addListener(() {
       if (!tabController.indexIsChanging) {
         update();

@@ -1,9 +1,7 @@
 class LeadModel {
   Map<String, dynamic>? fieldsRecord;
   List<Followup>? followup;
-
   LeadModel({this.fieldsRecord, this.followup});
-
   LeadModel.fromJson(Map<String, dynamic> json) {
     fieldsRecord = json['fields_record'] != null
         ? Map<String, dynamic>.from(json['fields_record'])
@@ -15,7 +13,6 @@ class LeadModel {
       });
     }
   }
-
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     if (fieldsRecord != null) {

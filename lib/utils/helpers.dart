@@ -543,6 +543,7 @@ String mainMenuTitleKey = 'main_menu_title';
 String leadsTitleKey = 'leads_title';
 String interactionsTitleKey = 'interactions_title';
 String pendingVisitsTitleKey = 'pending_visits_title';
+String completedLeadsTitleKey = 'completed_lead_title';
 String draftMenuTitleKey = 'draft_menu_title';
 String draftLeadTitleKey = 'draft_lead_title';
 String draftInteractionTitleKey = 'draft_interaction_title';
@@ -633,8 +634,17 @@ updateInteractionsTitle(String title) async => await setDataToPrefs(
 Future<String> getPendingVisitsTitle() async =>
     await getData(key: pendingVisitsTitleKey, type: 'string') ??
     "Pending Visits";
+
 updatePendingVisitsTitle(String title) async => await setDataToPrefs(
   key: pendingVisitsTitleKey,
+  value: title,
+  type: 'string',
+);
+Future<String> getCompletedLeadsTitle() async =>
+    await getData(key: completedLeadsTitleKey, type: 'string') ?? "History";
+
+updateCompletedLeadsTitle(String title) async => await setDataToPrefs(
+  key: completedLeadsTitleKey,
   value: title,
   type: 'string',
 );

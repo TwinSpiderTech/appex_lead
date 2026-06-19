@@ -29,7 +29,7 @@ class _LeadScreenState extends State<LeadScreen> {
       final cont = Get.find<LeadController>();
       cont.getLeads(reset: true, status: overDueKey);
       cont.getLeads(reset: true, status: dueTodayKey);
-      cont.getLeads(reset: true, status: completedKey);
+      // cont.getLeads(reset: true, status: completedKey);
       cont.getLeads(reset: true, status: allLeadsKey);
     });
   }
@@ -83,15 +83,15 @@ class _LeadScreenState extends State<LeadScreen> {
                         ),
                       ),
                     ),
-                    Tab(
-                      child: Text(
-                        "Completed",
-                        style: primaryTextStyle.copyWith(
-                          color: colorManager.whiteColor,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                    // Tab(
+                    //   child: Text(
+                    //     "Completed",
+                    //     style: primaryTextStyle.copyWith(
+                    //       color: colorManager.whiteColor,
+                    //       fontSize: 12,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -119,12 +119,12 @@ class _LeadScreenState extends State<LeadScreen> {
                 isLoading: cont.pendingLoading,
                 status: overDueKey,
               ),
-              HistoryTab(
-                cont: cont,
-                history: cont.closedLeads,
-                isLoading: cont.closedLoading,
-                status: completedKey,
-              ),
+              // HistoryTab(
+              //   cont: cont,
+              //   history: cont.closedLeads,
+              //   isLoading: cont.closedLoading,
+              //   status: completedKey,
+              // ),
             ],
           ),
           floatingActionButtonLocation:

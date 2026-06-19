@@ -8,6 +8,7 @@ import 'package:appex_lead/view/form/drafts_screen.dart';
 import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';
 import 'package:appex_lead/view/form/forms.dart';
+import 'package:appex_lead/view/leads/lead_history.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/leads/pending_visits_screen.dart';
 import 'package:flutter/foundation.dart';
@@ -94,6 +95,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     onTap: () {
                       Get.back();
                       Get.to(() => const PendingVisitsScreen());
+                    },
+                  ),
+                  DrawerItem(
+                    title: dash.complatedLeadsTitle.value,
+                    icon: HugeIcons.strokeRoundedTransactionHistory,
+                    onTap: () {
+                      Get.back();
+                      Get.to(() => const LeadHistory());
                     },
                   ),
                   const SizedBox(height: 16),

@@ -10,7 +10,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -49,7 +48,7 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
       "body": body,
     }),
   );
-}
+} 
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
