@@ -26,44 +26,44 @@ class AppSettings extends StatelessWidget {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                ListTile(
-                  onTap: () {},
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: (isTracking ? Colors.green : Colors.grey)
-                          .withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedLocation01,
-                      color: isTracking ? Colors.green : Colors.grey,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    "Route Tracking",
-                    style: primaryTextStyle.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
-                    isTracking
-                        ? "Recording your movement in background"
-                        : "Tap to start tracking movement",
-                    style: primaryTextStyle.copyWith(
-                      color: colorManager.textColor.withOpacity(0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: Switch(
-                    value: isTracking,
-                    onChanged: (val) => cont.toggleTracking(),
-                    activeColor: colorManager.primaryColor,
-                  ),
-                ),
+                // ListTile(
+                //   onTap: () {},
+                //   leading: Container(
+                //     padding: const EdgeInsets.all(8),
+                //     decoration: BoxDecoration(
+                //       color: (isTracking ? Colors.green : Colors.grey)
+                //           .withOpacity(0.1),
+                //       borderRadius: BorderRadius.circular(8),
+                //     ),
+                //     child: HugeIcon(
+                //       icon: HugeIcons.strokeRoundedLocation01,
+                //       color: isTracking ? Colors.green : Colors.grey,
+                //       size: 20,
+                //     ),
+                //   ),
+                //   title: Text(
+                //     "Route Tracking",
+                //     style: primaryTextStyle.copyWith(
+                //       fontWeight: FontWeight.bold,
+                //     ),
+                //   ),
+                //   subtitle: Text(
+                //     isTracking
+                //         ? "Recording your movement in background"
+                //         : "Tap to start tracking movement",
+                //     style: primaryTextStyle.copyWith(
+                //       color: colorManager.textColor.withOpacity(0.7),
+                //       fontSize: 12,
+                //     ),
+                //   ),
+                //   trailing: Switch(
+                //     value: isTracking,
+                //     onChanged: (val) => cont.toggleTracking(),
+                //     activeColor: colorManager.primaryColor,
+                //   ),
+                // ),
 
-                const Divider(height: 1),
+                // const Divider(height: 1),
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
