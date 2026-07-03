@@ -1,4 +1,3 @@
-import 'package:appex_lead/component/custom_switch.dart';
 import 'package:appex_lead/service/app_infor_service.dart';
 import 'package:appex_lead/service/firebase_service.dart';
 import 'package:appex_lead/utils/app_routes.dart';
@@ -7,10 +6,10 @@ import 'package:appex_lead/utils/helpers.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
 import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';
-import 'package:appex_lead/view/form/forms.dart';
 import 'package:appex_lead/view/leads/lead_history.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/leads/pending_visits_screen.dart';
+import 'package:appex_lead/view/method_channel_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,8 +18,6 @@ import 'package:appex_lead/utils/auth_service.dart';
 import 'package:appex_lead/view/app_settings.dart';
 import 'package:appex_lead/view/shared_prefs_screen.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/view/auth/login.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -146,6 +143,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                           Get.toNamed(AppPages.formsList);
                         },
                       ),
+                    // if (kDebugMode)
+                    DrawerItem(
+                      title: "Method Channels",
+                      icon: HugeIcons.strokeRoundedDeveloper,
+                      onTap: () {
+                        Get.to(() => MethodChannelScreen());
+                      },
+                    ),
                   ],
                 ],
               );

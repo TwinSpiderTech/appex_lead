@@ -60,6 +60,13 @@
             android:stopWithTask="false"
             tools:replace="android:exported" />
 
+        <service
+            android:name=".LocationTrackingService"
+            android:foregroundServiceType="location"
+            android:process=":location_service"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
