@@ -181,10 +181,10 @@ class DashController extends GetxController {
         }
         tickets.value = _tickets;
         // Inject local tracking module
-        tickets['route_tracking'] = {
-          'title': 'Route Tracking',
-          'subtitle': 'Track movement',
-        };
+        // tickets['route_tracking'] = {
+        //   'title': 'Route Tracking',
+        //   'subtitle': 'Track movement',
+        // };
         await setDataToPrefsEncoded(
           key: 'dashboard_tickets',
           value: tickets.value,

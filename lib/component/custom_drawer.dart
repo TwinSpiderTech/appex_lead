@@ -144,13 +144,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         },
                       ),
                     // if (kDebugMode)
-                    DrawerItem(
-                      title: "Method Channels",
-                      icon: HugeIcons.strokeRoundedDeveloper,
-                      onTap: () {
-                        Get.to(() => MethodChannelScreen());
-                      },
-                    ),
+                    // DrawerItem(
+                    //   title: "Method Channels",
+                    //   icon: HugeIcons.strokeRoundedDeveloper,
+                    //   onTap: () {
+                    //     Get.to(() => MethodChannelScreen());
+                    //   },
+                    // ),
                   ],
                 ],
               );
