@@ -64,10 +64,10 @@ class _RouteHistoryScreenState extends State<RouteHistoryScreen> {
           final points = await db.getPointsForRoute(route['id'] as int);
           final data = {'route': route, 'points': points};
 
-          // final result = await api.syncRoute(data);
-          // if (result != null && result['response_status'] == 'success') {
-          //   await db.markAsSynced(route['id'] as int);
-          // }
+          final result = await api.syncRoute(data);
+          if (result != null && result['response_status'] == 'success') {
+            await db.markAsSynced(route['id'] as int);
+          }
         }
         await _loadRoutes();
       },
