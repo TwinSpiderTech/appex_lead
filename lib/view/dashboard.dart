@@ -64,11 +64,11 @@ class _DashboardState extends State<Dashboard> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Padding(
+                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 18.0),
                     child: Text(
                       "Location is required to continue",
-                      style: TextStyle(fontSize: 18),
+                      style: primaryTextStyle.copyWith(fontSize: 18),
                       textAlign: TextAlign.center,
                     ),
                   ),
