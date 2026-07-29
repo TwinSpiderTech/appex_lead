@@ -10,7 +10,7 @@ class ColorManager extends GetxController {
   final PdfColor primaryPdfColor = PdfColor.fromInt(0xFFEF8124);
   final PdfColor lightPrimaryPdfColor = PdfColor.fromInt(0x4DEF8124);
 
-  Color primaryColor = const Color(0xFFef8124);
+  Color primaryColor = const Color(0xFF00CB51);
   Color secondaryColor = const Color(0xFF151a3d);
   Color accentColor = const Color(0xFF151a3d);
   Color textColor = const Color.fromRGBO(22, 22, 22, 1);
@@ -102,7 +102,7 @@ class ColorManager extends GetxController {
       isDark ? iconColor = Colors.white : iconColor = const Color(0xff161616);
       isDark ? darkTheme() : lightTheme();
       primaryColor = Color(
-        int.parse(hexToColor(v.getString('color') ?? "#ef8124")),
+        int.parse(hexToColor(v.getString('color') ?? "#00CB51")),
       );
       update();
     });
