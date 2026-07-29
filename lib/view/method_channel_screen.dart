@@ -1,4 +1,4 @@
-import 'package:appex_lead/component/custom_appbar.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,7 +12,7 @@ class MethodChannelScreen extends StatefulWidget {
 class _MethodChannelScreenState extends State<MethodChannelScreen> {
   String deviceModel = '';
   _getDeviceModel() async {
-    const platform = MethodChannel('appex_lead_channel');
+    const platform = MethodChannel('ts_fieldforce_channel');
     try {
       final String result = await platform.invokeMethod('getDeviceModel');
       if (mounted) {

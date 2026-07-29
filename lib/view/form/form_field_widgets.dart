@@ -1,16 +1,16 @@
 import 'dart:io';
-import 'package:appex_lead/component/custom_searchable_dropdown.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/utils/validations.dart';
+import 'package:ts_fieldforce/component/custom_searchable_dropdown.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/utils/validations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'image_preview_screen.dart';
 import '../../view/camera/camera_screen.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/component/custom_checkbox_field.dart';
+import 'package:ts_fieldforce/component/custom_input_field.dart';
+import 'package:ts_fieldforce/component/custom_checkbox_field.dart';
 import '../../component/custom_searchable_dropdown2.dart';
-import 'package:appex_lead/component/custom_button.dart';
+import 'package:ts_fieldforce/component/custom_button.dart';
 import '../../main.dart'; // for colorManager
 
 class GenericFormFieldWidget extends StatelessWidget {

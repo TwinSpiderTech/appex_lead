@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.twinspider.appex_lead"
+    namespace = "com.twinspider.ts_fieldforce"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.twinspider.appex_lead"
+        applicationId = "com.twinspider.ts_fieldforce"
         minSdk = 24
         targetSdk = 36
         versionCode = 10

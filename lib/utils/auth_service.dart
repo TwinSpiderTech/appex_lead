@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:get/get.dart';
-import 'package:appex_lead/view/auth/login.dart';
+import 'package:ts_fieldforce/view/auth/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {

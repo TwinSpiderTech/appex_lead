@@ -1,14 +1,14 @@
 import 'dart:developer';
 
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/lead/lead_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/leads/lead_details_layout2.dart';
-import 'package:appex_lead/component/summary_card.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
+import 'package:ts_fieldforce/component/custom_button.dart';
+import 'package:ts_fieldforce/component/custom_input_field.dart';
+import 'package:ts_fieldforce/controller/dash/dash_controller.dart';
+import 'package:ts_fieldforce/controller/lead/lead_controller.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/leads/lead_details_layout2.dart';
+import 'package:ts_fieldforce/component/summary_card.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

@@ -1,4 +1,4 @@
-package com.twinspider.appex_lead
+package com.twinspider.ts_fieldforce
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -9,7 +9,7 @@ import android.content.Intent
 class MainActivity : FlutterActivity(){
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        val channel = "appex_lead_channel"
+        val channel = "ts_fieldforce_channel"
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
             when (call.method) {

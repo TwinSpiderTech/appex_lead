@@ -4,9 +4,9 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:get/get.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/view/auth/login.dart';
-import 'package:appex_lead/view/dashboard.dart';
+import 'package:ts_fieldforce/utils/auth_service.dart';
+import 'package:ts_fieldforce/view/auth/login.dart';
+import 'package:ts_fieldforce/view/dashboard.dart';
 
 class SplashService {
   isLogin() async {

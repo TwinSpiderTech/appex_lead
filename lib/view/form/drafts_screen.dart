@@ -1,10 +1,10 @@
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
+import 'package:ts_fieldforce/controller/dash/dash_controller.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:appex_lead/component/summary_card.dart';
+import 'package:ts_fieldforce/component/summary_card.dart';
 import '../../controller/form/generic_form_controller.dart';
 import '../../main.dart';
 import 'form_details.dart';

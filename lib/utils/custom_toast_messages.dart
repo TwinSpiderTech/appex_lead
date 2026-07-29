@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:appex_lead/main.dart';
+import 'package:ts_fieldforce/main.dart';
 
 showErrorMessage({required String message}) {
   EasyLoading.instance.backgroundColor = Colors.red;

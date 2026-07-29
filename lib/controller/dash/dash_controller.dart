@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:appex_lead/controller/lead/lead_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/utils/urls.dart';
+import 'package:ts_fieldforce/controller/lead/lead_controller.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/auth_service.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/utils/urls.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';

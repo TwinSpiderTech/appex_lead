@@ -1,9 +1,9 @@
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/interaction/interaction_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/interaction/interaction_details_layout.dart';
-import 'package:appex_lead/component/summary_card.dart';
+import 'package:ts_fieldforce/controller/dash/dash_controller.dart';
+import 'package:ts_fieldforce/controller/interaction/interaction_controller.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/interaction/interaction_details_layout.dart';
+import 'package:ts_fieldforce/component/summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';

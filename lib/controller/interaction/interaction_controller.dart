@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -47,8 +47,12 @@ class InteractionController extends GetxController {
         url,
         pageNo: currentPage,
         search: searchCont.text,
-        startDate: startDate.value != null ? formatDateToString(startDate.value!) : null,
-        endDate: endDate.value != null ? formatDateToString(endDate.value!) : null,
+        startDate: startDate.value != null
+            ? formatDateToString(startDate.value!)
+            : null,
+        endDate: endDate.value != null
+            ? formatDateToString(endDate.value!)
+            : null,
       );
 
       if (response != null &&
