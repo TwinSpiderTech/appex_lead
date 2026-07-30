@@ -1,29 +1,29 @@
 class Urls {
   static const String env = 'prod';
 
-  static const String base = env == 'dev'
-      // ? '192.168.100.161'
-      // ? '192.168.100.173'
-      ? '1b0e-39-56-72-170.ngrok-free.app'
-      // : 'ed01-182-189-120-247.ngrok-free.app';
-      // : '9106-182-185-36-184.ngrok-free.app';
-      // : "6cf8-39-56-72-170.ngrok-free.app";
-      : "fieldforce.twincloud.app";
+  static String currentSubdomain = 'fieldforce';
 
-  static const String baseUrl = '$base/api/v1';
-  // static const String subDomain =
-  //     "https://flour$baseUrl/app_dashboard/verify_subdomain?subdomain=";
-  static const String deviceTokenUpdateURL =
+  static String get base {
+    if (env == 'dev') {
+      return '1b0e-39-56-72-170.ngrok-free.app';
+    }
+    return '$currentSubdomain.twincloud.app';
+  }
+
+  static String get baseUrl => '$base/api/v1';
+  static const String subDomain =
+      "https://flour.twincloud.app/api/v1/app_dashboard/verify_subdomain?subdomain=";
+  static String get deviceTokenUpdateURL =>
       '$baseUrl/associations/dashboard/update_device_token';
-  static const String appVersionURL =
+  static String get appVersionURL =>
       '$baseUrl/app_config/get_app_version?app_name=';
-  static const String authenticationURL = '$baseUrl/authenticate?';
-  static const String signupURL = '$baseUrl/authentication/signup';
-  static const String deleteAccountURL = '$baseUrl/authentication/disable_user';
-  static const String loadDashboardUrl = '$baseUrl/business/dashboard';
-  static const String leadsURL = '$baseUrl/business/leads';
-  static const String upcomingLeadsURL =
+  static String get authenticationURL => '$baseUrl/authenticate?';
+  static String get signupURL => '$baseUrl/authentication/signup';
+  static String get deleteAccountURL => '$baseUrl/authentication/disable_user';
+  static String get loadDashboardUrl => '$baseUrl/business/dashboard';
+  static String get leadsURL => '$baseUrl/business/leads';
+  static String get upcomingLeadsURL =>
       '$baseUrl/business/leads?upcoming_followups=within_a_week&page=';
-  static const String signoutUrl = '$baseUrl/authentication/logout';
-  static const String syncRouteURL = '$baseUrl/business/route_tracking/sync';
+  static String get signoutUrl => '$baseUrl/authentication/logout';
+  static String get syncRouteURL => '$baseUrl/business/route_tracking/sync';
 }

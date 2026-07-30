@@ -32,8 +32,8 @@ android {
         applicationId = "com.twinspider.ts_fieldforce"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.0.6"
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
     signingConfigs {

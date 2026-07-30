@@ -20,6 +20,7 @@ import 'package:ts_fieldforce/utils/constants.dart';
 import 'package:ts_fieldforce/utils/helpers.dart';
 import 'package:ts_fieldforce/view/dashboard.dart';
 import 'package:ts_fieldforce/view/auth/register_screen.dart';
+import 'package:ts_fieldforce/view/auth/subdomain.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -145,6 +146,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomButton(
+                      textColr: colorManager.primaryColor,
+                      backgroundColor: colorManager.bgDark,
+                      boderColor: colorManager.primaryColor,
+                      label: "Change Subdomain",
+                      onTap: () async {
+                        await AuthService.removeKey(AuthService.subdomainKey);
+                        Get.offAll(() => const SubdomainScreen());
+                      },
                     ),
                   ],
                 ),

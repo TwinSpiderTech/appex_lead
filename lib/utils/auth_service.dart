@@ -41,10 +41,10 @@ class AuthService {
     return (t != null && t.isNotEmpty);
   }
 
-  // static Future<String?> getSubdomain() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   return prefs.getString(subdomainKey);
-  // }
+  static Future<String?> getSubdomain() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(subdomainKey);
+  }
 
   static Future<void> updateSubdomain(String value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,10 +52,10 @@ class AuthService {
     log("Subdomain updated!");
   }
 
-  // static Future<bool> isSubdomainAvailable() async {
-  //   var s = await getSubdomain();
-  //   return (s != null && s.isNotEmpty);
-  // }
+  static Future<bool> isSubdomainAvailable() async {
+    var s = await getSubdomain();
+    return (s != null && s.isNotEmpty);
+  }
 
   static Future<void> logout() async {
     await removeKey(emailKey);

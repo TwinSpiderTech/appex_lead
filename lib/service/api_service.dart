@@ -416,4 +416,15 @@ class ApiServices {
       return null;
     }
   }
+
+  Future<bool> verifySubdomain(String domain) async {
+    String url = Urls.subDomain + domain;
+    try {
+      final response = await _dio.get(url);
+      return response.statusCode == 200;
+    } catch (e) {
+      log('Error verifying subdomain: $e');
+      return false;
+    }
+  }
 }
