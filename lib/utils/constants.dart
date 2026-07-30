@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/auth/login.dart';
+import 'package:ts_fieldforce/component/custom_button.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/auth/login.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -281,7 +281,7 @@ Future<File?> compressTo1MB(File file) async {
   int minWidth = 1920;
   int minHeight = 1080;
 
-  // If it's a PNG file (like our processed image), use the robust Dart image package 
+  // If it's a PNG file (like our processed image), use the robust Dart image package
   // to avoid native platform limitations in FlutterImageCompress.
   if (file.path.toLowerCase().endsWith('.png')) {
     final bytes = await file.readAsBytes();
@@ -294,14 +294,14 @@ Future<File?> compressTo1MB(File file) async {
     // Loop until we reach <1MB
     while (jpgBytes.length > targetSize && currentQuality > 10) {
       currentQuality -= 10;
-      
+
       // If quality is getting too low, downscale the resolution
       if (currentQuality < 40) {
         currentQuality = 80;
         final newWidth = (decodedImage!.width * 0.8).toInt();
         decodedImage = img.copyResize(decodedImage, width: newWidth);
       }
-      
+
       jpgBytes = img.encodeJpg(decodedImage!, quality: currentQuality);
     }
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:appex_lead/service/db_helper.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:ts_fieldforce/service/db_helper.dart';
+import 'package:ts_fieldforce/utils/custom_toast_messages.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -154,7 +154,7 @@ class RouteController extends GetxController {
               intervalDuration: const Duration(seconds: 5),
               foregroundNotificationConfig: const ForegroundNotificationConfig(
                 notificationText: "Route tracking is running in background",
-                notificationTitle: "Appex Tracking",
+                notificationTitle: "TS Tracking",
                 enableWakeLock: true,
               ),
             ),

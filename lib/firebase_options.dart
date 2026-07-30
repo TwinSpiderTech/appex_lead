@@ -50,20 +50,18 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDVsLVEFY88EMSyBbIfb2AG4_AxBFnY5Kk',
-    appId: '1:494118862427:android:62f960cab637a32f4f097e',
-    messagingSenderId: '494118862427',
-    projectId: 'appex-trading',
-    storageBucket: 'appex-trading.firebasestorage.app',
+    apiKey: 'AIzaSyDiQOdxKymMQPNdO91OFEQq2AlE0UIS5Xw',
+    appId: '1:3467906509:android:379a5fb3b964652fcd8884',
+    messagingSenderId: '3467906509',
+    projectId: 'ts-fieldforce',
+    storageBucket: 'ts-fieldforce.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDLM65c7K36Ik86flcYWJUA1Xz1bT80A9A',
-    appId: '1:494118862427:ios:e3fbec029ccb718a4f097e',
-    messagingSenderId: '494118862427',
-    projectId: 'appex-trading',
-    storageBucket: 'appex-trading.firebasestorage.app',
+    apiKey: 'AIzaSyC_b7bXIHgPZN0snKJxTSTcNoNVwkvYeqk',
+    appId: '1:3467906509:ios:382c7dfc7d1e17a9cd8884',
+    messagingSenderId: '3467906509',
+    projectId: 'ts-fieldforce',
+    storageBucket: 'ts-fieldforce.firebasestorage.app',
     iosBundleId: 'com.twinspider.appexFieldForce',
   );
-
 }

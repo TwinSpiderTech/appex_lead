@@ -1,7 +1,7 @@
 import 'dart:developer';
 
-import 'package:appex_lead/controller/form/generic_form_controller.dart';
-import 'package:appex_lead/main.dart';
+import 'package:ts_fieldforce/controller/form/generic_form_controller.dart';
+import 'package:ts_fieldforce/main.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';

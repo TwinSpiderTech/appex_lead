@@ -1,14 +1,14 @@
 import 'dart:developer';
-import 'package:appex_lead/component/quick_actions_card.dart';
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/form/generic_form_controller.dart';
-import 'package:appex_lead/controller/lead/lead_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/model/lead_model.dart'; // for Followup
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/form/form_field_widgets.dart';
-import 'package:appex_lead/view/interaction/interaction_details_layout.dart';
-import 'package:appex_lead/view/interaction/interaction_form.dart';
+import 'package:ts_fieldforce/component/quick_actions_card.dart';
+import 'package:ts_fieldforce/controller/dash/dash_controller.dart';
+import 'package:ts_fieldforce/controller/form/generic_form_controller.dart';
+import 'package:ts_fieldforce/controller/lead/lead_controller.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/model/lead_model.dart'; // for Followup
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/form/form_field_widgets.dart';
+import 'package:ts_fieldforce/view/interaction/interaction_details_layout.dart';
+import 'package:ts_fieldforce/view/interaction/interaction_form.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';

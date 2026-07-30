@@ -1,7 +1,7 @@
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/form/form_details.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/form/form_details.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -11,7 +11,7 @@ class AvailableForms extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: "Available Forms",),
+      appBar: CustomAppBar(title: "Available Forms"),
       body: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Column(

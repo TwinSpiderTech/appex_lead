@@ -1,13 +1,14 @@
 ---
 name: token-optimizer
-description: Navigates the appex_lead project directory efficiently without redundant directory listings or file reads, adhering to the 200-lines-per-file modular architecture rule.
+description: Navigates the ts_fieldforce project directory efficiently without redundant directory listings or file reads, adhering to the 200-lines-per-file modular architecture rule.
 ---
 
 # Project Token Optimizer Skill
 
-This skill provides instant context on the **appex_lead** codebase structure and enforces modular architecture guidelines. Future agents must use this skill to directly target files and minimize token usage.
+This skill provides instant context on the **ts_fieldforce** codebase structure and enforces modular architecture guidelines. Future agents must use this skill to directly target files and minimize token usage.
 
 ## 1. Codebase Structure & Directory Map
+
 Instead of running recursive directory listings, directly navigate to the appropriate path based on the feature layer:
 
 - **Views/Screens (`lib/view/`)**: Containing UI views, organized by feature subfolders.
@@ -34,6 +35,7 @@ Instead of running recursive directory listings, directly navigate to the approp
 ---
 
 ## 2. Token-Saving Guidelines for Agents
+
 - **No Large Directory Lists**: Do not list top-level directories recursively. Use the map above to determine the exact path.
 - **Pinpoint Grepping**: When searching for variables or class references, restrict the `SearchPath` to specific directories (e.g. `lib/controller` or `lib/view`) and use `Includes` to filter by file types (`*.dart`, `*.kt`).
 - **Targeted File Reading**: Only read the files relevant to the active task. Read only the specific line range needed using `StartLine` and `EndLine` parameters when files are large.
@@ -41,7 +43,9 @@ Instead of running recursive directory listings, directly navigate to the approp
 ---
 
 ## 3. The 200-Line Limit Constraint
+
 To keep the project clean, structured, and easy to maintain, all new features/files must strictly adhere to the following rule:
+
 - **No file should exceed 200 lines.**
 - If a file starts approaching 200 lines, refactor immediately:
   - **For Views**: Extract sub-widgets (e.g. cards, custom headers, forms) into separate files in `lib/component/` or a feature subfolder in `lib/view/`.

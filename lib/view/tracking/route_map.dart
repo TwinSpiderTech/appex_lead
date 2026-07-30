@@ -1,9 +1,9 @@
-import 'package:appex_lead/service/db_helper.dart';
-import 'package:appex_lead/view/dashboard.dart';
+import 'package:ts_fieldforce/service/db_helper.dart';
+import 'package:ts_fieldforce/view/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:appex_lead/main.dart';
+import 'package:ts_fieldforce/main.dart';
 import 'package:intl/intl.dart';
 
 class RouteMapScreen extends StatefulWidget {
@@ -101,7 +101,7 @@ class _RouteMapScreenState extends State<RouteMapScreen> {
                     TileLayer(
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.twinspider.appex_lead',
+                      userAgentPackageName: 'com.twinspider.ts_fieldforce',
                     ),
                     PolylineLayer(
                       polylines: [

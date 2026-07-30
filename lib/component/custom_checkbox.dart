@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
 
 class CustomCheckbox extends StatelessWidget {
   bool initialValue;

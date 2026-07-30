@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:appex_lead/main.dart';
+import 'package:ts_fieldforce/main.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ResusableCard3Shimmer extends StatelessWidget {

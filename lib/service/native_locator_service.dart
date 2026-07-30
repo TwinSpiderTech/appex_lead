@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 /// Service interface to communicate with the native platform foreground service
 /// for persistent background tracking.
 class NativeLocatorService {
-  static const MethodChannel _channel = MethodChannel('appex_lead_channel');
+  static const MethodChannel _channel = MethodChannel('ts_fieldforce_channel');
 
   /// Starts the native background service for tracking a specific route ID.
   /// Only runs on Android.
@@ -27,7 +27,9 @@ class NativeLocatorService {
   static Future<bool> stopTrackingService() async {
     if (!Platform.isAndroid) return false;
     try {
-      final bool? success = await _channel.invokeMethod<bool>('stopTrackingService');
+      final bool? success = await _channel.invokeMethod<bool>(
+        'stopTrackingService',
+      );
       return success ?? false;
     } on PlatformException catch (e) {
       print('Failed to stop native tracking service: ${e.message}');

@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:appex_lead/controller/dash/dash_controller.dart';
-import 'package:appex_lead/controller/notification_controller.dart';
-import 'package:appex_lead/service/app_infor_service.dart';
-import 'package:appex_lead/service/notificaion_services.dart';
-import 'package:appex_lead/utils/app_routes.dart';
+import 'package:ts_fieldforce/controller/dash/dash_controller.dart';
+import 'package:ts_fieldforce/controller/notification_controller.dart';
+import 'package:ts_fieldforce/service/app_infor_service.dart';
+import 'package:ts_fieldforce/service/notificaion_services.dart';
+import 'package:ts_fieldforce/utils/app_routes.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,10 +13,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
-import 'package:appex_lead/controller/theme/theme_controller.dart';
-import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/controller/tracking/route_controller.dart';
-// import 'package:appex_lead/service/background_service.dart';
+import 'package:ts_fieldforce/controller/theme/theme_controller.dart';
+import 'package:ts_fieldforce/service/api_service.dart';
+import 'package:ts_fieldforce/controller/tracking/route_controller.dart';
+// import 'package:ts_fieldforce/service/background_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -48,7 +48,7 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
       "body": body,
     }),
   );
-} 
+}
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -124,7 +124,7 @@ class _MyAppState extends State<MyApp> {
       opaqueRoute: true,
       popGesture: true,
       debugShowCheckedModeBanner: false,
-      title: 'Appex Field Force',
+      title: 'TS Field Force',
       theme: ThemeData(
         dialogBackgroundColor: colorManager.bgDark,
         fontFamily: 'SF Pro',

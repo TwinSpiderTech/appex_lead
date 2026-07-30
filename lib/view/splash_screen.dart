@@ -1,14 +1,14 @@
 // ignore_for_file: file_names
 
-import 'package:appex_lead/controller/app_update_controller.dart';
-import 'package:appex_lead/main.dart';
+import 'package:ts_fieldforce/controller/app_update_controller.dart';
+import 'package:ts_fieldforce/main.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:appex_lead/controller/theme/theme_controller.dart';
-import 'package:appex_lead/service/splash_service.dart';
-import 'package:appex_lead/utils/constants.dart';
-import 'package:appex_lead/service/att_service.dart';
+import 'package:ts_fieldforce/controller/theme/theme_controller.dart';
+import 'package:ts_fieldforce/service/splash_service.dart';
+import 'package:ts_fieldforce/utils/constants.dart';
+import 'package:ts_fieldforce/service/att_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {

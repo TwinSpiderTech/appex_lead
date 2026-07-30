@@ -1,12 +1,12 @@
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/media_viewer.dart';
-import 'package:appex_lead/utils/helpers.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
+import 'package:ts_fieldforce/component/media_viewer.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:appex_lead/main.dart';
+import 'package:ts_fieldforce/main.dart';
 
-import 'package:appex_lead/view/dashboard.dart';
+import 'package:ts_fieldforce/view/dashboard.dart';
 
 class NotificaionDetailScreen extends StatefulWidget {
   const NotificaionDetailScreen({super.key});

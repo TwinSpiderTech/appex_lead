@@ -1,15 +1,15 @@
-import 'package:appex_lead/controller/tracking/route_controller.dart';
-import 'package:appex_lead/view/tracking/route_history.dart';
-import 'package:appex_lead/utils/constants.dart';
+import 'package:ts_fieldforce/controller/tracking/route_controller.dart';
+import 'package:ts_fieldforce/view/tracking/route_history.dart';
+import 'package:ts_fieldforce/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/shared_prefs_screen.dart';
-import 'package:appex_lead/view/auth/login.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/shared_prefs_screen.dart';
+import 'package:ts_fieldforce/view/auth/login.dart';
 
 class AppSettings extends StatelessWidget {
   const AppSettings({super.key});
@@ -42,9 +42,7 @@ class AppSettings extends StatelessWidget {
                 ),
                 title: Text(
                   "Route Tracking",
-                  style: primaryTextStyle.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: primaryTextStyle.copyWith(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
                   isTracking

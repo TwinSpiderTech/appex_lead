@@ -1,25 +1,26 @@
 import 'dart:developer';
 
-import 'package:appex_lead/controller/theme/theme_controller.dart';
-import 'package:appex_lead/service/firebase_service.dart';
-import 'package:appex_lead/utils/custom_toast_messages.dart';
+import 'package:ts_fieldforce/controller/theme/theme_controller.dart';
+import 'package:ts_fieldforce/service/firebase_service.dart';
+import 'package:ts_fieldforce/utils/custom_toast_messages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:appex_lead/component/custom_appbar.dart';
-import 'package:appex_lead/component/custom_button.dart';
-import 'package:appex_lead/component/custom_drawer.dart';
-import 'package:appex_lead/component/custom_input_field.dart';
-import 'package:appex_lead/controller/auth_controller.dart';
-import 'package:appex_lead/main.dart';
-import 'package:appex_lead/service/api_service.dart';
-import 'package:appex_lead/utils/auth_service.dart';
-import 'package:appex_lead/utils/constants.dart';
-import 'package:appex_lead/utils/helpers.dart';
-import 'package:appex_lead/view/dashboard.dart';
-import 'package:appex_lead/view/auth/register_screen.dart';
+import 'package:ts_fieldforce/component/custom_appbar.dart';
+import 'package:ts_fieldforce/component/custom_button.dart';
+import 'package:ts_fieldforce/component/custom_drawer.dart';
+import 'package:ts_fieldforce/component/custom_input_field.dart';
+import 'package:ts_fieldforce/controller/auth_controller.dart';
+import 'package:ts_fieldforce/main.dart';
+import 'package:ts_fieldforce/service/api_service.dart';
+import 'package:ts_fieldforce/utils/auth_service.dart';
+import 'package:ts_fieldforce/utils/constants.dart';
+import 'package:ts_fieldforce/utils/helpers.dart';
+import 'package:ts_fieldforce/view/dashboard.dart';
+import 'package:ts_fieldforce/view/auth/register_screen.dart';
+import 'package:ts_fieldforce/view/auth/subdomain.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -106,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         await cont.authenticate();
                       },
                     ),
+
                     if (kDebugMode)
                       Obx(() {
                         return CustomButton(
@@ -114,14 +116,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           label: "Dev Login",
                           onTap: () {
                             cont.authenticate(
-                              email: 'ff@appex.com',
+                              email: 'demo@fieldforce.com',
                               password: 'pass1234',
                             );
                           },
                         );
                       }),
                     const SizedBox(height: 12),
-
                     FirebaseHelper.RegisterManager(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -145,6 +146,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomButton(
+                      textColr: colorManager.primaryColor,
+                      backgroundColor: colorManager.bgDark,
+                      boderColor: colorManager.primaryColor,
+                      label: "Change Subdomain",
+                      onTap: () async {
+                        await AuthService.removeKey(AuthService.subdomainKey);
+                        Get.offAll(() => const SubdomainScreen());
+                      },
                     ),
                   ],
                 ),
