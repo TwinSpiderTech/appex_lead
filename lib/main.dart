@@ -10,12 +10,13 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:appex_lead/controller/theme/theme_controller.dart';
 import 'package:appex_lead/service/api_service.dart';
+import 'package:appex_lead/controller/tracking/route_controller.dart';
+// import 'package:appex_lead/service/background_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -47,13 +48,17 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
       "body": body,
     }),
   );
-}
+} 
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
   await services.initLocalNotificationOnStart();
+
+  // Initialize Route Tracking Service
+  // Initialize Route Tracking Service
+  await RouteController.initializeService();
   FirebaseMessaging.instance.getInitialMessage().then((message) {
     if (message != null) {
       services.handleNavigation(message);
@@ -64,29 +69,18 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
-  // Request App Tracking Transparency authorization
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    try {
-      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      if (status == TrackingStatus.notDetermined) {
-        // Wait for a moment to ensure the app is fully resumed
-        await Future.delayed(const Duration(milliseconds: 1000));
-        await AppTrackingTransparency.requestTrackingAuthorization();
-      }
-    } catch (e) {
-      debugPrint("ATT Error: $e");
-    }
-  });
+  // ATT request moved to SplashScreen for better lifecycle management
 
   // Initialize Core Services & Controllers
   Get.put(ColorManager());
   Get.put(NotificationController());
+  Get.put(RouteController());
   Get.lazyPut(() => DashController(), fenix: true);
 
   // await services.forgroundMessage();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown, 
+    DeviceOrientation.portraitDown,
   ]);
   colorManager.loadThemeFromPreferences();
   AppInfo.init();

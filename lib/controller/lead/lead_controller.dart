@@ -25,15 +25,22 @@ class LeadController extends GetxController
   List<Map<String, dynamic>>? pendingLeads,
       ongoingLeads,
       closedLeads,
+      allLeads,
       physicalVerificationPendingLeads;
-  int pendingPage = 1, ongoingPage = 1, closedPage = 1, pvpPage = 1;
+  int pendingPage = 1,
+      ongoingPage = 1,
+      closedPage = 1,
+      pvpPage = 1,
+      allLeadPage = 1;
   bool pendingHasNext = false,
       ongoingHasNext = false,
       closedHasNext = false,
+      allLeadsHasNext = false,
       pvpHasNext = false;
   RxBool pendingLoading = false.obs,
       ongoingLoading = false.obs,
       closedLoading = false.obs,
+      allLeadsLoading = false.obs,
       physicalVerificationPendingLoading = false.obs;
 
   bool isLoaded = false;
@@ -110,6 +117,11 @@ class LeadController extends GetxController
       currentPage = closedPage;
       searchQuery = closedSearchCont.text;
       closedLoading.value = true;
+    } else if (status == allLeadsKey) {
+      if (reset) allLeadPage = 1;
+      currentPage = allLeadPage;
+      searchQuery = "";
+      allLeadsLoading.value = true;
     } else if (extraParams != null &&
         extraParams['ownership_status'] == 'physical_verification_pending') {
       if (reset) pvpPage = 1;
@@ -155,6 +167,9 @@ class LeadController extends GetxController
       } else if (status == completedKey) {
         closedLeads = fetchedHistory;
         closedHasNext = hasNext;
+      } else if (status == allLeadsKey) {
+        allLeads = fetchedHistory;
+        allLeadsHasNext = hasNext;
       } else if (extraParams != null &&
           extraParams['ownership_status'] == 'physical_verification_pending') {
         physicalVerificationPendingLeads = fetchedHistory;
@@ -177,6 +192,7 @@ class LeadController extends GetxController
     pendingLoading.value = false;
     ongoingLoading.value = false;
     closedLoading.value = false;
+    allLeadsLoading.value = false;
     physicalVerificationPendingLoading.value = false;
     update();
   }
@@ -188,10 +204,14 @@ class LeadController extends GetxController
       ongoingPage++;
       status = dueTodayKey;
     } else if (tabController.index == 1) {
+      if (!allLeadsHasNext) return;
+      allLeadPage++;
+      status = allLeadsKey;
+    } else if (tabController.index == 2) {
       if (!pendingHasNext) return;
       pendingPage++;
       status = overDueKey;
-    } else if (tabController.index == 2) {
+    } else if (tabController.index == 3) {
       if (!closedHasNext) return;
       closedPage++;
       status = completedKey;
@@ -207,10 +227,14 @@ class LeadController extends GetxController
       ongoingPage--;
       status = dueTodayKey;
     } else if (tabController.index == 1) {
+      if (allLeadPage <= 1) return;
+      allLeadPage--;
+      status = allLeadsKey;
+    } else if (tabController.index == 2) {
       if (pendingPage <= 1) return;
       pendingPage--;
       status = overDueKey;
-    } else if (tabController.index == 2) {
+    } else if (tabController.index == 3) {
       if (closedPage <= 1) return;
       closedPage--;
       status = completedKey;

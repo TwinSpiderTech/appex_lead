@@ -155,7 +155,9 @@ class ApiServices {
       String url =
           "${Urls.env == 'dev' ? "http://" : "https://"}${Urls.leadsURL}?page=$pageNo";
       if (status != null && status.isNotEmpty) {
-        url += "&lead_status=$status";
+        if (status != allLeadsKey) {
+          url += "&lead_status=$status";
+        }
       }
       if (search != null && search.isNotEmpty) {
         url += "&search=$search";
@@ -165,7 +167,7 @@ class ApiServices {
           url += "&$key=$value";
         });
       }
-      print(url);
+      print("Lead URL => $url");
       final response = await _dio.get(url);
       return response.data;
     } on DioException catch (e) {
@@ -399,6 +401,18 @@ class ApiServices {
       return null;
     } catch (e) {
       log('Error occurred: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> syncRoute(
+    Map<String, dynamic> routeData,
+  ) async {
+    try {
+      final response = await postData(Urls.syncRouteURL, data: routeData);
+      return response;
+    } catch (e) {
+      log('Error syncing route: $e');
       return null;
     }
   }

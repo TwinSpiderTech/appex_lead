@@ -149,6 +149,7 @@ class DashController extends GetxController {
   RxString leadsTitle = "My Setups".obs;
   RxString interactionsTitle = "My Visits".obs;
   RxString pendingVisitsTitle = "Pending Visit".obs;
+  RxString complatedLeadsTitle = "History".obs;
   RxString draftMenuTitle = "Drafts".obs;
   RxString draftLeadTitle = "Setups".obs;
   RxString draftInteractionTitle = "Visits".obs;
@@ -179,7 +180,15 @@ class DashController extends GetxController {
           updateHeaderSubTitle(headerSubTitle.value);
         }
         tickets.value = _tickets;
-        await setDataToPrefsEncoded(key: 'dashboard_tickets', value: _tickets);
+        // Inject local tracking module
+        // tickets['route_tracking'] = {
+        //   'title': 'Route Tracking',
+        //   'subtitle': 'Track movement',
+        // };
+        await setDataToPrefsEncoded(
+          key: 'dashboard_tickets',
+          value: tickets.value,
+        );
         print(tickets.value);
 
         if (listItems['upcoming_interactions'] != null) {
@@ -219,6 +228,10 @@ class DashController extends GetxController {
         if (mainItems['pending_visits'] != null) {
           pendingVisitsTitle.value = mainItems['pending_visits'];
           updatePendingVisitsTitle(pendingVisitsTitle.value);
+        }
+        if (mainItems['complated_leads'] != null) {
+          complatedLeadsTitle.value = mainItems['complated_leads'];
+          updateCompletedLeadsTitle(complatedLeadsTitle.value);
         }
 
         if (draftsData['title'] != null) {

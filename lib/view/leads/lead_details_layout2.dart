@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:appex_lead/component/quick_actions_card.dart';
 import 'package:appex_lead/controller/dash/dash_controller.dart';
 import 'package:appex_lead/controller/form/generic_form_controller.dart';
 import 'package:appex_lead/controller/lead/lead_controller.dart';
@@ -210,7 +211,10 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
                                 ),
                               ),
                             const Divider(height: 32),
-                            _buildQuickActions(_lead),
+                            QuickActionsCard(
+                              data: _lead,
+                              controller: controller,
+                            ),
                           ],
                         ),
                       ),
@@ -379,82 +383,50 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
     });
   }
 
-  Widget _buildQuickActions(Map<String, dynamic> lead) {
-    final phoneNum =
-        controller.formValues['phone_number'] ??
-        controller.formValues['phone_no'];
-    final mobileNO =
-        controller.formValues['mobile_number'] ??
-        controller.formValues['mobile_no'];
-    final whatsapp = controller.formValues['whatsapp'];
-    final email = controller.formValues['email_address'];
+  // Widget _buildQuickActions(Map<String, dynamic> lead) {
+  //   final phoneNum =
+  //       controller.formValues['phone_number'] ??
+  //       controller.formValues['phone_no'];
+  //   final mobileNO =
+  //       controller.formValues['mobile_number'] ??
+  //       controller.formValues['mobile_no'];
+  //   final whatsapp = controller.formValues['whatsapp'];
+  //   final email = controller.formValues['email_address'];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        if (mobileNO != null && mobileNO.toString().trim().isNotEmpty)
-          _actionButton(
-            icon: HugeIcons.strokeRoundedCall,
-            label: "Call",
-            color: colorManager.primaryColor,
-            onTap: () => _launchUrl("tel:$mobileNO"),
-          ),
-        if (whatsapp != null && whatsapp.toString().trim().isNotEmpty)
-          _actionButton(
-            icon: HugeIcons.strokeRoundedWhatsapp,
-            label: "WhatsApp",
-            color: Colors.green,
-            onTap: () => _launchWhatsapp(whatsapp.toString()),
-          ),
-        if (phoneNum != null && phoneNum.toString().trim().isNotEmpty)
-          _actionButton(
-            icon: HugeIcons.strokeRoundedTelephone,
-            label: "Phone",
-            color: Colors.orange,
-            onTap: () => _launchUrl("tel:$phoneNum"),
-          ),
-        if (email != null && email.toString().trim().isNotEmpty)
-          _actionButton(
-            icon: HugeIcons.strokeRoundedMail01,
-            label: "Email",
-            color: Colors.blue,
-            onTap: () => _launchEmail(email.toString()),
-          ),
-      ],
-    );
-  }
-
-  Widget _actionButton({
-    required icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: HugeIcon(icon: icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: colorManager.textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //     children: [
+  //       if (mobileNO != null && mobileNO.toString().trim().isNotEmpty)
+  //         _actionButton(
+  //           icon: HugeIcons.strokeRoundedCall,
+  //           label: "Call",
+  //           color: colorManager.primaryColor,
+  //           onTap: () => _launchUrl("tel:$mobileNO"),
+  //         ),
+  //       if (whatsapp != null && whatsapp.toString().trim().isNotEmpty)
+  //         _actionButton(
+  //           icon: HugeIcons.strokeRoundedWhatsapp,
+  //           label: "WhatsApp",
+  //           color: Colors.green,
+  //           onTap: () => _launchWhatsapp(whatsapp.toString()),
+  //         ),
+  //       if (phoneNum != null && phoneNum.toString().trim().isNotEmpty)
+  //         _actionButton(
+  //           icon: HugeIcons.strokeRoundedTelephone,
+  //           label: "Phone",
+  //           color: Colors.orange,
+  //           onTap: () => _launchUrl("tel:$phoneNum"),
+  //         ),
+  //       if (email != null && email.toString().trim().isNotEmpty)
+  //         _actionButton(
+  //           icon: HugeIcons.strokeRoundedMail01,
+  //           label: "Email",
+  //           color: Colors.blue,
+  //           onTap: () => _launchEmail(email.toString()),
+  //         ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildTimelineItem(Followup followup) {
     return GestureDetector(
@@ -547,36 +519,6 @@ class _LeadDetailsLayout2State extends State<LeadDetailsLayout2> {
         ),
       ),
     );
-  }
-
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      log("Error launching URL: $e");
-    }
-  }
-
-  Future<void> _launchEmail(String email) async {
-    final Uri emailUri = Uri(scheme: 'mailto', path: email);
-    try {
-      if (await canLaunchUrl(emailUri)) {
-        await launchUrl(emailUri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      log("Error launching email: $e");
-    }
-  }
-
-  Future<void> _launchWhatsapp(String phoneNumber) async {
-    String number = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    if (number.startsWith("0")) {
-      number = "92${number.substring(1)}";
-    }
-    await _launchUrl("https://wa.me/$number");
   }
 
   Widget _buildShimmerLoading() {

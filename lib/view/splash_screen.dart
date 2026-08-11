@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:appex_lead/controller/theme/theme_controller.dart';
 import 'package:appex_lead/service/splash_service.dart';
 import 'package:appex_lead/utils/constants.dart';
+import 'package:appex_lead/service/att_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -122,6 +123,12 @@ class _SplashScreenState extends State<SplashScreen> {
     updateApp();
 
     _services.isLogin();
+
+    // Request ATT authorization when the splash screen is visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ATTService.requestATT(context);
+    });
+
     super.initState();
   }
 

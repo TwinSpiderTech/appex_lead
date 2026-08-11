@@ -25,4 +25,5 @@ class Urls {
   static const String upcomingLeadsURL =
       '$baseUrl/business/leads?upcoming_followups=within_a_week&page=';
   static const String signoutUrl = '$baseUrl/authentication/logout';
+  static const String syncRouteURL = '$baseUrl/business/route_tracking/sync';
 }

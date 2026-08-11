@@ -6,6 +6,7 @@ import 'package:appex_lead/main.dart';
 import 'package:appex_lead/utils/app_routes.dart';
 import 'package:appex_lead/utils/device_id_helper.dart';
 import 'package:appex_lead/utils/helpers.dart';
+import 'package:appex_lead/view/app_settings.dart';
 import 'package:appex_lead/view/form/drafts_screen.dart';
 import 'package:appex_lead/view/interaction/inteaction_screen.dart';
 import 'package:appex_lead/view/interaction/interaction_drafts_screen.dart';
@@ -14,9 +15,11 @@ import 'package:appex_lead/view/interaction/interaction_form.dart';
 import 'package:appex_lead/view/leads/lead_details_layout2.dart';
 import 'package:appex_lead/view/leads/lead_screen.dart';
 import 'package:appex_lead/view/form/form_details.dart';
+import 'package:appex_lead/view/tracking/route_history.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class Dashboard extends StatefulWidget {
@@ -46,107 +49,104 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<DashController>(
-      builder: (controller) {
-        return Scaffold(
-          key: _scaffoldKey,
-          backgroundColor: colorManager.whiteColor,
-          drawer: CustomDrawer(),
-          body: RefreshIndicator(
-            color: colorManager.primaryColor,
-            onRefresh: () => controller.refreshDashboard(),
-            child: CustomScrollView(
-              slivers: [
-                _buildAppBar(controller),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 8,
-                        ), // _buildSectionHeader("Upcoming Follow-ups"),
-                        _buildTickcetGrid(controller),
-                        // Text("data"),
-                        // _buildSearchBar(controller),
-                        const SizedBox(height: 24),
-                        _buildSectionHeader(
-                          controller.upcomingInteractionTitle.value,
-                          controller.upcomingInteractionSubTitle.value,
-                          onTap: () {
-                            Get.find<LeadController>().tabController.index = 0;
-                            Get.to(() => const LeadScreen());
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _buildUpcomingList(controller),
-                        // _buildUpcomingList(controller),
-                        // const SizedBox(height: 24),
-                        // _buildSectionHeader("Drafts", () {
-                        //   Get.to(() => const DraftsScreen());
-                        // }),
-                        // const SizedBox(height: 12),
-                        // _buildDraftsList(controller),
-                        // _buildSectionHeader("Pending Leads", () {
-                        //   Get.find<LeadController>().tabController.index = 1;
-                        //   Get.to(() => const LeadScreen());
-                        // }),
-                        // _buildPendingList(controller),
-                        // const SizedBox(height: 12),
-                      ],
+    return FutureBuilder<bool>(
+      future: handleLocationAccess(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final hasLocationAccess = snapshot.data!;
+        if (!hasLocationAccess) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                   Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 18.0),
+                    child: Text(
+                      "Location is required to continue",
+                      style: primaryTextStyle.copyWith(fontSize: 18),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await Geolocator.openAppSettings();
+                    },
+                    child: const Text("Grant Permission"),
+                  ),
+                ],
+              ),
             ),
-          ),
-          floatingActionButton: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_isFabExpanded) ...[
-                _buildFabOption(
-                  icon: HugeIcons.strokeRoundedUserAdd01,
-                  label: controller.leadTicketTitle.value,
-                  onTap: () {
-                    _toggleFab();
-                    Get.to(
-                      () => FormDetails(
-                        url: "/api/v1/business/leads/get_form_template",
-                        title: controller.leadTicketTitle.value,
+          );
+        }
+        // GPS enabled, show normal dashboard
+        return GetBuilder<DashController>(
+          builder: (controller) {
+            return Scaffold(
+              key: _scaffoldKey,
+              backgroundColor: colorManager.whiteColor,
+              drawer: CustomDrawer(),
+              body: RefreshIndicator(
+                color: colorManager.primaryColor,
+                onRefresh: () => controller.refreshDashboard(),
+                child: CustomScrollView(
+                  slivers: [
+                    _buildAppBar(controller),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            _buildTickcetGrid(controller),
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(
+                              controller.upcomingInteractionTitle.value,
+                              controller.upcomingInteractionSubTitle.value,
+                              onTap: () {
+                                Get.find<LeadController>().tabController.index =
+                                    0;
+                                Get.to(() => const LeadScreen());
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _buildUpcomingList(controller),
+                          ],
+                        ),
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                // _buildFabOption(
-                //   icon: HugeIcons.strokeRoundedPlusSignSquare,
-                //   label: "Add " + controller.interactionFormTitle.value,
-                //   onTap: () {
-                //     _toggleFab();
-
-                //     Get.to(
-                //       () => InteractionForm(
-                //         url: "/api/v1/business/interactions/get_form_template",
-                //         title: "Add " + controller.interactionFormTitle.value,
-                //       ),
-                //     );
-
-                //     // Get.to(() => const InteractionForm());
-                //   },
-                // ),
-                // const SizedBox(height: 12),
-              ],
-              // FloatingActionButton(
-              //   backgroundColor: colorManager.primaryColor,
-              //   onPressed: _toggleFab,
-              //   child: Icon(
-              //     _isFabExpanded ? Icons.close : Icons.add,
-              //     color: Colors.white,
-              //   ),
-              // ),
-            ],
-          ),
+              ),
+              floatingActionButton: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isFabExpanded) ...[
+                    _buildFabOption(
+                      icon: HugeIcons.strokeRoundedUserAdd01,
+                      label: controller.leadTicketTitle.value,
+                      onTap: () {
+                        _toggleFab();
+                        Get.to(
+                          () => FormDetails(
+                            url: "/api/v1/business/leads/get_form_template",
+                            title: controller.leadTicketTitle.value,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -692,6 +692,12 @@ class _DashboardState extends State<Dashboard> {
           "subtitle": "",
           "icon": HugeIcons.strokeRoundedFile02,
           "screen": InteractionDraftsScreen(),
+        },
+        'route_tracking': {
+          "title": "Route Tracking",
+          "subtitle": "Track your movement",
+          "icon": HugeIcons.strokeRoundedLocation01,
+          "screen": const RouteHistoryScreen(),
         },
       };
       final ticketKeys = controller.tickets.keys.toList();

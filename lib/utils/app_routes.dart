@@ -12,6 +12,7 @@ import 'package:appex_lead/view/notifications/notification_details.dart';
 
 import 'package:appex_lead/view/shared_prefs_screen.dart';
 import 'package:appex_lead/view/splash_screen.dart';
+import 'package:appex_lead/view/tracking/route_history.dart';
 import 'package:get/get.dart';
 
 class AppPages {
@@ -28,6 +29,7 @@ class AppPages {
   static const drafts = '/drafts';
 
   static const noInternet = '/no-internet';
+  static const trackingHistory = '/tracking-history';
 
   static final routes = [
     GetPage(name: splash, page: () => SplashScreen()),
@@ -48,5 +50,6 @@ class AppPages {
     GetPage(name: drafts, page: () => DraftsScreen()),
     
     GetPage(name: appSetting, page: () => AppSettings()),
+    GetPage(name: trackingHistory, page: () => const RouteHistoryScreen()),
   ];
 }
